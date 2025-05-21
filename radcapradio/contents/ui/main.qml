@@ -104,8 +104,9 @@ Item {
         id: categoriesView
         ListView {
             model: categories
-            delegate: Kirigami.BasicListItem {
+            delegate: ItemDelegate {
                 text: model.name
+                width: parent.width
                 onClicked: loadCategory(model)
             }
         }
@@ -127,8 +128,9 @@ Item {
             }
             ListView {
                 model: stations
-                delegate: Kirigami.BasicListItem {
+                delegate: ItemDelegate {
                     text: model.name
+                    width: parent.width
                     onClicked: {
                         player.source = model.url
                         player.play()
