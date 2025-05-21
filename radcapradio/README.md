@@ -13,4 +13,3 @@ The widget retrieves the HTML pages from `radcap.ru` and extracts links ending i
 2. Alternatively, create `RadCapRadio.plasmoid` with:
    `zip -r RadCapRadio.plasmoid radcapradio` and install the archive.
 3. Add "RadCap Radio" from the Plasma widget list.
-
