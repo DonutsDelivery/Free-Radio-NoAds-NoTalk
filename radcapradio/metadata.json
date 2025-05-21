@@ -3,16 +3,10 @@
     "Id": "radcapradio",
     "Name": "RadCap Radio",
     "Description": "Stream radio channels from radcap.ru",
-    "Icon": "media-playback-start",
+    "Version": "0.1",
     "License": "GPL-3.0+",
-    "EnabledByDefault": true,
-    "Version": "1.0",
-    "Authors": [
-      { "Name": "Unknown", "Email": "" }
-    ]
+    "EnabledByDefault": true
   },
   "X-Plasma-API": "declarativeappletscript",
-  "X-Plasma-MainScript": "ui/main.qml",
-  "Category": "Multimedia",
-  "ServiceTypes": [ "Plasma/Applet" ]
+  "X-Plasma-MainScript": "ui/main.qml"
 }
