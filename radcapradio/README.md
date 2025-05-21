@@ -23,4 +23,3 @@ The widget retrieves the HTML pages from `radcap.ru` and extracts links ending i
    ```
 
 3. Add **RadCap Radio** from the Plasma widget list.
-
