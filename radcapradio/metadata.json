@@ -3,7 +3,7 @@
     "Id": "radcapradio",
     "Name": "RadCap Radio",
     "Description": "Stream radio channels from radcap.ru",
-    "Version": "0.1",
+    "Version": "0.2",
     "EnabledByDefault": true,
     "License": "GPL"
   },
