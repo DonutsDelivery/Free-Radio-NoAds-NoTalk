@@ -4,6 +4,7 @@ Comment=Stream radio channels from radcap.ru
 Type=Service
 Icon=media-playback-start
 ServiceTypes=Plasma/Applet
+X-Plasma-API=declarativeappletscript
 X-KDE-PluginInfo-Author=Unknown
 X-KDE-PluginInfo-Email=
 X-KDE-PluginInfo-Name=radcapradio
