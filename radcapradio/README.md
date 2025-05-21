@@ -13,4 +13,3 @@ The widget retrieves the HTML pages from `radcap.ru` and extracts links ending i
 1. Run `kpackagetool6 --install radcapradio` from this repository root.
 2. Add "RadCap Radio" from the Plasma widget list.
 3. (Optional) Create `RadCapRadio.plasmoid` with `zip -r RadCapRadio.plasmoid radcapradio` and install by double-clicking.
-
