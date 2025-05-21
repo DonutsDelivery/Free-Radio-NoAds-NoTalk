@@ -1,6 +1,6 @@
 # RadCap Radio Plasma Widget
 
-This widget targets **KDE Plasma 6** and lists radio genres from **radcap.ru**.
+This widget targets **KDE Plasma 6** and lists radio genres from **radcap.ru**.
 Selecting a genre loads the radio channels for that category. Clicking a channel
 starts streaming with play/stop and volume controls always available at the
 bottom of the widget.
@@ -21,5 +21,4 @@ To distribute the widget as a single archive run:
 zip -r RadCapRadio.plasmoid radcapradio
 ```
 
-You can then double‑click the resulting file to install it in Plasma 6.
-
+You can then double‑click the resulting file to install it in Plasma 6.
