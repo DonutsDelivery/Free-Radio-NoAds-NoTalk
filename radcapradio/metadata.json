@@ -4,9 +4,12 @@
     "Name": "RadCap Radio",
     "Description": "Stream radio channels from radcap.ru",
     "Version": "0.1",
-    "License": "GPL-3.0+",
-    "EnabledByDefault": true
+    "EnabledByDefault": true,
+    "License": "GPL"
   },
-  "X-Plasma-API": "declarativeappletscript",
-  "X-Plasma-MainScript": "ui/main.qml"
+  "KPackage": {
+    "Structure": "Plasma/Applet"
+  },
+  "X-Plasma-MainScript": "ui/main.qml",
+  "Categories": ["Audio", "Network"]
 }
