@@ -1,0 +1,14 @@
+{
+  "KPlugin": {
+    "Id": "radcapradio",
+    "Name": "RadCap Radio",
+    "Description": "Stream radio channels from radcap.ru",
+    "Icon": "media-playback-start",
+    "ServiceTypes": ["Plasma/Applet"],
+    "Version": "0.1",
+    "License": "GPL",
+    "EnabledByDefault": true
+  },
+  "X-Plasma-API": "declarativeappletscript",
+  "X-Plasma-MainScript": "ui/main.qml"
+}
