@@ -14,5 +14,3 @@ The widget retrieves the HTML pages from `radcap.ru` and extracts links ending i
 To distribute the widget as a single file, create a plasmoid archive:
 
     zip -r RadCapRadio.plasmoid radcapradio
-
-
