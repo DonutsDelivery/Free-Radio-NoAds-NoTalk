@@ -9,8 +9,17 @@ The widget retrieves the HTML pages from `radcap.ru` and extracts links ending i
 
 ## Installation
 
-1. From the repository root run `kpackagetool5 --install radcapradio`.
-   Alternatively create a `.plasmoid` archive with
-   `zip -r RadCapRadio.plasmoid radcapradio` and install that file.
-2. Add "RadCap Radio" from the Plasma widget list.
+1. From the repository root, run:
 
+   ```bash
+   kpackagetool5 --install radcapradio
+   ```
+
+   This installs the widget directly from the `radcapradio` folder.
+2. Optionally create a `.plasmoid` archive for manual distribution:
+
+   ```bash
+   zip -r RadCapRadio.plasmoid radcapradio
+   ```
+
+3. Add **RadCap Radio** from the Plasma widget list.
