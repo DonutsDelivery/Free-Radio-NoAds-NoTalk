@@ -1,13 +1,14 @@
-import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
-import QtMultimedia
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
+import QtMultimedia 6.5
 import org.kde.plasma.plasmoid
+import org.kde.kirigami 2.20 as Kirigami
 
 Item {
     id: root
-    width: 300
-    height: 400
+    width: Kirigami.Units.gridUnit * 20
+    height: Kirigami.Units.gridUnit * 25
 
     property var categories: [
         { name: "ETHNIC / FOLK / SPIRITUAL", url: "http://radcap.ru/ethnic-d.html" },
@@ -103,17 +104,9 @@ Item {
         id: categoriesView
         ListView {
             model: categories
-            delegate: Item {
-                width: parent.width
-                height: 32
-                Text {
-                    text: model.name
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: loadCategory(model)
-                }
+            delegate: Kirigami.BasicListItem {
+                text: model.name
+                onClicked: loadCategory(model)
             }
         }
     }
@@ -134,16 +127,11 @@ Item {
             }
             ListView {
                 model: stations
-                delegate: Item {
-                    width: parent.width
-                    height: 32
-                    Text { text: model.name; anchors.verticalCenter: parent.verticalCenter }
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            player.source = model.url
-                            player.play()
-                        }
+                delegate: Kirigami.BasicListItem {
+                    text: model.name
+                    onClicked: {
+                        player.source = model.url
+                        player.play()
                     }
                 }
             }
