@@ -5,7 +5,7 @@ import QtMultimedia 6.5
 import org.kde.plasma.plasmoid
 import org.kde.kirigami 2.20 as Kirigami
 
-Item {
+PlasmoidItem {
     id: root
     width: Kirigami.Units.gridUnit * 20
     height: Kirigami.Units.gridUnit * 25
