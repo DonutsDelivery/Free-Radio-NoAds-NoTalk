@@ -35,7 +35,10 @@ Item {
     MediaPlayer {
         id: player
         autoPlay: false
-        volume: volumeSlider.value
+        audioOutput: AudioOutput {
+            id: audioOut
+            volume: volumeSlider.value
+        }
     }
 
     function loadCategory(cat) {
