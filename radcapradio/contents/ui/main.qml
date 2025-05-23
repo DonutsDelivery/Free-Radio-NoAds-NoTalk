@@ -111,7 +111,7 @@ PlasmoidItem {
                     // modelData contains the station object
                     text: modelData.name
                     onClicked: {
-                        player.source = modelData.url + "." + playlistFormat
+                        player.source = modelData.host + "/" + modelData.path + "." + playlistFormat
                         player.play()
                     }
                 }
