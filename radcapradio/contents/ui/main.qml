@@ -11,12 +11,13 @@ PlasmoidItem {
     width: Kirigami.Units.gridUnit * 20
     height: Kirigami.Units.gridUnit * 25
 
+    // List of categories and their stations loaded from radiodata.js
     property var categories: RadioData.categories
-    property var categoriesModel: []
 
     property var stations: []
     property bool inCategory: false
     property string currentCategory: ""
+    property string playlistFormat: "xspf"
 
     MediaPlayer {
         id: player
@@ -29,36 +30,8 @@ PlasmoidItem {
 
     function loadCategory(cat) {
         currentCategory = cat.name
-        if (cat.name === "Favorites") {
-            stations = favorites
-        } else {
-            stations = cat.stations
-        }
+        stations = cat.stations || []
         inCategory = true
-    }
-
-    property var favorites: []
-    property bool highQuality: true
-    property string playlistFormat: "xspf"
-
-    Component.onCompleted: updateCategoriesModel()
-    onFavoritesChanged: updateCategoriesModel()
-
-    function isFavorite(station) {
-        return favorites.some(function(s) { return s.name === station.name })
-    }
-
-    function toggleFavorite(station) {
-        if (isFavorite(station)) {
-            favorites = favorites.filter(function(s) { return s.name !== station.name })
-        } else {
-            favorites.push(station)
-        }
-        updateCategoriesModel()
-    }
-
-    function updateCategoriesModel() {
-        categoriesModel = favorites.length ? [{ name: "Favorites", stations: favorites }].concat(categories) : categories
     }
 
     ColumnLayout {
@@ -91,16 +64,10 @@ PlasmoidItem {
                 }
             }
             ComboBox {
-                id: qualityBox
-                model: ["Low", "High"]
-                currentIndex: highQuality ? 1 : 0
-                onCurrentIndexChanged: highQuality = (currentIndex === 1)
-            }
-            ComboBox {
                 id: formatBox
                 model: ["xspf", "m3u"]
-                currentIndex: playlistFormat === "m3u" ? 1 : 0
-                onCurrentIndexChanged: playlistFormat = currentText
+                currentIndex: 0
+                onCurrentValueChanged: playlistFormat = currentValue
             }
             Slider {
                 id: volumeSlider
@@ -115,7 +82,7 @@ PlasmoidItem {
     Component {
         id: categoriesView
         ListView {
-            model: categoriesModel
+            model: categories
             delegate: ItemDelegate {
                 // modelData represents the category object with 'name' and 'url'
                 text: modelData.name
@@ -141,21 +108,10 @@ PlasmoidItem {
             ListView {
                 model: stations
                 delegate: ItemDelegate {
-                    RowLayout {
-                        anchors.fill: parent
-                        Label {
-                            text: modelData.name
-                            Layout.fillWidth: true
-                        }
-                        Button {
-                            text: root.isFavorite(modelData) ? "\u2605" : "\u2606"
-                            onClicked: root.toggleFavorite(modelData)
-                        }
-                    }
+                    // modelData contains the station object
+                    text: modelData.name
                     onClicked: {
-                        var port = highQuality ? 8002 : 8000
-                        var url = modelData.host + ":" + port + "/" + modelData.path + "." + playlistFormat
-                        player.source = url
+                        player.source = modelData.url + "." + playlistFormat
                         player.play()
                     }
                 }
