@@ -14,7 +14,12 @@ PlasmoidItem {
     // List of categories and their stations loaded from radiodata.js
     property var categories: RadioData.categories
 
-    property var stations: []
+    // Models used by the views. Converting the plain arrays into
+    // ListModels avoids issues with ListView when loading the data
+    // directly from JavaScript.
+    ListModel { id: categoriesModel }
+    ListModel { id: stationsModel }
+
     property bool inCategory: false
     property string currentCategory: ""
     property string playlistFormat: "xspf"
@@ -28,9 +33,20 @@ PlasmoidItem {
         }
     }
 
+    Component.onCompleted: {
+        // Populate the categories model once the UI loads
+        for (var i = 0; i < categories.length; ++i) {
+            categoriesModel.append(categories[i])
+        }
+    }
+
     function loadCategory(cat) {
         currentCategory = cat.name
-        stations = cat.stations || []
+        stationsModel.clear()
+        var list = cat.stations || []
+        for (var i = 0; i < list.length; ++i) {
+            stationsModel.append(list[i])
+        }
         inCategory = true
     }
 
@@ -82,7 +98,7 @@ PlasmoidItem {
     Component {
         id: categoriesView
         ListView {
-            model: categories
+            model: categoriesModel
             delegate: ItemDelegate {
                 // modelData represents the category object with 'name' and 'url'
                 text: modelData.name
@@ -97,7 +113,10 @@ PlasmoidItem {
             RowLayout {
                 Button {
                     text: "Back"
-                    onClicked: inCategory = false
+                    onClicked: {
+                        inCategory = false
+                        stationsModel.clear()
+                    }
                 }
                 Label {
                     text: currentCategory
@@ -106,12 +125,12 @@ PlasmoidItem {
                 }
             }
             ListView {
-                model: stations
+                model: stationsModel
                 delegate: ItemDelegate {
                     // modelData contains the station object
                     text: modelData.name
                     onClicked: {
-                        player.source = modelData.url + "." + playlistFormat
+                        player.source = modelData.host + "/" + modelData.path + "." + playlistFormat
                         player.play()
                     }
                 }
