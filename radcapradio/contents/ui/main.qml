@@ -108,8 +108,9 @@ PlasmoidItem {
         ListView {
             model: categories
             delegate: ItemDelegate {
-                text: model.name
-                onClicked: loadCategory(model)
+                // modelData represents the category object with 'name' and 'url'
+                text: modelData.name
+                onClicked: loadCategory(modelData)
             }
         }
     }
@@ -131,9 +132,10 @@ PlasmoidItem {
             ListView {
                 model: stations
                 delegate: ItemDelegate {
-                    text: model.name
+                    // modelData contains the station object
+                    text: modelData.name
                     onClicked: {
-                        player.source = model.url
+                        player.source = modelData.url
                         player.play()
                     }
                 }
