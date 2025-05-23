@@ -4,29 +4,15 @@ import QtQuick.Layouts 1.15
 import QtMultimedia 6.5
 import org.kde.plasma.plasmoid
 import org.kde.kirigami 2.20 as Kirigami
+import "radiodata.js" as RadioData
 
 PlasmoidItem {
     id: root
     width: Kirigami.Units.gridUnit * 20
     height: Kirigami.Units.gridUnit * 25
 
-    property var categories: [
-        { name: "ETHNIC / FOLK / SPIRITUAL", url: "http://radcap.ru/ethnic-d.html" },
-        { name: "REGGAE / SKA", url: "http://radcap.ru/reggae-d.html" },
-        { name: "POP", url: "http://radcap.ru/pop-d.html" },
-        { name: "ROCK", url: "http://radcap.ru/rock-d.html" },
-        { name: "JAZZ", url: "http://radcap.ru/jazz-d.html" },
-        { name: "METAL", url: "http://radcap.ru/metal-d.html" },
-        { name: "HARDCORE", url: "http://radcap.ru/hardcore-d.html" },
-        { name: "CLASSICAL", url: "http://radcap.ru/classic-d.html" },
-        { name: "HIP-HOP / RAP", url: "http://radcap.ru/hh-d.html" },
-        { name: "ELECTRONIC", url: "http://radcap.ru/electro-d.html" },
-        { name: "MISCELLANEOUS", url: "http://radcap.ru/misc-d.html" },
-        { name: "ШАНСОН", url: "http://radcap.ru/shanson-d.html" },
-        { name: "BLUES / FUNK / SOUL / R&B", url: "http://radcap.ru/blues-d.html" },
-        { name: "COUNTRY", url: "http://radcap.ru/country-d.html" },
-        { name: "ВСЕ СТИЛИ,  ЖАНРЫ,  НАПРАВЛЕНИЯ,  КОМПИЛЯЦИИ", url: "http://radcap.ru/all-d.html" }
-    ]
+    property var categories: RadioData.categories
+    property var categoriesModel: []
 
     property var stations: []
     property bool inCategory: false
@@ -43,25 +29,36 @@ PlasmoidItem {
 
     function loadCategory(cat) {
         currentCategory = cat.name
-        var xhr = new XMLHttpRequest()
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                stations = parseStations(xhr.responseText)
-                inCategory = true
-            }
+        if (cat.name === "Favorites") {
+            stations = favorites
+        } else {
+            stations = cat.stations
         }
-        xhr.open("GET", cat.url)
-        xhr.send()
+        inCategory = true
     }
 
-    function parseStations(html) {
-        var regex = /href="(http:\/\/[^\"]+\.(?:m3u|pls|xspf))"[^>]*>([^<]+)/g
-        var res = []
-        var match
-        while ((match = regex.exec(html)) !== null) {
-            res.push({ name: match[2], url: match[1] })
+    property var favorites: []
+    property bool highQuality: true
+    property string playlistFormat: "xspf"
+
+    Component.onCompleted: updateCategoriesModel()
+    onFavoritesChanged: updateCategoriesModel()
+
+    function isFavorite(station) {
+        return favorites.some(function(s) { return s.name === station.name })
+    }
+
+    function toggleFavorite(station) {
+        if (isFavorite(station)) {
+            favorites = favorites.filter(function(s) { return s.name !== station.name })
+        } else {
+            favorites.push(station)
         }
-        return res
+        updateCategoriesModel()
+    }
+
+    function updateCategoriesModel() {
+        categoriesModel = favorites.length ? [{ name: "Favorites", stations: favorites }].concat(categories) : categories
     }
 
     ColumnLayout {
@@ -93,6 +90,18 @@ PlasmoidItem {
                         player.play()
                 }
             }
+            ComboBox {
+                id: qualityBox
+                model: ["Low", "High"]
+                currentIndex: highQuality ? 1 : 0
+                onCurrentIndexChanged: highQuality = (currentIndex === 1)
+            }
+            ComboBox {
+                id: formatBox
+                model: ["xspf", "m3u"]
+                currentIndex: playlistFormat === "m3u" ? 1 : 0
+                onCurrentIndexChanged: playlistFormat = currentText
+            }
             Slider {
                 id: volumeSlider
                 from: 0
@@ -106,10 +115,11 @@ PlasmoidItem {
     Component {
         id: categoriesView
         ListView {
-            model: categories
+            model: categoriesModel
             delegate: ItemDelegate {
-                text: model.name
-                onClicked: loadCategory(model)
+                // modelData represents the category object with 'name' and 'url'
+                text: modelData.name
+                onClicked: loadCategory(modelData)
             }
         }
     }
@@ -131,9 +141,21 @@ PlasmoidItem {
             ListView {
                 model: stations
                 delegate: ItemDelegate {
-                    text: model.name
+                    RowLayout {
+                        anchors.fill: parent
+                        Label {
+                            text: modelData.name
+                            Layout.fillWidth: true
+                        }
+                        Button {
+                            text: root.isFavorite(modelData) ? "\u2605" : "\u2606"
+                            onClicked: root.toggleFavorite(modelData)
+                        }
+                    }
                     onClicked: {
-                        player.source = model.url
+                        var port = highQuality ? 8002 : 8000
+                        var url = modelData.host + ":" + port + "/" + modelData.path + "." + playlistFormat
+                        player.source = url
                         player.play()
                     }
                 }
