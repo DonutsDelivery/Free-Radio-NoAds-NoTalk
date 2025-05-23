@@ -1,12 +1,14 @@
 # RadCap Radio Plasma Widget
 
-This KDE Plasma **6** widget lists radio genres from **radcap.ru**. The user
-interface now uses **Kirigami** components for a modern look. Selecting a genre
-loads the radio channels for that category. Clicking a channel starts streaming
-with play/stop and volume controls always available at the bottom of the widget.
+This KDE Plasma **6** widget lists radio genres from a bundled dataset. The user
+interface uses **Kirigami** components for a modern look. Selecting a genre
+shows the channels contained in `radiodata.js`; clicking a channel starts
+streaming with play/stop and volume controls always available at the bottom of
+the widget.
 
-The widget retrieves the HTML pages from `radcap.ru` and extracts links ending in
-`m3u`, `pls` or `xspf`. These links are used as the stream source for playback.
+No network access is required at runtime since the station list is hard coded.
+The selected playlist format (`xspf` or `m3u`) is appended to each station URL
+when playback begins.
 
 ## Installation
 
