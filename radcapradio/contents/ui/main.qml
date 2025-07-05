@@ -55,6 +55,14 @@ PlasmoidItem {
     // Favorites system
     property var favoriteStations: []
     
+    // Last played station persistence
+    property string lastStationName: ""
+    property string lastStationUrl: ""
+    property string lastStationHost: ""
+    property string lastStationPath: ""
+    property string lastSource: ""
+    property string lastCategory: ""
+    
     // Quality filtering system
     property int minBitrate: 64  // Minimum bitrate in kbps
     property bool skipLowQuality: true  // Skip obvious low quality streams
@@ -72,6 +80,71 @@ PlasmoidItem {
         }
         console.log("Loaded favorites:", favoriteStations.length, "stations")
         console.log("Favorites array:", JSON.stringify(favoriteStations))
+    }
+    
+    function loadLastStation() {
+        // Load last played station from configuration
+        lastStationName = plasmoid.configuration.lastStationName || ""
+        lastStationUrl = plasmoid.configuration.lastStationUrl || ""
+        lastStationHost = plasmoid.configuration.lastStationHost || ""
+        lastStationPath = plasmoid.configuration.lastStationPath || ""
+        lastSource = plasmoid.configuration.lastSource || ""
+        lastCategory = plasmoid.configuration.lastCategory || ""
+        
+        console.log("Loaded last station:", lastStationName)
+        
+        if (lastStationName && lastStationUrl) {
+            // Restore station info but don't auto-play
+            currentStationName = lastStationName
+            currentStationUrl = lastStationUrl
+            currentStationHost = lastStationHost
+            currentStationPath = lastStationPath
+            currentSource = lastSource
+            currentCategory = lastCategory
+            
+            // Set up the UI state without playing
+            player.source = lastStationUrl
+            
+            // Navigate to the appropriate category if it was set
+            if (lastSource && lastCategory) {
+                // Set the navigation state to show the category
+                inSource = true
+                inCategory = true
+                
+                // Load the source and category
+                if (lastSource === "📻 RadCap.ru") {
+                    loadSource({name: "📻 RadCap.ru", description: "500+ curated music channels", categories: RadioData.radcapCategories})
+                } else if (lastSource === "🎵 SomaFM") {
+                    loadSource({name: "🎵 SomaFM", description: "30+ stations in 7 genres", categories: RadioData.somafmCategories})
+                }
+                
+                // Find and load the specific category
+                var sourceCategories = lastSource === "📻 RadCap.ru" ? RadioData.radcapCategories : RadioData.somafmCategories
+                for (var i = 0; i < sourceCategories.length; i++) {
+                    if (sourceCategories[i].name === lastCategory) {
+                        loadCategory(sourceCategories[i])
+                        break
+                    }
+                }
+            }
+            
+            console.log("Last station restored, ready to play:", lastStationName)
+        }
+    }
+    
+    function saveLastStation() {
+        // Save current station to configuration
+        plasmoid.configuration.lastStationName = currentStationName
+        plasmoid.configuration.lastStationUrl = currentStationUrl
+        plasmoid.configuration.lastStationHost = currentStationHost
+        plasmoid.configuration.lastStationPath = currentStationPath
+        plasmoid.configuration.lastSource = currentSource
+        plasmoid.configuration.lastCategory = currentCategory
+        
+        // Force configuration save
+        plasmoid.writeConfig()
+        
+        console.log("Saved last station:", currentStationName)
     }
     
     
@@ -374,6 +447,7 @@ PlasmoidItem {
         console.log("Initial stream quality:", streamQuality)
         loadFavorites()
         loadSources()
+        loadLastStation()  // Restore last played station
     }
 
     function loadSource(source) {
@@ -1643,6 +1717,9 @@ PlasmoidItem {
                         // Play directly without playlist parsing
                         player.source = streamUrl
                         player.play()
+                        
+                        // Save this station as the last played
+                        saveLastStation()
                     }
                     
                     Rectangle {

@@ -14,6 +14,30 @@
       <label>Auto-mute when other audio is playing</label>
       <default>false</default>
     </entry>
+    <entry name="lastStationName" type="String">
+      <label>Last played station name</label>
+      <default></default>
+    </entry>
+    <entry name="lastStationUrl" type="String">
+      <label>Last played station URL</label>
+      <default></default>
+    </entry>
+    <entry name="lastStationHost" type="String">
+      <label>Last played station host</label>
+      <default></default>
+    </entry>
+    <entry name="lastStationPath" type="String">
+      <label>Last played station path</label>
+      <default></default>
+    </entry>
+    <entry name="lastSource" type="String">
+      <label>Last selected radio source</label>
+      <default></default>
+    </entry>
+    <entry name="lastCategory" type="String">
+      <label>Last selected category</label>
+      <default></default>
+    </entry>
   </group>
 
 </kcfg>
