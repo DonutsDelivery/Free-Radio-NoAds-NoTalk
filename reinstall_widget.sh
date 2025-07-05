@@ -26,8 +26,8 @@ sleep 2
 
 # Install widget fresh
 echo "Installing widget..."
-cd /home/user/Documents/Free-Radio-NoAds-NoTalk
-kpackagetool6 --type="Plasma/Applet" --upgrade radcapradio
+cd /home/user/Documents/Free-Radio-NoAds-NoTalk/radcap-radio-widget
+kpackagetool6 --type="Plasma/Applet" --install radcapradio
 
 # Wait and restart plasma
 echo "Restarting Plasma..."

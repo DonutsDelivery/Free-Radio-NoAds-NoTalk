@@ -1396,17 +1396,21 @@ PlasmoidItem {
         spacing: Math.max(8, root.height * 0.02)  // Responsive spacing: 8px min or 2% of height
 
         // Sources ListView
-        ListView {
+        ScrollView {
             visible: !inSource && !inCategory
             Layout.fillWidth: true
             Layout.fillHeight: true
-            model: sourcesModel
-            spacing: Math.max(6, root.height * 0.01)  // Responsive spacing: 6px min or 1% of height
             clip: true
+            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+            ScrollBar.vertical.policy: ScrollBar.AsNeeded
             
-            delegate: ItemDelegate {
-                width: ListView.view.width
-                height: Math.max(50, root.height * 0.12)  // Responsive height: 50px min or 12% of widget height
+            ListView {
+                model: sourcesModel
+                spacing: Math.max(6, root.height * 0.01)  // Responsive spacing: 6px min or 1% of height
+                
+                delegate: ItemDelegate {
+                    width: ListView.view.width
+                    height: Math.max(50, root.height * 0.12)  // Responsive height: 50px min or 12% of widget height
                 
                 // Modern card background
                 background: Rectangle {
@@ -1459,13 +1463,7 @@ PlasmoidItem {
                 }
                 
                 onClicked: loadSource(model)
-            }
-            
-            ScrollBar.vertical: ScrollBar {
-                active: true
-                anchors.right: parent.right
-                anchors.rightMargin: 2
-                width: 8
+                }
             }
         }
         
@@ -1503,19 +1501,23 @@ PlasmoidItem {
                 }
             }
             
-            GridView {
+            ScrollView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                model: categoriesModel
                 clip: true
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
                 
-                // 2 columns layout
-                cellWidth: width / 2
-                cellHeight: Math.max(45, Math.min(60, root.height / 20))
-                
-                delegate: ItemDelegate {
-                    width: GridView.view.cellWidth - 2
-                    height: GridView.view.cellHeight - 2
+                GridView {
+                    model: categoriesModel
+                    
+                    // 2 columns layout
+                    cellWidth: width / 2
+                    cellHeight: Math.max(45, Math.min(60, root.height / 20))
+                    
+                    delegate: ItemDelegate {
+                        width: GridView.view.cellWidth - 2
+                        height: GridView.view.cellHeight - 2
                     leftPadding: 16
                     rightPadding: 16
                     topPadding: 12
@@ -1546,13 +1548,7 @@ PlasmoidItem {
                             ColorAnimation { duration: 150 }
                         }
                     }
-                }
-                
-                ScrollBar.vertical: ScrollBar {
-                    active: true
-                    anchors.right: parent.right
-                    anchors.rightMargin: 2
-                    width: 8
+                    }
                 }
             }
         }
@@ -1600,16 +1596,20 @@ PlasmoidItem {
                 }
             }
             
-            ListView {
+            ScrollView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                model: stationsModel
-                spacing: Math.max(1, root.height / 250)  // Responsive spacing
                 clip: true
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
                 
-                delegate: ItemDelegate {
-                    width: ListView.view.width
-                    height: Math.max(25, Math.min(35, root.height / 25))  // Responsive height
+                ListView {
+                    model: stationsModel
+                    spacing: Math.max(1, root.height / 250)  // Responsive spacing
+                    
+                    delegate: ItemDelegate {
+                        width: ListView.view.width
+                        height: Math.max(25, Math.min(35, root.height / 25))  // Responsive height
                     text: model.name
                     font.pointSize: Math.max(7, Math.min(11, root.width / 40))  // Responsive font
                     
@@ -1665,13 +1665,7 @@ PlasmoidItem {
                         border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.5)
                         antialiasing: true
                     }
-                }
-                
-                ScrollBar.vertical: ScrollBar {
-                    active: true
-                    anchors.right: parent.right
-                    anchors.rightMargin: 2
-                    width: 8
+                    }
                 }
             }
         }
