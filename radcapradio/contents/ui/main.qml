@@ -187,16 +187,7 @@ PlasmoidItem {
             hasOtherAudio = true
         }
         
-        // Apply the auto-mute logic
-        if (hasOtherAudio && !audioOut.muted && !isFadingOut) {
-            console.log("Auto-mute: Detected other audio, fading out")
-            fadeOutAudio()
-        } else if (!hasOtherAudio && audioOut.muted && !isFadingIn) {
-            console.log("Auto-mute: Other audio stopped, fading back in")
-            fadeInAudio()
-        }
-        
-        console.log("Auto-mute: Check completed - Other audio:", hasOtherAudio ? "YES" : "NO")
+        console.log("Audio detection completed - Other audio:", hasOtherAudio ? "YES" : "NO")
     }
     
     function saveFavorites() {
@@ -290,7 +281,6 @@ PlasmoidItem {
         audioOutput: AudioOutput {
             id: audioOut
             volume: volumeSlider.value
-            muted: false
         }
         
         onErrorOccurred: function(error, errorString) {
@@ -1928,30 +1918,13 @@ PlasmoidItem {
                 }
                 
                 
-                Button {
-                    text: audioOut.muted ? "🔇" : "🔊"
-                    font.pointSize: Math.max(12, Math.min(16, root.width / 25))
-                    onClicked: audioOut.muted = !audioOut.muted
-                    implicitWidth: Math.max(35, Math.min(45, root.width / 15))
-                    implicitHeight: Math.max(30, Math.min(40, root.height / 20))
-                    Layout.alignment: Qt.AlignVCenter
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        font: parent.font
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        color: parent.enabled ? Kirigami.Theme.textColor : Kirigami.Theme.disabledTextColor
-                    }
-                }
-                
                 Slider {
                     id: volumeSlider
                     from: 0
                     to: 1
                     value: 0.5
                     Layout.fillWidth: true
-                    enabled: !audioOut.muted
+                    enabled: currentStationName !== ""
                     Layout.alignment: Qt.AlignVCenter
                 }
             }

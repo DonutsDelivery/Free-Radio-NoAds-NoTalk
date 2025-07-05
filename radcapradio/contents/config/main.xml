@@ -10,10 +10,6 @@
       <label>Favorite radio stations</label>
       <default>[]</default>
     </entry>
-    <entry name="autoMuteEnabled" type="Bool">
-      <label>Auto-mute when other audio is playing</label>
-      <default>false</default>
-    </entry>
     <entry name="lastStationName" type="String">
       <label>Last played station name</label>
       <default></default>
