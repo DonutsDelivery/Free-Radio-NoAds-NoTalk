@@ -55,7 +55,7 @@ PlasmoidItem {
     property bool showSearchDialog: false
     property bool isEditMode: false
     property int editStationIndex: -1
-    property string streamQuality: "3"  // Default to highest quality
+    property string streamQuality: "3"  // Always use highest quality
     
     // Search filter properties
     property int minSearchBitrate: 0  // Minimum bitrate filter for search results
@@ -123,8 +123,8 @@ PlasmoidItem {
         var stored = plasmoid.configuration.volumeLevel
         if (stored !== undefined && stored !== null) {
             console.log("Loading saved volume level:", stored)
-            // Set the persistent volume slider to the saved value
-            if (persistentVolumeSlider) persistentVolumeSlider.value = stored
+            // Set the compact volume slider to the saved value
+            if (compactVolumeSlider) compactVolumeSlider.value = stored
         }
     }
     
@@ -263,18 +263,44 @@ PlasmoidItem {
         }
     }
     
-    function loadQualitySetting() {
-        // Load quality setting from persistent storage
-        var savedQuality = plasmoid.configuration.streamQuality || "3"
-        streamQuality = savedQuality
-        console.log("Loaded quality setting:", streamQuality)
+    
+    function loadLastStation() {
+        // Load last station from persistent storage
+        var savedName = plasmoid.configuration.lastStationName || ""
+        var savedUrl = plasmoid.configuration.lastStationUrl || ""
+        var savedHost = plasmoid.configuration.lastStationHost || ""
+        var savedPath = plasmoid.configuration.lastStationPath || ""
+        
+        if (savedName && savedUrl && savedHost) {
+            currentStationName = savedName
+            currentStationUrl = savedUrl
+            currentStationHost = savedHost
+            currentStationPath = savedPath
+            
+            console.log("Loaded last station:", savedName, "URL:", savedUrl)
+            
+            // Set the player source but don't auto-play
+            player.source = savedUrl
+            player.stop() // Ensure it's paused
+            
+            return true
+        }
+        
+        console.log("No last station found")
+        return false
     }
     
-    function saveQualitySetting() {
-        // Save quality setting to persistent storage
-        plasmoid.configuration.streamQuality = streamQuality
-        plasmoid.writeConfig()
-        console.log("Saved quality setting:", streamQuality)
+    function saveLastStation() {
+        // Save current station to persistent storage
+        if (currentStationName && currentStationUrl && currentStationHost) {
+            plasmoid.configuration.lastStationName = currentStationName
+            plasmoid.configuration.lastStationUrl = currentStationUrl
+            plasmoid.configuration.lastStationHost = currentStationHost
+            plasmoid.configuration.lastStationPath = currentStationPath
+            plasmoid.writeConfig()
+            
+            console.log("Saved last station:", currentStationName, "URL:", currentStationUrl)
+        }
     }
     
     
@@ -551,12 +577,11 @@ PlasmoidItem {
         console.log("MediaPlayer available:", typeof player)
         console.log("AudioOutput available:", typeof audioOut)
         console.log("Initial player state:", player.playbackState)
-        loadQualitySetting()
-        console.log("Loaded stream quality:", streamQuality)
         loadVolumeLevel()
         console.log("Loaded volume level")
         loadFavorites()
         loadCustomStations()
+        loadLastStation()
         loadSources()
     }
 
@@ -726,7 +751,9 @@ PlasmoidItem {
                 port = "8004"
             }
             
-            var baseUrl = host.replace(":8000", ":" + port) + ":" + port + "/" + path
+            // Remove existing port if present, then add the quality-specific port
+            var cleanHost = host.replace(/:8000|:8002|:8004/, "")
+            var baseUrl = cleanHost + ":" + port + "/" + path
             console.log("RadCap stream URL:", baseUrl, "for quality level:", quality)
             return baseUrl
         }
@@ -1636,34 +1663,31 @@ PlasmoidItem {
     }
     
     function reloadCurrentStation() {
-        if (currentStationName && inCategory) {
+        if (currentStationName && currentStationHost && currentStationPath) {
             console.log("Reloading current station with new quality:", streamQuality)
-            // Find current station in model and reload it
-            for (var i = 0; i < stationsModel.count; i++) {
-                var station = stationsModel.get(i)
-                if (station.name === currentStationName) {
-                    var streamUrl = getStreamUrl(station.host, station.path, streamQuality)
-                    currentStationUrl = streamUrl
-                    
-                    // Clear song info when changing quality
-                    currentSongTitle = ""
-                    currentArtist = ""
-                    debugMetadata = "Reloading with new quality..."
-                    
-                    songUpdateTimer.stop()
-                    player.stop()
-                    console.log("=== RELOADING STATION ===")
-                    console.log("Stream URL:", streamUrl)
-                    
-                    // Fetch live song metadata
-                    fetchStreamMetadata(streamUrl)
-                    songUpdateTimer.start()
-                    
-                    player.source = streamUrl
-                    player.play()
-                    break
-                }
-            }
+            
+            // Generate new URL with updated quality
+            var streamUrl = getStreamUrl(currentStationHost, currentStationPath, streamQuality)
+            currentStationUrl = streamUrl
+            
+            // Clear song info when changing quality
+            currentSongTitle = ""
+            currentArtist = ""
+            debugMetadata = "Reloading with new quality..."
+            
+            songUpdateTimer.stop()
+            player.stop()
+            console.log("=== RELOADING STATION ===")
+            console.log("Old URL:", currentStationUrl)
+            console.log("New URL:", streamUrl)
+            console.log("Quality level:", streamQuality)
+            
+            // Fetch live song metadata
+            fetchStreamMetadata(streamUrl)
+            songUpdateTimer.start()
+            
+            player.source = streamUrl
+            player.play()
         }
     }
     
@@ -2132,6 +2156,9 @@ PlasmoidItem {
         currentStationHost = station.host
         currentStationPath = station.path
         currentStationIndex = index
+        
+        // Save this as the last played station
+        saveLastStation()
         
         // Clear previous song info when changing stations
         currentSongTitle = ""
@@ -3029,6 +3056,17 @@ PlasmoidItem {
                     }
                 }
                 
+                // Show current stream URL (to verify port changes)
+                Label {
+                    visible: currentStationUrl !== ""
+                    text: currentStationUrl
+                    font.pointSize: Math.max(6, Math.min(8, root.width / 50))
+                    color: Kirigami.Theme.textColor
+                    opacity: 0.6
+                    elide: Text.ElideMiddle
+                    Layout.fillWidth: true
+                }
+                
                 RowLayout {
                     visible: currentSongTitle || currentArtist
                     Layout.fillWidth: true
@@ -3065,7 +3103,7 @@ PlasmoidItem {
             border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.25)
             antialiasing: true
             
-            // Single horizontal row: Play, Quality, Volume controls
+            // Single horizontal row: Play and Volume controls
             RowLayout {
                 anchors.centerIn: parent
                 width: parent.width - 24
@@ -3171,92 +3209,41 @@ PlasmoidItem {
                     }
                 }
                 
-                Label {
-                    text: "Quality:"
-                    font.pointSize: Math.max(7, Math.min(10, root.width / 40))  // Responsive font
-                    color: Kirigami.Theme.textColor
+                // Volume Controls
+                Button {
+                    text: audioOut.muted ? "🔇" : "🔊"
+                    font.pointSize: Math.max(10, Math.min(14, root.width / 32))
+                    onClicked: audioOut.muted = !audioOut.muted
+                    implicitWidth: Math.max(35, Math.min(45, root.width / 15))
+                    implicitHeight: Math.max(35, Math.min(45, root.height / 18))
                     Layout.alignment: Qt.AlignVCenter
+                    flat: true
+                    
+                    ToolTip.text: audioOut.muted ? "Unmute" : "Mute"
+                    ToolTip.visible: hovered
+                    
+                    contentItem: Text {
+                        text: parent.text
+                        font: parent.font
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: parent.enabled ? Kirigami.Theme.textColor : Kirigami.Theme.disabledTextColor
+                    }
                 }
                 
-                ComboBox {
-                    id: qualityBox
-                    model: ListModel {
-                        id: qualityModel
-                        ListElement { text: "1 (48k)"; value: "1"; applicable: true }
-                        ListElement { text: "2 (320k)"; value: "2"; applicable: true }
-                        ListElement { text: "3 (HQ)"; value: "3"; applicable: true }
-                    }
-                    textRole: "text"
-                    valueRole: "value"
-                    
-                    // Only enable for RadCap stations
-                    enabled: currentStationHost && !currentStationHost.includes("somafm.com") && currentStationUrl !== ""
-                    
-                    // Set initial index based on loaded quality
-                    Component.onCompleted: {
-                        for (var i = 0; i < qualityModel.count; i++) {
-                            if (qualityModel.get(i).value === streamQuality) {
-                                currentIndex = i
-                                break
-                            }
-                        }
-                    }
-                    
-                    // Update applicability based on current station
-                    function updateQualityApplicability() {
-                        var isSomaFM = currentStationHost && currentStationHost.includes("somafm.com")
-                        
-                        for (var i = 0; i < qualityModel.count; i++) {
-                            var item = qualityModel.get(i)
-                            if (isSomaFM) {
-                                // SomaFM: Only quality 1 and 2 are applicable
-                                qualityModel.setProperty(i, "applicable", item.value === "1" || item.value === "2")
-                            } else {
-                                // RadCap: All qualities are applicable
-                                qualityModel.setProperty(i, "applicable", true)
-                            }
-                        }
-                    }
-                    
-                    // Custom delegate to grey out inapplicable options
-                    delegate: ItemDelegate {
-                        width: qualityBox.width
-                        contentItem: Text {
-                            text: model.text
-                            color: model.applicable ? 
-                                   Kirigami.Theme.textColor : 
-                                   Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.4)
-                            font: qualityBox.font
-                            elide: Text.ElideRight
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        highlighted: qualityBox.highlightedIndex === index
-                        enabled: model.applicable
-                    }
-                    
-                    onCurrentValueChanged: {
-                        if (currentValue !== streamQuality) {
-                            streamQuality = currentValue
-                            saveQualitySetting()
-                            console.log("=== QUALITY CHANGE ===")
-                            console.log("Quality changed to level:", streamQuality)
-                            console.log("Current station name:", currentStationName)
-                            console.log("Current station URL:", currentStationUrl)
-                            // Reload current station with new quality
-                            reloadCurrentStation()
-                        }
-                    }
-                    
-                    // Update applicability when station changes
-                    Connections {
-                        target: root
-                        function onCurrentStationHostChanged() {
-                            qualityBox.updateQualityApplicability()
-                        }
-                    }
-                    
-                    implicitWidth: Math.max(70, Math.min(90, root.width / 8))
+                Slider {
+                    id: compactVolumeSlider
+                    from: 0
+                    to: 1
+                    value: 0.5
+                    Layout.preferredWidth: Math.max(80, Math.min(120, root.width / 4))
+                    enabled: !audioOut.muted
                     Layout.alignment: Qt.AlignVCenter
+                    
+                    // Save volume level when changed
+                    onValueChanged: {
+                        saveVolumeLevel(value)
+                    }
                 }
                 
                 Label {
@@ -3274,64 +3261,6 @@ PlasmoidItem {
             }
         }
         
-        // Always-visible Volume Control (Bottom)
-        Rectangle {
-            Layout.fillWidth: true
-            height: Math.max(45, Math.min(55, root.height * 0.1))
-            color: Kirigami.Theme.backgroundColor
-            radius: 8
-            border.width: 1
-            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.2)
-            
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 12
-                
-                Text {
-                    text: "♪"
-                    font.pointSize: Math.max(12, Math.min(16, root.width / 25))
-                    color: Kirigami.Theme.textColor
-                    Layout.alignment: Qt.AlignVCenter
-                }
-                
-                Button {
-                    text: audioOut.muted ? "🔇" : "🔊"
-                    font.pointSize: Math.max(12, Math.min(16, root.width / 25))
-                    onClicked: audioOut.muted = !audioOut.muted
-                    implicitWidth: Math.max(35, Math.min(45, root.width / 15))
-                    implicitHeight: Math.max(30, Math.min(40, root.height / 20))
-                    Layout.alignment: Qt.AlignVCenter
-                    flat: true
-                    
-                    ToolTip.text: audioOut.muted ? "Unmute" : "Mute"
-                    ToolTip.visible: hovered
-                }
-                
-                Slider {
-                    id: persistentVolumeSlider
-                    from: 0
-                    to: 1
-                    value: 0.5
-                    Layout.fillWidth: true
-                    enabled: !audioOut.muted
-                    Layout.alignment: Qt.AlignVCenter
-                    
-                    // Save volume level when changed
-                    onValueChanged: {
-                        saveVolumeLevel(value)
-                    }
-                }
-                
-                Text {
-                    text: Math.round(persistentVolumeSlider.value * 100) + "%"
-                    font.pointSize: Math.max(10, Math.min(13, root.width / 30))
-                    color: Kirigami.Theme.disabledTextColor
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.minimumWidth: 40
-                }
-            }
-        }
     } // ColumnLayout
     
     // Add/Edit Custom Radio Dialog (Manual Entry Only)

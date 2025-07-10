@@ -22,9 +22,21 @@
       <label>Volume level</label>
       <default>0.5</default>
     </entry>
-    <entry name="streamQuality" type="String">
-      <label>Stream quality setting</label>
-      <default>3</default>
+    <entry name="lastStationName" type="String">
+      <label>Last selected station name</label>
+      <default></default>
+    </entry>
+    <entry name="lastStationUrl" type="String">
+      <label>Last selected station URL</label>
+      <default></default>
+    </entry>
+    <entry name="lastStationHost" type="String">
+      <label>Last selected station host</label>
+      <default></default>
+    </entry>
+    <entry name="lastStationPath" type="String">
+      <label>Last selected station path</label>
+      <default></default>
     </entry>
   </group>
 
