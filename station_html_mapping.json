@@ -1,0 +1,1672 @@
+{
+  "happyhardcore": [
+    "happyhardcore"
+  ],
+  "jazz": [
+    "jazz"
+  ],
+  "saxophone": [
+    "saxophone"
+  ],
+  "contclass": [
+    "contclass"
+  ],
+  "slowcore": [
+    "slowcore"
+  ],
+  "avantrock": [
+    "avantrock"
+  ],
+  "kpop": [
+    "kpop"
+  ],
+  "rootsreggae": [
+    "rootsreggae"
+  ],
+  "metalcore": [
+    "metalcore"
+  ],
+  "deathnroll": [
+    "deathnroll"
+  ],
+  "oldschoolhiphop": [
+    "oldschoolhiphop",
+    "oldschhiphop"
+  ],
+  "countrypop": [
+    "countrypop"
+  ],
+  "powerelectronics": [
+    "powerelectronics"
+  ],
+  "andean": [
+    "andean"
+  ],
+  "classical": [
+    "classical",
+    "classicalpiano",
+    "modernclassical",
+    "neoclassical"
+  ],
+  "psychobilly": [
+    "psychobilly"
+  ],
+  "postbop": [
+    "postbop"
+  ],
+  "ebm": [
+    "ebm"
+  ],
+  "atmosphericdoom": [
+    "atmosphericdoom",
+    "atmosdoom",
+    "melodicdoom",
+    "gothicdoom"
+  ],
+  "accordion": [
+    "accordion"
+  ],
+  "hammond": [
+    "hammond"
+  ],
+  "freestyle": [
+    "freestyle"
+  ],
+  "altrock": [
+    "altrock"
+  ],
+  "eclecticprog": [
+    "eclecticprog"
+  ],
+  "psybient": [
+    "psybient"
+  ],
+  "afrobeat": [
+    "afrobeat"
+  ],
+  "oistreetpunk": [
+    "oistreetpunk"
+  ],
+  "skapunk": [
+    "skapunk"
+  ],
+  "darkmetal": [
+    "darkmetal"
+  ],
+  "triphop": [
+    "triphop"
+  ],
+  "progmetalcore": [
+    "progmetalcore"
+  ],
+  "rnb": [
+    "rnb"
+  ],
+  "riddimdubstep": [
+    "riddimdubstep"
+  ],
+  "clubdance": [
+    "clubdance",
+    "club",
+    "italodance",
+    "eurodance"
+  ],
+  "darkambient": [
+    "darkambient"
+  ],
+  "celtic": [
+    "celtic"
+  ],
+  "acidrock": [
+    "acidrock"
+  ],
+  "organ": [
+    "organ"
+  ],
+  "rpi": [
+    "rpi"
+  ],
+  "idm": [
+    "idm"
+  ],
+  "klezmer": [
+    "klezmer"
+  ],
+  "gangstarap": [
+    "gangstarap"
+  ],
+  "impressionism": [
+    "impressionism"
+  ],
+  "dungeonsynth": [
+    "dungeonsynth"
+  ],
+  "manouche": [
+    "manouche"
+  ],
+  "postrock": [
+    "postrock"
+  ],
+  "symphorock": [
+    "symphorock"
+  ],
+  "poppunk": [
+    "poppunk"
+  ],
+  "heavypsych": [
+    "heavypsych"
+  ],
+  "phonk": [
+    "phonk"
+  ],
+  "thrashdeath": [
+    "thrashdeath"
+  ],
+  "souljazz": [
+    "souljazz"
+  ],
+  "hardstyle": [
+    "hardstyle"
+  ],
+  "detroittechno": [
+    "detroittechno",
+    "industrialtechno",
+    "detroittech",
+    "darktechno"
+  ],
+  "jumpblues": [
+    "jumpblues"
+  ],
+  "shansonru": [
+    "shansonru"
+  ],
+  "country": [
+    "country"
+  ],
+  "aabmds": [
+    "aabmds"
+  ],
+  "straightahead": [
+    "straightahead"
+  ],
+  "neurofunk": [
+    "neurofunk"
+  ],
+  "clarinet": [
+    "clarinet"
+  ],
+  "indiepop": [
+    "indiepop",
+    "indierock",
+    "indietweepop",
+    "indiefolk"
+  ],
+  "oratorio": [
+    "oratorio"
+  ],
+  "beatdown": [
+    "beatdown"
+  ],
+  "gothblackmet": [
+    "gothblackmet"
+  ],
+  "indiefolk": [
+    "indiefolk"
+  ],
+  "soundnat": [
+    "soundnat",
+    "sonata",
+    "soundsnat"
+  ],
+  "fluteclass": [
+    "fluteclass"
+  ],
+  "progrelated": [
+    "progrelated"
+  ],
+  "garagehouse": [
+    "garagehouse"
+  ],
+  "proghouse": [
+    "proghouse"
+  ],
+  "idmambient": [
+    "idmambient"
+  ],
+  "postmetal": [
+    "postmetal"
+  ],
+  "poprock": [
+    "poprock"
+  ],
+  "eurobeat": [
+    "eurobeat"
+  ],
+  "latinjazz": [
+    "latinjazz"
+  ],
+  "vibraphone": [
+    "vibraphone",
+    "saxophone",
+    "vibraphonejazz"
+  ],
+  "leftfield": [
+    "leftfield"
+  ],
+  "americana": [
+    "americana"
+  ],
+  "enigmatic": [
+    "enigmatic"
+  ],
+  "nwobhm": [
+    "nwobhm"
+  ],
+  "newbeat": [
+    "newbeat"
+  ],
+  "futurepop": [
+    "futurepop"
+  ],
+  "avantgardejazz": [
+    "avantgardejazz"
+  ],
+  "psychfolk": [
+    "psychfolk"
+  ],
+  "popballads": [
+    "popballads",
+    "popball"
+  ],
+  "darkdubstep": [
+    "darkdubstep"
+  ],
+  "avantblackmet": [
+    "avantblackmet",
+    "gothblackmet",
+    "avantgardeblack",
+    "blackmetal"
+  ],
+  "experimentaltechno": [
+    "experimentaltechno",
+    "exptechno",
+    "ambienttechno",
+    "experimental"
+  ],
+  "chillout": [
+    "chillout"
+  ],
+  "bigroomhouse": [
+    "bigroomhouse"
+  ],
+  "mathcore": [
+    "mathcore",
+    "deathcore",
+    "rapcore",
+    "metalcore"
+  ],
+  "glitch": [
+    "glitch"
+  ],
+  "italodisco": [
+    "italodisco"
+  ],
+  "postshanson": [
+    "postshanson"
+  ],
+  "neoclassical": [
+    "neoclassical"
+  ],
+  "progtrance": [
+    "progtrance"
+  ],
+  "funkrock": [
+    "funkrock"
+  ],
+  "breakcore": [
+    "breakcore"
+  ],
+  "instrumentalmetal": [
+    "instrumentalmetal",
+    "instrumental",
+    "industrialmetal",
+    "instrmetal"
+  ],
+  "rootsrock": [
+    "rootsrock"
+  ],
+  "heavypowermetal": [
+    "heavypowermetal"
+  ],
+  "dixieland": [
+    "dixieland"
+  ],
+  "ndh": [
+    "ndh"
+  ],
+  "numetal": [
+    "numetal"
+  ],
+  "mathmetal": [
+    "mathmetal"
+  ],
+  "westcoastblues": [
+    "westcoastblues"
+  ],
+  "house": [
+    "house"
+  ],
+  "popsoul": [
+    "popsoul"
+  ],
+  "countryrock": [
+    "countryrock"
+  ],
+  "edmtrap": [
+    "edmtrap"
+  ],
+  "electroindustrial": [
+    "electroindustrial"
+  ],
+  "chorus": [
+    "chorus",
+    "ghouse",
+    "crust",
+    "house"
+  ],
+  "speedmetal": [
+    "speedmetal"
+  ],
+  "folkpunk": [
+    "folkpunk"
+  ],
+  "classguitar": [
+    "classguitar"
+  ],
+  "garagepunk": [
+    "garagepunk"
+  ],
+  "suomisaundi": [
+    "suomisaundi"
+  ],
+  "illbient": [
+    "illbient"
+  ],
+  "dubtechno": [
+    "dubtechno",
+    "dubtech",
+    "darktechno",
+    "techno"
+  ],
+  "witchhouse": [
+    "witchhouse"
+  ],
+  "eastcoastrap": [
+    "eastcoastrap",
+    "gangstarap",
+    "westcoastblues",
+    "eastcoast"
+  ],
+  "postpunk": [
+    "postpunk"
+  ],
+  "chamberjazz": [
+    "chamberjazz"
+  ],
+  "indierock": [
+    "indierock"
+  ],
+  "crossoverthrash": [
+    "crossoverthrash"
+  ],
+  "grime": [
+    "grime"
+  ],
+  "mantras": [
+    "mantras"
+  ],
+  "horrorpunk": [
+    "horrorpunk"
+  ],
+  "chillwave": [
+    "chillwave"
+  ],
+  "soulblues": [
+    "soulblues"
+  ],
+  "southernrap": [
+    "southernrap"
+  ],
+  "poetryru": [
+    "poetryru",
+    "poetry",
+    "popru"
+  ],
+  "deltablues": [
+    "deltablues"
+  ],
+  "harshnoise": [
+    "harshnoise"
+  ],
+  "ambienttechno": [
+    "ambienttechno"
+  ],
+  "arabicpop": [
+    "arabicpop"
+  ],
+  "contemporaryjazz": [
+    "contemporaryjazz"
+  ],
+  "freefunk": [
+    "freefunk"
+  ],
+  "electroclash": [
+    "electroclash"
+  ],
+  "vocaljazz": [
+    "vocaljazz"
+  ],
+  "eurodisco": [
+    "eurodisco"
+  ],
+  "melodicheavy": [
+    "melodicheavy"
+  ],
+  "darkfolk": [
+    "darkfolk"
+  ],
+  "hardbop": [
+    "hardbop"
+  ],
+  "ambient": [
+    "ambient"
+  ],
+  "ethereal": [
+    "ethereal"
+  ],
+  "flamenco": [
+    "flamenco"
+  ],
+  "rapcore": [
+    "rapcore"
+  ],
+  "hardtrance": [
+    "hardtrance"
+  ],
+  "reggaeton": [
+    "reggaeton"
+  ],
+  "neoprogrock": [
+    "neoprogrock"
+  ],
+  "fado": [
+    "fado"
+  ],
+  "ussr": [
+    "ussr"
+  ],
+  "italodance": [
+    "italodance"
+  ],
+  "pumpinghouse": [
+    "pumpinghouse"
+  ],
+  "chamberpop": [
+    "chamberpop"
+  ],
+  "psyprog": [
+    "psyprog"
+  ],
+  "gothicrock": [
+    "gothicrock"
+  ],
+  "brokenbeat": [
+    "brokenbeat"
+  ],
+  "freejazz": [
+    "freejazz"
+  ],
+  "dub": [
+    "dub"
+  ],
+  "futurebass": [
+    "futurebass"
+  ],
+  "rockballads": [
+    "rockballads",
+    "rockabilly",
+    "rockroll",
+    "rockball"
+  ],
+  "romantic": [
+    "romantic"
+  ],
+  "melodicpower": [
+    "melodicpower"
+  ],
+  "acousticblues": [
+    "acousticblues"
+  ],
+  "nativeamerican": [
+    "nativeamerican",
+    "americana",
+    "natam"
+  ],
+  "orientalmetal": [
+    "orientalmetal"
+  ],
+  "jazzfusion": [
+    "jazzfusion",
+    "jazzfunk",
+    "fusion"
+  ],
+  "hitechpsy": [
+    "hitechpsy"
+  ],
+  "indiancinema": [
+    "indiancinema"
+  ],
+  "symphopower": [
+    "symphopower"
+  ],
+  "cpop": [
+    "cpop",
+    "kpop",
+    "jpop",
+    "pop"
+  ],
+  "darkelectro": [
+    "darkelectro"
+  ],
+  "glam": [
+    "glam"
+  ],
+  "tradpop": [
+    "tradpop",
+    "traditionalpop",
+    "italopop",
+    "triphop"
+  ],
+  "tribalhouse": [
+    "tribalhouse"
+  ],
+  "deathmetal": [
+    "deathmetal"
+  ],
+  "soul": [
+    "soul"
+  ],
+  "mpb": [
+    "mpb"
+  ],
+  "blues": [
+    "blues"
+  ],
+  "stonerrock": [
+    "stonerrock"
+  ],
+  "avantgardemetal": [
+    "avantgardemetal",
+    "avantmetal",
+    "avantgardeblack",
+    "avantgardejazz"
+  ],
+  "singersongwriter": [
+    "singersongwriter"
+  ],
+  "bossanova": [
+    "bossanova"
+  ],
+  "futuregarage": [
+    "futuregarage"
+  ],
+  "symphonicblackmetal": [
+    "symphonicblackmetal",
+    "blackmetal",
+    "symphoblack",
+    "symphometal"
+  ],
+  "dreampop": [
+    "dreampop"
+  ],
+  "symphometal": [
+    "symphometal"
+  ],
+  "oceania": [
+    "oceania"
+  ],
+  "retrowave": [
+    "retrowave"
+  ],
+  "countryblues": [
+    "countryblues"
+  ],
+  "nightpsytrance": [
+    "nightpsytrance",
+    "nightpsy",
+    "forestpsytrance",
+    "psytrance"
+  ],
+  "lovesongs": [
+    "lovesongs"
+  ],
+  "progbreaks": [
+    "progbreaks"
+  ],
+  "memphisrap": [
+    "memphisrap"
+  ],
+  "ambienthouse": [
+    "ambienthouse"
+  ],
+  "nudisco": [
+    "nudisco"
+  ],
+  "crossoverprog": [
+    "crossoverprog"
+  ],
+  "industrialtechno": [
+    "industrialtechno"
+  ],
+  "rocksteady": [
+    "rocksteady"
+  ],
+  "louisianablues": [
+    "louisianablues"
+  ],
+  "droneambient": [
+    "droneambient"
+  ],
+  "gospel": [
+    "gospel"
+  ],
+  "healing": [
+    "healing"
+  ],
+  "middleeast": [
+    "middleeast"
+  ],
+  "bardru": [
+    "bardru",
+    "bard",
+    "baroque"
+  ],
+  "melodicdoom": [
+    "melodicdoom"
+  ],
+  "funeraldoom": [
+    "funeraldoom"
+  ],
+  "slideguitar": [
+    "slideguitar"
+  ],
+  "classcross": [
+    "classcross"
+  ],
+  "medievalmetal": [
+    "medievalmetal"
+  ],
+  "synthpop": [
+    "synthpop"
+  ],
+  "rock": [
+    "rock"
+  ],
+  "opera": [
+    "opera"
+  ],
+  "psychedelicrock": [
+    "psychedelicrock"
+  ],
+  "medievalfolk": [
+    "medievalfolk"
+  ],
+  "darkwave": [
+    "darkwave"
+  ],
+  "texasblues": [
+    "texasblues"
+  ],
+  "bluegrass": [
+    "bluegrass"
+  ],
+  "jazzmetal": [
+    "jazzmetal"
+  ],
+  "europeanfolk": [
+    "europeanfolk"
+  ],
+  "folkrockru": [
+    "folkrockru"
+  ],
+  "latinhouse": [
+    "latinhouse"
+  ],
+  "deephouse": [
+    "deephouse"
+  ],
+  "jazzpop": [
+    "jazzpop"
+  ],
+  "forestpsytrance": [
+    "forestpsytrance"
+  ],
+  "progdeath": [
+    "progdeath"
+  ],
+  "melodicmetalcore": [
+    "melodicmetalcore"
+  ],
+  "modernclassical": [
+    "modernclassical"
+  ],
+  "thrashheavy": [
+    "thrashheavy"
+  ],
+  "swing": [
+    "swing"
+  ],
+  "rapru": [
+    "rapru"
+  ],
+  "aor": [
+    "aor"
+  ],
+  "powermetal": [
+    "powermetal"
+  ],
+  "melodicdeath": [
+    "melodicdeath",
+    "melodicpower",
+    "melodicdoom",
+    "melodicheavy"
+  ],
+  "breakbeat": [
+    "breakbeat"
+  ],
+  "twilightpsy": [
+    "twilightpsy"
+  ],
+  "chalga": [
+    "chalga"
+  ],
+  "jazzrap": [
+    "jazzrap"
+  ],
+  "gothdeathmet": [
+    "gothdeathmet"
+  ],
+  "dancehall": [
+    "dancehall"
+  ],
+  "baroque": [
+    "baroque"
+  ],
+  "instrumental": [
+    "instrumental"
+  ],
+  "instrumentalrock": [
+    "instrumentalrock"
+  ],
+  "jazzfunk": [
+    "jazzfunk"
+  ],
+  "bebop": [
+    "bebop"
+  ],
+  "progelectronic": [
+    "progelectronic"
+  ],
+  "vocal": [
+    "vocal"
+  ],
+  "vocaltrance": [
+    "vocaltrance",
+    "trance",
+    "voctrance",
+    "goatrance"
+  ],
+  "nujazz": [
+    "nujazz"
+  ],
+  "hardrock": [
+    "hardrock"
+  ],
+  "relaxation": [
+    "relaxation"
+  ],
+  "crust": [
+    "crust"
+  ],
+  "punk": [
+    "punk"
+  ],
+  "ukhiphop": [
+    "ukhiphop"
+  ],
+  "makina": [
+    "makina"
+  ],
+  "fieldrecording": [
+    "fieldrecording",
+    "electroswing",
+    "fieldrecordings"
+  ],
+  "classavant": [
+    "classavant"
+  ],
+  "blackdeath": [
+    "blackdeath"
+  ],
+  "chicagoblues": [
+    "chicagoblues"
+  ],
+  "modaljazz": [
+    "modaljazz"
+  ],
+  "rockabilly": [
+    "rockabilly"
+  ],
+  "gothicmetal": [
+    "gothicmetal",
+    "gothmetal",
+    "postmetal",
+    "celticmetal"
+  ],
+  "darktechno": [
+    "darktechno"
+  ],
+  "celticrock": [
+    "celticrock"
+  ],
+  "gabber": [
+    "gabber"
+  ],
+  "dronemetal": [
+    "dronemetal"
+  ],
+  "latinpop": [
+    "latinpop"
+  ],
+  "soulfulhouse": [
+    "soulfulhouse"
+  ],
+  "tradelectronic": [
+    "tradelectronic"
+  ],
+  "folkblackmet": [
+    "folkblackmet",
+    "gothblackmet",
+    "folkblackmetal",
+    "blackmetal"
+  ],
+  "deathcore": [
+    "deathcore"
+  ],
+  "pop": [
+    "pop"
+  ],
+  "anime": [
+    "anime"
+  ],
+  "bigband": [
+    "bigband"
+  ],
+  "dubstep": [
+    "dubstep"
+  ],
+  "ghouse": [
+    "ghouse"
+  ],
+  "electrotechno": [
+    "electrotechno",
+    "electrotech",
+    "electrohouse",
+    "electroclash"
+  ],
+  "screamoemo": [
+    "screamoemo",
+    "emoscreamo"
+  ],
+  "psytrance": [
+    "psytrance"
+  ],
+  "manele": [
+    "manele"
+  ],
+  "artrock": [
+    "artrock"
+  ],
+  "oldies": [
+    "oldies"
+  ],
+  "chicanorap": [
+    "chicanorap"
+  ],
+  "undergroundrap": [
+    "undergroundrap"
+  ],
+  "dreamtrance": [
+    "dreamtrance"
+  ],
+  "medieval": [
+    "medieval"
+  ],
+  "thirdstream": [
+    "thirdstream"
+  ],
+  "nitzhonot": [
+    "nitzhonot"
+  ],
+  "westernswing": [
+    "westernswing"
+  ],
+  "symphodeath": [
+    "symphodeath",
+    "symphodeathmet",
+    "progdeath",
+    "symphometal"
+  ],
+  "doom": [
+    "doom",
+    "atmosdoom",
+    "blackdoom",
+    "doommetal"
+  ],
+  "hardcorerap": [
+    "hardcorerap"
+  ],
+  "abstracthiphop": [
+    "abstracthiphop"
+  ],
+  "undergroundtechno": [
+    "undergroundtechno"
+  ],
+  "blackmetal": [
+    "blackmetal"
+  ],
+  "minimalism": [
+    "minimalism"
+  ],
+  "musiqueconcrete": [
+    "musiqueconcrete",
+    "concrete"
+  ],
+  "mainstreamjazz": [
+    "mainstreamjazz",
+    "latinjazz",
+    "mainstream"
+  ],
+  "crossoverjazz": [
+    "crossoverjazz"
+  ],
+  "postgrunge": [
+    "postgrunge"
+  ],
+  "hiphopsoul": [
+    "hiphopsoul"
+  ],
+  "harpblues": [
+    "harpblues",
+    "blues",
+    "heavyblues",
+    "harmonicablues"
+  ],
+  "progpowermetal": [
+    "progpowermetal"
+  ],
+  "trance": [
+    "trance"
+  ],
+  "downtempo": [
+    "downtempo"
+  ],
+  "germanrap": [
+    "germanrap",
+    "gangstarap",
+    "mantras",
+    "germanhiphop"
+  ],
+  "jungle": [
+    "jungle"
+  ],
+  "hardcoremetal": [
+    "hardcoremetal",
+    "hardcorerap",
+    "hardcore",
+    "hardcoretech"
+  ],
+  "trumpetjazz": [
+    "trumpetjazz",
+    "jazztrumpet",
+    "freejazz",
+    "instrumental"
+  ],
+  "experimentalmusic": [
+    "experimentalmusic",
+    "epicmetal",
+    "experimental"
+  ],
+  "ethnotronica": [
+    "ethnotronica"
+  ],
+  "gypsyru": [
+    "gypsyru",
+    "gypsy"
+  ],
+  "jazzrock": [
+    "jazzrock"
+  ],
+  "deathrock": [
+    "deathrock"
+  ],
+  "salsa": [
+    "salsa",
+    "latin"
+  ],
+  "southernrock": [
+    "southernrock"
+  ],
+  "freeimprovisation": [
+    "freeimprovisation"
+  ],
+  "celticmetal": [
+    "celticmetal"
+  ],
+  "visualkei": [
+    "visualkei"
+  ],
+  "popru": [
+    "popru"
+  ],
+  "grindcore": [
+    "grindcore"
+  ],
+  "indieelectronic": [
+    "indieelectronic"
+  ],
+  "misc": [
+    "misc"
+  ],
+  "mintechhouse": [
+    "mintechhouse"
+  ],
+  "folkpop": [
+    "folkpop"
+  ],
+  "russianfolk": [
+    "russianfolk",
+    "europeanfolk",
+    "africanfolk",
+    "russian"
+  ],
+  "guitarjazz": [
+    "guitarjazz"
+  ],
+  "darkjazz": [
+    "darkjazz"
+  ],
+  "erotic": [
+    "erotic"
+  ],
+  "frenchpop": [
+    "frenchpop"
+  ],
+  "mathrock": [
+    "mathrock"
+  ],
+  "easylistening": [
+    "easylistening"
+  ],
+  "darkpsytrance": [
+    "darkpsytrance"
+  ],
+  "chiptune": [
+    "chiptune"
+  ],
+  "africanfolk": [
+    "africanfolk"
+  ],
+  "90collection": [
+    "90collection",
+    "clavecin"
+  ],
+  "progressiverock": [
+    "progressiverock",
+    "depressiveblack",
+    "progelectronic",
+    "progrock"
+  ],
+  "upliftingtrance": [
+    "upliftingtrance"
+  ],
+  "folkdeathmet": [
+    "folkdeathmet",
+    "gothdeathmet",
+    "deathmetal",
+    "folkdeathmetal"
+  ],
+  "reggae": [
+    "reggae"
+  ],
+  "groovemetal": [
+    "groovemetal"
+  ],
+  "postblack": [
+    "postblack"
+  ],
+  "frenchrap": [
+    "frenchrap",
+    "frenchhiphop",
+    "frenchpop"
+  ],
+  "spacerock": [
+    "spacerock"
+  ],
+  "classpiano": [
+    "classpiano",
+    "classavant",
+    "piano",
+    "classicalpiano"
+  ],
+  "krautrock": [
+    "krautrock"
+  ],
+  "britpop": [
+    "britpop"
+  ],
+  "electroswing": [
+    "electroswing"
+  ],
+  "mcreative": [
+    "mcreative",
+    "moderncreative"
+  ],
+  "martialindustrial": [
+    "martialindustrial"
+  ],
+  "renaissance": [
+    "renaissance"
+  ],
+  "christianrock": [
+    "christianrock"
+  ],
+  "bluesrock": [
+    "bluesrock"
+  ],
+  "zydeco": [
+    "zydeco"
+  ],
+  "gothdoommet": [
+    "gothdoommet",
+    "gothmetal",
+    "doommetal",
+    "gothicdoom"
+  ],
+  "ethnojazz": [
+    "ethnojazz"
+  ],
+  "cantata": [
+    "cantata"
+  ],
+  "metalstep": [
+    "metalstep"
+  ],
+  "grunge": [
+    "grunge"
+  ],
+  "jamband": [
+    "jamband"
+  ],
+  "industrialrock": [
+    "industrialrock"
+  ],
+  "rockroll": [
+    "rockroll"
+  ],
+  "smoothjazz": [
+    "smoothjazz"
+  ],
+  "paganmetal": [
+    "paganmetal"
+  ],
+  "symphony": [
+    "symphony"
+  ],
+  "newage": [
+    "newage"
+  ],
+  "70collection": [
+    "70collection",
+    "clavecin"
+  ],
+  "speedheavy": [
+    "speedheavy"
+  ],
+  "dancepunk": [
+    "dancepunk"
+  ],
+  "electronicore": [
+    "electronicore"
+  ],
+  "organichouse": [
+    "organichouse"
+  ],
+  "progfolk": [
+    "progfolk"
+  ],
+  "neoclassicalmetal": [
+    "neoclassicalmetal"
+  ],
+  "dancepop": [
+    "dancepop"
+  ],
+  "mintechno": [
+    "mintechno",
+    "ambienttechno",
+    "techno",
+    "mintech"
+  ],
+  "piano": [
+    "piano"
+  ],
+  "industrialmetal": [
+    "industrialmetal"
+  ],
+  "clavecin": [
+    "clavecin"
+  ],
+  "balearichouse": [
+    "balearichouse"
+  ],
+  "liquidfunk": [
+    "liquidfunk"
+  ],
+  "pianojazz": [
+    "pianojazz"
+  ],
+  "hardcoretech": [
+    "hardcoretech"
+  ],
+  "shoegazing": [
+    "shoegazing",
+    "shoegaze",
+    "healing"
+  ],
+  "techdeathmetal": [
+    "techdeathmetal",
+    "gothdeathmet",
+    "deathmetal",
+    "thrashmetal"
+  ],
+  "funkyhouse": [
+    "funkyhouse"
+  ],
+  "techno": [
+    "techno"
+  ],
+  "folkrock": [
+    "folkrock"
+  ],
+  "funk": [
+    "funk"
+  ],
+  "rap": [
+    "rap"
+  ],
+  "slavonicneofolk": [
+    "slavonicneofolk",
+    "slavonic",
+    "africanfolk"
+  ],
+  "dsbm": [
+    "dsbm"
+  ],
+  "thrashmetal": [
+    "thrashmetal"
+  ],
+  "chamber": [
+    "chamber"
+  ],
+  "thrashblack": [
+    "thrashblack"
+  ],
+  "musicgame": [
+    "musicgame"
+  ],
+  "symphogoth": [
+    "symphogoth",
+    "symphogothmet",
+    "symphopower",
+    "symphorock"
+  ],
+  "lounge": [
+    "lounge"
+  ],
+  "techtrance": [
+    "techtrance"
+  ],
+  "caucasus": [
+    "caucasus"
+  ],
+  "spacemusic": [
+    "spacemusic"
+  ],
+  "ambientdub": [
+    "ambientdub"
+  ],
+  "orthodox": [
+    "orthodox"
+  ],
+  "goatrance": [
+    "goatrance"
+  ],
+  "trailer": [
+    "trailer"
+  ],
+  "deathstep": [
+    "deathstep"
+  ],
+  "laika": [
+    "laika",
+    "latin",
+    "laiko"
+  ],
+  "altcountry": [
+    "altcountry"
+  ],
+  "chants": [
+    "chants",
+    "mantras",
+    "frchanson",
+    "chant"
+  ],
+  "melodicblackmetal": [
+    "melodicblackmetal",
+    "melodicmetalcore",
+    "folkblackmetal",
+    "blackmetal"
+  ],
+  "eurodance": [
+    "eurodance"
+  ],
+  "drumbass": [
+    "drumbass"
+  ],
+  "melodichouse": [
+    "melodichouse"
+  ],
+  "tango": [
+    "tango"
+  ],
+  "sonata": [
+    "sonata"
+  ],
+  "acousticguitar": [
+    "acousticguitar"
+  ],
+  "progheavy": [
+    "progheavy",
+    "proghouse",
+    "progmetal",
+    "progheavymetal"
+  ],
+  "pianoblues": [
+    "pianoblues"
+  ],
+  "jumpstyle": [
+    "jumpstyle"
+  ],
+  "romanceru": [
+    "romanceru",
+    "trance",
+    "romance",
+    "romantic"
+  ],
+  "cantopop": [
+    "cantopop"
+  ],
+  "hiphop": [
+    "hiphop"
+  ],
+  "italopop": [
+    "italopop"
+  ],
+  "siberia": [
+    "siberia"
+  ],
+  "avantprog": [
+    "avantprog"
+  ],
+  "brutaldeathmetal": [
+    "brutaldeathmetal",
+    "deathmetal",
+    "brutaldeath",
+    "folkdeathmetal"
+  ],
+  "spacesynth": [
+    "spacesynth"
+  ],
+  "drumstep": [
+    "drumstep"
+  ],
+  "ska": [
+    "ska"
+  ],
+  "turkishpop": [
+    "turkishpop"
+  ],
+  "industrial": [
+    "industrial"
+  ],
+  "jpop": [
+    "jpop"
+  ],
+  "garagerock": [
+    "garagerock"
+  ],
+  "strings": [
+    "strings"
+  ],
+  "cloudrap": [
+    "cloudrap"
+  ],
+  "honkytonk": [
+    "honkytonk"
+  ],
+  "frenchchanson": [
+    "frenchchanson",
+    "frenchhiphop",
+    "frchanson",
+    "frenchpop"
+  ],
+  "powernoise": [
+    "powernoise"
+  ],
+  "instrumentalhiphop": [
+    "instrumentalhiphop"
+  ],
+  "posthardcore": [
+    "posthardcore"
+  ],
+  "flute": [
+    "flute"
+  ],
+  "acidjazz": [
+    "acidjazz"
+  ],
+  "indianfolk": [
+    "indianfolk",
+    "indian",
+    "indiefolk",
+    "darkfolk"
+  ],
+  "newwave": [
+    "newwave"
+  ],
+  "vikingmetal": [
+    "vikingmetal"
+  ],
+  "noiserock": [
+    "noiserock"
+  ],
+  "acid": [
+    "acid"
+  ],
+  "cooljazz": [
+    "cooljazz"
+  ],
+  "hardhouse": [
+    "hardhouse"
+  ],
+  "surfrock": [
+    "surfrock"
+  ],
+  "clubru": [
+    "clubru"
+  ],
+  "epicmetal": [
+    "epicmetal"
+  ],
+  "brazilianjazz": [
+    "brazilianjazz"
+  ],
+  "balkan": [
+    "balkan"
+  ],
+  "80ru": [
+    "80ru"
+  ],
+  "cyberpunk": [
+    "cyberpunk"
+  ],
+  "electricblues": [
+    "electricblues"
+  ],
+  "00collection": [
+    "00collection",
+    "clavecin"
+  ],
+  "fareast": [
+    "fareast"
+  ],
+  "lo-fi": [
+    "lo-fi"
+  ],
+  "punkru": [
+    "punkru"
+  ],
+  "folkmetal": [
+    "folkmetal"
+  ],
+  "electro": [
+    "electro"
+  ],
+  "60collection": [
+    "60collection",
+    "clavecin"
+  ],
+  "blackdoom": [
+    "blackdoom"
+  ],
+  "fullon": [
+    "fullon"
+  ],
+  "harp": [
+    "harp"
+  ],
+  "rusmilsong": [
+    "rusmilsong"
+  ],
+  "darkcabaret": [
+    "darkcabaret"
+  ],
+  "schlager": [
+    "schlager"
+  ],
+  "ballroomdance": [
+    "ballroomdance",
+    "italodance",
+    "romance",
+    "ballroom"
+  ],
+  "ecmrecords": [
+    "ecmrecords",
+    "fieldrecordings"
+  ],
+  "sacred": [
+    "sacred"
+  ],
+  "darksynth": [
+    "darksynth"
+  ],
+  "pubrock": [
+    "pubrock"
+  ],
+  "pop80": [
+    "pop80",
+    "kpop",
+    "jpop",
+    "pop"
+  ],
+  "meditation": [
+    "meditation"
+  ],
+  "sludgemetal": [
+    "sludgemetal"
+  ],
+  "disco": [
+    "disco"
+  ],
+  "heavyblues": [
+    "heavyblues"
+  ],
+  "heavyprog": [
+    "heavyprog"
+  ],
+  "pianorock": [
+    "pianorock"
+  ],
+  "deathdoom": [
+    "deathdoom",
+    "atmosdoom",
+    "deathcore",
+    "deathrock"
+  ],
+  "femalemetal": [
+    "femalemetal"
+  ],
+  "lute": [
+    "lute"
+  ],
+  "progmetal": [
+    "progmetal"
+  ],
+  "twist": [
+    "twist"
+  ],
+  "rockru": [
+    "rockru"
+  ],
+  "electrohouse": [
+    "electrohouse"
+  ],
+  "heavymetal": [
+    "heavymetal"
+  ],
+  "eurohouse": [
+    "eurohouse"
+  ],
+  "jrock": [
+    "jrock"
+  ],
+  "cello": [
+    "cello"
+  ],
+  "violin": [
+    "violin"
+  ],
+  "acoustic": [
+    "acoustic"
+  ]
+}

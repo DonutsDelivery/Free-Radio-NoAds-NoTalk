@@ -1,0 +1,722 @@
+[
+  {
+    "name": "ROCK",
+    "url_param": "Rock",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Rock",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "POP",
+    "url_param": "Pop",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Pop",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "DANCE",
+    "url_param": "Dance",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Dance",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "OLDIES",
+    "url_param": "Oldies",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Oldies",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "80S",
+    "url_param": "80s",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/80s",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "JAZZ",
+    "url_param": "Jazz",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Jazz",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "70S",
+    "url_param": "70s",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/70s",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "COUNTRY",
+    "url_param": "Country",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Country",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "ELECTRONIC",
+    "url_param": "Electronic",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Electronic",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "CHRISTMAS",
+    "url_param": "Christmas",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Christmas",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "60S",
+    "url_param": "60s",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/60s",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "SOUL",
+    "url_param": "Soul",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Soul",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "HOUSE",
+    "url_param": "House",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/House",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "FUNK",
+    "url_param": "Funk",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Funk",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "TALK",
+    "url_param": "Talk",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Talk",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "ALTERNATIVE",
+    "url_param": "Alternative",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Alternative",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "90S",
+    "url_param": "90s",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/90s",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "CHRISTIAN",
+    "url_param": "Christian",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Christian",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "CLASSIC ROCK",
+    "url_param": "Classic%20Rock",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Classic%20Rock",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "ADULT CONTEMPORARY",
+    "url_param": "Adult%20Contemporary",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Adult%20Contemporary",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "R&B",
+    "url_param": "R&B",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/R&B",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "TRANCE",
+    "url_param": "Trance",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Trance",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "GOSPEL",
+    "url_param": "Gospel",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Gospel",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "AMBIENT",
+    "url_param": "Ambient",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Ambient",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "NEWS",
+    "url_param": "News",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/News",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "LATIN",
+    "url_param": "Latin",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Latin",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "METAL",
+    "url_param": "Metal",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Metal",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "DISCO",
+    "url_param": "Disco",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Disco",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "LOUNGE",
+    "url_param": "Lounge",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Lounge",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "INDIE",
+    "url_param": "Indie",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Indie",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "REGGAE",
+    "url_param": "Reggae",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Reggae",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "INSTRUMENTAL",
+    "url_param": "Instrumental",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Instrumental",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "TECHNO",
+    "url_param": "Techno",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Techno",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "HIP HOP",
+    "url_param": "Hip%20Hop",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Hip%20Hop",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "CLASSICAL",
+    "url_param": "Classical",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Classical",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "EASY LISTENING",
+    "url_param": "Easy%20Listening",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Easy%20Listening",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "VARIETY",
+    "url_param": "Variety",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Variety",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "FOLK",
+    "url_param": "Folk",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Folk",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "EDM",
+    "url_param": "EDM",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/EDM",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "CLUB",
+    "url_param": "Club",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Club",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "FILIPINO",
+    "url_param": "Filipino",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Filipino",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "GREEK",
+    "url_param": "Greek",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Greek",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "2000S",
+    "url_param": "2000s",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/2000s",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "WORSHIP",
+    "url_param": "Worship",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Worship",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "BOLLYWOOD",
+    "url_param": "Bollywood",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Bollywood",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "PROGRESSIVE",
+    "url_param": "Progressive",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Progressive",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "CHILL",
+    "url_param": "Chill",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Chill",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "MIX",
+    "url_param": "Mix",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Mix",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "HARDSTYLE",
+    "url_param": "Hardstyle",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Hardstyle",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "ELECTRONICA",
+    "url_param": "Electronica",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Electronica",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "CHILLOUT",
+    "url_param": "Chillout",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Chillout",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "LO-FI",
+    "url_param": "lo-fi",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/lo-fi",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "EXPERIMENTAL",
+    "url_param": "Experimental",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Experimental",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "BREAKBEAT",
+    "url_param": "Breakbeat",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Breakbeat",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "PUNK",
+    "url_param": "Punk",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Punk",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "BLUES",
+    "url_param": "Blues",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Blues",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "WORLD",
+    "url_param": "World",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/World",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "NEW WAVE",
+    "url_param": "New%20Wave",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/New%20Wave",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "ACOUSTIC",
+    "url_param": "Acoustic",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Acoustic",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  },
+  {
+    "name": "SMOOTH JAZZ",
+    "url_param": "Smooth%20Jazz",
+    "stations": [
+      {
+        "name": "Loading...",
+        "host": "https://dir.xiph.org",
+        "path": "genres/Smooth%20Jazz",
+        "description": "Loading stations from Icecast Directory..."
+      }
+    ]
+  }
+]

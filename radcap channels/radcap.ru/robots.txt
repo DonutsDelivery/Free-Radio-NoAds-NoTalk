@@ -1,0 +1,12 @@
+User-Agent: Yandex
+Disallow:
+Crawl-delay: 5
+Host: https://radcap.ru
+
+User-agent: Googlebot
+Disallow:
+Crawl-delay: 5
+
+User-agent: *
+Disallow:
+Crawl-delay: 5

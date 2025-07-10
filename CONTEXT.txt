@@ -1,0 +1,83 @@
+KDE PLASMA WIDGET DEVELOPMENT - CONTEXT AND STATUS
+==================================================
+
+PROJECT: RadCap Radio Widget
+LOCATION: /home/user/Documents/Free-Radio-NoAds-NoTalk/radcapradio/
+
+CURRENT STATUS:
+==============
+- Widget has been modified with new features but changes aren't visible after reinstallation
+- Testing with red background color to verify if reinstallation process works
+- Plasma restart/refresh issues preventing updated widget from loading
+
+CHANGES MADE TO WIDGET:
+======================
+1. ✅ SOMAFM INTEGRATION:
+   - Added 30 SomaFM stations to radiodata.js as first category "SOMA FM"
+   - Modified main.qml loadSources() function to separate SomaFM as own top menu item
+   - Added SomaFM-specific URL handling in getStreamUrl() function
+   - Added fetchSomaFMMetadata() function for SomaFM API song info
+
+2. ✅ BETTER BORDERS:
+   - Added subtle borders to all Rectangle UI elements
+   - Used Qt.rgba() with 0.2-0.3 opacity for visibility
+   - Added antialiasing: true for smooth rounded corners
+   - Added main wrapper Rectangle with red background (for testing)
+
+3. ✅ UI HEADER:
+   - Added header Rectangle with "📻 RadCap Radio" title
+   - Styled with highlight color and proper typography
+
+4. ✅ SYNTAX FIXES:
+   - Fixed missing closing braces in QML structure
+   - Widget should load without syntax errors
+
+INSTALLATION PROCESS DISCOVERED:
+================================
+CORRECT METHOD:
+- Location: ~/.local/share/plasma/plasmoids/radcapradio/
+- Command: kpackagetool6 --type="Plasma/Applet" --install radcapradio
+- NOT: kpackagetool6 --install (missing type parameter)
+- NOT: ~/.local/share/kpackage/generic/ (wrong location)
+
+CACHE CLEARING NEEDED:
+- rm -rf ~/.cache/plasma-qmlcache
+- rm -rf ~/.cache/plasmashell
+- kbuildsycoca6 --noincremental
+
+PLASMA RESTART REQUIRED:
+- pkill -f plasmashell (force kill all processes)
+- Let Plasma auto-restart to pick up new files
+
+CURRENT ISSUE:
+=============
+- Widget files are correctly installed with changes
+- grep shows red color is in installed main.qml
+- But widget instances on desktop still show old version
+- Plasma restart not properly refreshing widget instances
+
+FILES TO CHECK AFTER RESTART:
+============================
+1. Widget should show RED BACKGROUND (test feature)
+2. Widget should show header "📻 RadCap Radio" 
+3. Top menu should have separate "🎵 SomaFM" item
+4. All borders should be visible and subtle
+
+WORKING REINSTALL SCRIPT:
+========================
+/home/user/Documents/Free-Radio-NoAds-NoTalk/auto_reinstall.sh
+
+NEXT STEPS AFTER PC RESTART:
+============================
+1. Verify if widget shows red background and header
+2. If yes: Remove red background, keep improvements
+3. If no: Debug why Plasma cache isn't clearing properly
+4. Test SomaFM stations and metadata fetching
+5. Verify all border improvements are visible
+
+KEY LESSON LEARNED:
+==================
+- Use --upgrade for existing widgets, --install for new
+- Must use --type="Plasma/Applet" parameter
+- Plasma caching is aggressive, requires force restart
+- Widget instances don't auto-refresh, need Plasma restart

@@ -1,0 +1,472 @@
+🎵 Testing RadCap Radio Stations Song Fetching 🎵
+============================================================
+Loaded station data from: radcap channels/full_named_streams.json
+Error processing station 497: missing key 'url'
+Station data: {}
+Loaded 497 stations
+
+📻 Category: ALL STATIONS
+----------------------------------------
+
+--- Testing: UNDERGROUND RAP / HIP-HOP ---
+Stream path: undergroundrap
+Host: http://79.111.14.76
+Trying variations: ['undergroundrap']
+✅ SUCCESS via station page: Kno - Graveyard (feat. Sheisty Khrist)
+   Method: station-page->playback-history/3/undergroundrap-ph.php
+
+--- Testing: HARD / HEAVY ROCK ---
+Stream path: hardrock
+Host: http://79.120.77.11
+Trying variations: ['hardrock']
+✅ SUCCESS via station page: Big Ball - Groove Monster Machine
+   Method: station-page->playback-history/1/hardrock-ph.php
+
+--- Testing: THRASH HEAVY METAL ---
+Stream path: thrashheavy
+Host: http://213.141.131.10
+Trying variations: ['thrashheavy']
+✅ SUCCESS via station page: Harbinger A.D. - Dreams of the Paranormal
+   Method: station-page->playback-history/5/thrashheavy-ph.php
+
+--- Testing: ACID HOUSE / TRANCE / TECHNO ---
+Stream path: acid
+Host: http://79.111.119.111
+Trying variations: ['acid']
+✅ SUCCESS via station page: Hardfloor - B2 Mahogany Roots (Slam Beneat
+   Method: station-page->playback-history/4/acid-ph.php
+
+--- Testing: MEDIEVAL FOLK ---
+Stream path: medievalfolk
+Host: http://213.141.131.10
+Trying variations: ['medievalfolk']
+✅ SUCCESS via station page: Faun - MacBeth
+   Method: station-page->playback-history/5/medievalfolk-ph.php
+
+--- Testing: FULL ON ---
+Stream path: fullon
+Host: http://79.111.14.76
+Trying variations: ['fullon']
+✅ SUCCESS via station page: Digital Karma - Black Magic
+   Method: station-page->playback-history/3/fullon-ph.php
+
+--- Testing: DARK PSYTRANCE ---
+Stream path: darkpsytrance
+Host: http://79.111.119.111
+Trying variations: ['darkpsytrance']
+✅ SUCCESS via station page: Psilo Cowboys - Sweet And Sour
+   Method: station-page->playback-history/4/darkpsytrance-ph.php
+
+--- Testing: PAGAN METAL ---
+Stream path: paganmetal
+Host: http://79.111.119.111
+Trying variations: ['paganmetal']
+✅ SUCCESS via station page: Antti Martikainen - The Forbidden City
+   Method: station-page->playback-history/4/paganmetal-ph.php
+
+--- Testing: MATH METAL / DJENT ---
+Stream path: mathmetal
+Host: http://79.120.39.202
+Trying variations: ['mathmetal']
+✅ SUCCESS via station page: Tenkan - The Fear (Lily Allen)
+   Method: station-page->playback-history/2/mathmetal-ph.php
+
+--- Testing: CROSSOVER JAZZ ---
+Stream path: crossoverjazz
+Host: http://213.141.131.10
+Trying variations: ['crossoverjazz']
+✅ SUCCESS via station page: Chick Corea & Bela Fleck - Menagerie
+   Method: station-page->playback-history/5/crossoverjazz-ph.php
+
+--- Testing: RUSSIAN PUNK ROCK ---
+Stream path: punkru
+Host: http://79.120.77.11
+Trying variations: ['punkru']
+✅ SUCCESS via station page: Mongol Shuudan - Mama Sama Naydet
+   Method: station-page->playback-history/1/punkru-ph.php
+
+--- Testing: BALKAN MUSIC ---
+Stream path: balkan
+Host: http://79.120.39.202
+Trying variations: ['balkan']
+✅ SUCCESS via station page: Fanfare Savale - Hrpeasca
+   Method: station-page->playback-history/2/balkan-ph.php
+
+--- Testing: MINIMAL TECHNO ---
+Stream path: mintechno
+Host: http://79.120.39.202
+Trying variations: ['mintechno']
+❌ FAILED: No valid playback history URL found
+
+--- Testing: CLASSICAL FLUTE ---
+Stream path: fluteclass
+Host: http://79.111.14.76
+Trying variations: ['fluteclass']
+✅ SUCCESS via station page: American Baroque - Concerto No. 2 in D major: 2. Affettuoso
+   Method: station-page->playback-history/3/fluteclass-ph.php
+
+--- Testing: RETRO ELECTRO (Retrowave / Synthwave / Dreamwave / Outrun Electro) ---
+Stream path: retrowave
+Host: http://79.120.39.202
+Trying variations: ['retrowave']
+✅ SUCCESS via station page: Wice - Cruise Control
+   Method: station-page->playback-history/2/retrowave-ph.php
+
+--- Testing: COUNTRY MUSIC ---
+Stream path: country
+Host: http://79.120.77.11
+Trying variations: ['country']
+✅ SUCCESS via station page: Martina McBride - My Baby Loves Me
+   Method: station-page->playback-history/1/country-ph.php
+
+--- Testing: NATURE SOUNDS ---
+Stream path: soundnat
+Host: http://79.111.14.76
+Trying variations: ['soundnat']
+❌ FAILED: No valid playback history URL found
+
+--- Testing: TRIBAL HOUSE ---
+Stream path: tribalhouse
+Host: http://213.141.131.10
+Trying variations: ['tribalhouse']
+✅ SUCCESS via station page: Rinaldo Montezz - Time (Club Mix) (feat. Caleb Huntsberry)
+   Method: station-page->playback-history/5/tribalhouse-ph.php
+
+--- Testing: ELECTRO-INDUSTRIAL ---
+Stream path: electroindustrial
+Host: http://79.111.119.111
+Trying variations: ['electroindustrial']
+✅ SUCCESS via station page: XPQ-21 feat. Jeyenne - Monster
+   Method: station-page->playback-history/4/electroindustrial-ph.php
+
+--- Testing: DREAM POP ---
+Stream path: dreampop
+Host: http://79.111.14.76
+Trying variations: ['dreampop']
+✅ SUCCESS via station page: Deserta - A World Without
+   Method: station-page->playback-history/3/dreampop-ph.php
+
+--- Testing: POP SOUL ---
+Stream path: popsoul
+Host: http://213.141.131.10
+Trying variations: ['popsoul']
+✅ SUCCESS via station page: Daryl Hall & John Oates - Gotta Lotta Nerve (Perfect Perfect)
+   Method: station-page->playback-history/5/popsoul-ph.php
+
+--- Testing: ELECTRO ---
+Stream path: electro
+Host: http://79.111.119.111
+Trying variations: ['electro']
+✅ SUCCESS via station page: Yale67 - Oncoming
+   Method: station-page->playback-history/4/electro-ph.php
+
+--- Testing: ORGAN MUSIC ---
+Stream path: organ
+Host: http://79.120.77.11
+Trying variations: ['organ', 'organ']
+✅ SUCCESS via station page: Andre Isoir - Michel Giboureau - JS BACH - Andante en sol Majeur BWV 1034.2
+   Method: station-page->playback-history/1/organ-ph.php
+
+--- Testing: JUMP BLUES ---
+Stream path: jumpblues
+Host: http://213.141.131.10
+Trying variations: ['jumpblues']
+✅ SUCCESS via station page: Mitch Kashmar - Song For My Father
+   Method: station-page->playback-history/5/jumpblues-ph.php
+
+--- Testing: SAXOPHONE ---
+Stream path: saxophone
+Host: http://79.120.77.11
+Trying variations: ['saxophone']
+✅ SUCCESS via station page: Kenny G - Forever In Love
+   Method: station-page->playback-history/1/saxophone-ph.php
+
+--- Testing: UK / BRITISH HIP-HOP / RAP ---
+Stream path: ukhiphop
+Host: http://213.141.131.10
+Trying variations: ['ukhiphop']
+✅ SUCCESS via station page: Funky DL - Marie-D Riddem
+   Method: station-page->playback-history/5/ukhiphop-ph.php
+
+--- Testing: HAPPY / UK HARDCORE ---
+Stream path: happyhardcore
+Host: http://79.120.77.11
+Trying variations: ['happyhardcore']
+✅ SUCCESS via station page: Gammer - N+
+   Method: station-page->playback-history/1/happyhardcore-ph.php
+
+--- Testing: CHAMBER MUSIC ---
+Stream path: chamber
+Host: http://213.141.131.10
+Trying variations: ['chamber', 'chamber']
+✅ SUCCESS via station page: Moscow Violoncello Quartet - M. Godar - Paso doble
+   Method: station-page->playback-history/5/chamber-ph.php
+
+--- Testing: ATMOSPHERIC / AMBIENT BLACK METAL ---
+Stream path: aabmds
+Host: http://79.120.39.202
+Trying variations: ['aabmds']
+✅ SUCCESS via station page: Midnight Odyssey - Journey Across the Sea
+   Method: station-page->playback-history/2/aabmds-ph.php
+
+--- Testing: AMERICANA ---
+Stream path: americana
+Host: http://213.141.131.10
+Trying variations: ['americana']
+✅ SUCCESS via station page: Mark Germino - The Greatest Song Ever Written
+   Method: station-page->playback-history/5/americana-ph.php
+
+--- Testing: ATMOSPHERIC DOOM ---
+Stream path: atmosphericdoom
+Host: http://213.141.131.10
+Trying variations: ['atmosphericdoom']
+❌ FAILED: No valid playback history URL found
+
+--- Testing: ELECTRIC / MODERN ELECTRIC BLUES ---
+Stream path: electricblues
+Host: http://79.111.14.76
+Trying variations: ['electricblues']
+✅ SUCCESS via station page: Kenny `Blue` Ray - Tacos & Tequila
+   Method: station-page->playback-history/3/electricblues-ph.php
+
+--- Testing: DISCO ---
+Stream path: disco
+Host: http://79.120.77.11
+Trying variations: ['disco']
+✅ SUCCESS via station page: Arabesque - Squaw (Extended Version)
+   Method: station-page->playback-history/1/disco-ph.php
+
+--- Testing: SPACESYNTH / SYNTHDANCE / SPACEDANCE ---
+Stream path: spacesynth
+Host: http://79.120.39.202
+Trying variations: ['spacesynth']
+✅ SUCCESS via station page: Daylight - Mysterious Games
+   Method: station-page->playback-history/2/spacesynth-ph.php
+
+--- Testing: POP PUNK ---
+Stream path: poppunk
+Host: http://79.111.14.76
+Trying variations: ['poppunk']
+✅ SUCCESS via station page: Transit - Empty Shell
+   Method: station-page->playback-history/3/poppunk-ph.php
+
+--- Testing: PSYTRANCE ---
+Stream path: psytrance
+Host: http://79.111.119.111
+Trying variations: ['psytrance']
+✅ SUCCESS via station page: Synaesthesiacs - Channel 9
+   Method: station-page->playback-history/4/psytrance-ph.php
+
+--- Testing: ELECTROCLASH ---
+Stream path: electroclash
+Host: http://79.120.39.202
+Trying variations: ['electroclash']
+✅ SUCCESS via station page: Motormark - This Is A Warning
+   Method: station-page->playback-history/2/electroclash-ph.php
+
+--- Testing: MAKINA ---
+Stream path: makina
+Host: http://79.120.12.130
+Trying variations: ['makina']
+✅ SUCCESS via station page: EMOTIONAL G - Toffee
+   Method: station-page->playback-history/6/makina-ph.php
+
+--- Testing: GOTHIC DEATH METAL ---
+Stream path: gothdeathmet
+Host: http://79.120.39.202
+Trying variations: ['gothdeathmet']
+✅ SUCCESS via station page: Before the Dawn - End of Days
+   Method: station-page->playback-history/2/gothdeathmet-ph.php
+
+--- Testing: HARP ---
+Stream path: harp
+Host: http://213.141.131.10
+Trying variations: ['harp']
+✅ SUCCESS via station page: Raphael & Shakya feat. Praful and Jai Uttal - Emerging Light
+   Method: station-page->playback-history/5/harp-ph.php
+
+--- Testing: UPLIFTING / EPIC / EUPHORIC / ANTHEM TRANCE ---
+Stream path: upliftingtrance
+Host: http://79.111.119.111
+Trying variations: ['upliftingtrance']
+✅ SUCCESS via station page: Frank Dattilo - Heart Scream
+   Method: station-page->playback-history/4/upliftingtrance-ph.php
+
+--- Testing: NU JAZZ / FUTURE JAZZ ---
+Stream path: nujazz
+Host: http://79.111.14.76
+Trying variations: ['nujazz']
+✅ SUCCESS via station page: Nighthawks - Rickenbacker Causeway
+   Method: station-page->playback-history/3/nujazz-ph.php
+
+--- Testing: COOL / WEST COAST JAZZ ---
+Stream path: cooljazz
+Host: http://79.120.39.202
+Trying variations: ['cooljazz']
+✅ SUCCESS via station page: Bill Evans - T.T.T (Twelve Tone Tune)
+   Method: station-page->playback-history/2/cooljazz-ph.php
+
+--- Testing: STONER ROCK ---
+Stream path: stonerrock
+Host: http://79.111.119.111
+Trying variations: ['stonerrock']
+✅ SUCCESS via station page: Causa Sui - Tropic Of Capricorn
+   Method: station-page->playback-history/4/stonerrock-ph.php
+
+--- Testing: DARK DUBSTEP ---
+Stream path: darkdubstep
+Host: http://79.120.39.202
+Trying variations: ['darkdubstep']
+✅ SUCCESS via station page: Frosty - Old Times Dubstep Mix (The Sound of the Past)
+   Method: station-page->playback-history/2/darkdubstep-ph.php
+
+--- Testing: PROGRESSIVE BLACK / POST-BLACK / BLACKGAZE ---
+Stream path: postblack
+Host: http://79.111.14.76
+Trying variations: ['postblack']
+✅ SUCCESS via station page: The Great Old Ones - The Truth
+   Method: station-page->playback-history/3/postblack-ph.php
+
+--- Testing: WESTERN SWING ---
+Stream path: westernswing
+Host: http://79.120.12.130
+Trying variations: ['westernswing']
+✅ SUCCESS via station page: Big Bad Voodoo Daddy - Sleep Tight
+   Method: station-page->playback-history/6/westernswing-ph.php
+
+--- Testing: POP / SOFT ROCK / POWER POP ---
+Stream path: poprock
+Host: http://79.120.77.11
+Trying variations: ['poprock']
+✅ SUCCESS via station page: This Wild Life - Pull Me Out
+   Method: station-page->playback-history/1/poprock-ph.php
+
+--- Testing: JAZZ ROCK ---
+Stream path: jazzrock
+Host: http://79.111.119.111
+Trying variations: ['jazzrock']
+✅ SUCCESS via station page: Inside//Outside - Self-Portrait In Three Shades Of Mauve
+   Method: station-page->playback-history/4/jazzrock-ph.php
+
+--- Testing: DEATH DOOM METAL ---
+Stream path: deathdoom
+Host: http://79.120.39.202
+Trying variations: ['deathdoom']
+❌ FAILED: No valid playback history URL found
+
+--- Testing: DETROIT TECHNO / TECH HOUSE ---
+Stream path: detroittechno
+Host: http://213.141.131.10
+Trying variations: ['detroittechno']
+❌ FAILED: No valid playback history URL found
+
+--- Testing: ROOTS REGGAE ---
+Stream path: rootsreggae
+Host: http://79.111.119.111
+Trying variations: ['rootsreggae']
+✅ SUCCESS via station page: Vivian Jones - Schooling
+   Method: station-page->playback-history/4/rootsreggae-ph.php
+
+--- Testing: INDIE FOLK ---
+Stream path: indiefolk
+Host: http://79.111.14.76
+Trying variations: ['indiefolk']
+✅ SUCCESS via station page: Michael J Sheehy - I Shame You With My Kisses
+   Method: station-page->playback-history/3/indiefolk-ph.php
+
+--- Testing: ROMANTIC MUSIC COLLECTION ---
+Stream path: romantic
+Host: http://79.120.39.202
+Trying variations: ['romantic']
+✅ SUCCESS via station page: Nenen Chery & Youssou N'dour - 7 Seconds
+   Method: station-page->playback-history/2/romantic-ph.php
+
+--- Testing: DANCE / DISCO / FUNK PUNK ---
+Stream path: dancepunk
+Host: http://213.141.131.10
+Trying variations: ['dancepunk']
+✅ SUCCESS via station page: Art vs. Science - Magic Fountain (Kissy Sell Out's Dark Crystal Version)
+   Method: station-page->playback-history/5/dancepunk-ph.php
+
+--- Testing: FREE JAZZ ---
+Stream path: freejazz
+Host: http://79.111.14.76
+Trying variations: ['freejazz']
+✅ SUCCESS via station page: Anthony Braxton - All the things you are / The Angular Apron / Composition 6A
+   Method: station-page->playback-history/3/freejazz-ph.php
+
+--- Testing: MEDITATION MUSIC ---
+Stream path: meditation
+Host: http://79.120.77.11
+Trying variations: ['meditation']
+✅ SUCCESS via station page: Anjey Satori - Son Pod Shum Dozhdya
+   Method: station-page->playback-history/1/meditation-ph.php
+
+--- Testing: MELODIC POWER METAL ---
+Stream path: melodicpower
+Host: http://79.111.119.111
+Trying variations: ['melodicpower']
+✅ SUCCESS via station page: Age Of Artemis - Under The Sun
+   Method: station-page->playback-history/4/melodicpower-ph.php
+
+--- Testing: CLASSICAL CROSSOVER ---
+Stream path: classcross
+Host: http://79.120.77.11
+Trying variations: ['classcross']
+✅ SUCCESS via station page: Manchester String Quartet - This Charming Man
+   Method: station-page->playback-history/1/classcross-ph.php
+
+--- Testing: BALLROOM DANCE ---
+Stream path: ballroomdance
+Host: http://79.111.14.76
+Trying variations: ['ballroomdance']
+❌ FAILED: No valid playback history URL found
+
+--- Testing: POST METAL ---
+Stream path: postmetal
+Host: http://79.120.39.202
+Trying variations: ['postmetal']
+✅ SUCCESS via station page: Lybica - Charyou
+   Method: station-page->playback-history/2/postmetal-ph.php
+
+--- Testing: SHOEGAZING ---
+Stream path: shoegazing
+Host: http://79.111.119.111
+Trying variations: ['shoegazing']
+❌ FAILED: No valid playback history URL found
+
+--- Testing: INDUSTRIAL / DARK / RITUAL AMBIENT ---
+Stream path: darkambient
+Host: http://79.120.39.202
+Trying variations: ['darkambient']
+✅ SUCCESS via station page: In Slaughter Natives - Angel Meat
+   Method: station-page->playback-history/2/darkambient-ph.php
+
+--- Testing: SKA-PUNK / CORE ---
+Stream path: skapunk
+Host: http://79.111.119.111
+Trying variations: ['skapunk']
+✅ SUCCESS via station page: Horinfarkt - Musikpiraten
+   Method: station-page->playback-history/4/skapunk-ph.php
+
+--- Testing: GARAGE PUNK ---
+Stream path: garagepunk
+Host: http://79.120.12.130
+Trying variations: ['garagepunk']
+✅ SUCCESS via station page: Oblivians - I May Be Gone
+   Method: station-page->playback-history/6/garagepunk-ph.php
+
+--- Testing: ILLBIENT ---
+Stream path: illbient
+Host: http://213.141.131.10
+Trying variations: ['illbient']
+✅ SUCCESS via station page: Scorn - Turn Ting Up
+   Method: station-page->playback-history/5/illbient-ph.php
+
+--- Testing: DOOM / EPIC DOOM METAL ---
+Stream path: doom
+Host: http://79.111.14.76
+Trying variations: ['doom']
+❌ FAILED: No valid playback history URL found
+
+--- Testing: AVANT-GARDE JAZZ ---
