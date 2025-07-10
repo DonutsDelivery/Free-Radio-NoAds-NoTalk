@@ -448,7 +448,7 @@ PlasmoidItem {
         loops: MediaPlayer.Infinite
         audioOutput: AudioOutput {
             id: audioOut
-            volume: persistentVolumeSlider.value
+            volume: compactVolumeSlider.value
             muted: false
         }
     }
@@ -460,7 +460,7 @@ PlasmoidItem {
         loops: MediaPlayer.Infinite
         audioOutput: AudioOutput {
             id: previewAudioOut
-            volume: persistentVolumeSlider.value * 0.7  // Slightly lower volume for preview
+            volume: compactVolumeSlider.value * 0.7  // Slightly lower volume for preview
             muted: false
         }
         
