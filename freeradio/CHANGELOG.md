@@ -1,6 +1,6 @@
 # Free Radio - Changelog
 
-## Version 0.3.0 - December 2024
+## Version 1.2.0 - December 2024
 
 ### 🎉 Major Features
 

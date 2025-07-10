@@ -3,7 +3,7 @@
     "Id": "freeradio",
     "Name": "Free Radio",
     "Description": "Stream radio stations from various sources without ads or talk",
-    "Version": "0.2",
+    "Version": "1.2",
     "EnabledByDefault": true,
     "License": "GPL"
   },
