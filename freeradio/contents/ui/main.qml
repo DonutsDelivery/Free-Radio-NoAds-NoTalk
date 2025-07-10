@@ -2340,29 +2340,146 @@ PlasmoidItem {
     }
     
     function playNextStation() {
-        updateCurrentStationsList()
+        // Build a comprehensive station list regardless of current context
+        var allStations = getAllAvailableStations()
         
-        if (currentStationsList.length === 0) {
+        if (allStations.length === 0) {
             console.log("No stations available for next")
             return false
         }
         
-        var nextIndex = (currentStationIndex + 1) % currentStationsList.length
-        console.log("Playing next station, index:", nextIndex)
-        return playStationByIndex(nextIndex)
+        // Find current station in the comprehensive list
+        var currentIndex = findCurrentStationIndex(allStations)
+        var nextIndex = (currentIndex + 1) % allStations.length
+        
+        console.log("Playing next station, current:", currentIndex, "next:", nextIndex, "total:", allStations.length)
+        return playStationDirect(allStations[nextIndex])
     }
     
     function playPreviousStation() {
-        updateCurrentStationsList()
+        // Build a comprehensive station list regardless of current context
+        var allStations = getAllAvailableStations()
         
-        if (currentStationsList.length === 0) {
+        if (allStations.length === 0) {
             console.log("No stations available for previous")
             return false
         }
         
-        var prevIndex = currentStationIndex <= 0 ? currentStationsList.length - 1 : currentStationIndex - 1
-        console.log("Playing previous station, index:", prevIndex)
-        return playStationByIndex(prevIndex)
+        // Find current station in the comprehensive list
+        var currentIndex = findCurrentStationIndex(allStations)
+        var prevIndex = currentIndex <= 0 ? allStations.length - 1 : currentIndex - 1
+        
+        console.log("Playing previous station, current:", currentIndex, "prev:", prevIndex, "total:", allStations.length)
+        return playStationDirect(allStations[prevIndex])
+    }
+    
+    function getAllAvailableStations() {
+        var allStations = []
+        
+        // Add all RadCap stations
+        if (RadioData.radcapCategories) {
+            for (var i = 0; i < RadioData.radcapCategories.length; i++) {
+                var category = RadioData.radcapCategories[i]
+                for (var j = 0; j < category.stations.length; j++) {
+                    allStations.push({
+                        name: category.stations[j].name,
+                        host: category.stations[j].host,
+                        path: category.stations[j].path,
+                        source: "📻 RadCap.ru",
+                        category: category.name
+                    })
+                }
+            }
+        }
+        
+        // Add all SomaFM stations
+        if (RadioData.somafmCategories) {
+            for (var k = 0; k < RadioData.somafmCategories.length; k++) {
+                var somaCategory = RadioData.somafmCategories[k]
+                for (var l = 0; l < somaCategory.stations.length; l++) {
+                    allStations.push({
+                        name: somaCategory.stations[l].name,
+                        host: somaCategory.stations[l].host,
+                        path: somaCategory.stations[l].path,
+                        source: "🎵 SomaFM",
+                        category: somaCategory.name
+                    })
+                }
+            }
+        }
+        
+        // Add custom stations
+        for (var m = 0; m < customStations.length; m++) {
+            allStations.push({
+                name: customStations[m].name,
+                host: customStations[m].host,
+                path: customStations[m].path,
+                source: "🔗 Custom",
+                category: "Custom"
+            })
+        }
+        
+        // Add favorites
+        for (var n = 0; n < favoriteStations.length; n++) {
+            allStations.push({
+                name: favoriteStations[n].name,
+                host: favoriteStations[n].host,
+                path: favoriteStations[n].path,
+                source: "⭐ Favorites",
+                category: "Favorites"
+            })
+        }
+        
+        console.log("Built comprehensive station list with", allStations.length, "stations")
+        return allStations
+    }
+    
+    function findCurrentStationIndex(stationsList) {
+        // Find the current station in the provided list
+        for (var i = 0; i < stationsList.length; i++) {
+            if (stationsList[i].name === currentStationName && 
+                stationsList[i].host === currentStationHost) {
+                return i
+            }
+        }
+        
+        // If not found, return 0 to start from beginning
+        console.log("Current station not found in list, starting from beginning")
+        return 0
+    }
+    
+    function playStationDirect(station) {
+        var streamUrl = getStreamUrl(station.host, station.path, streamQuality)
+        
+        currentStationName = station.name
+        currentStationUrl = streamUrl
+        currentStationHost = station.host
+        currentStationPath = station.path
+        
+        // Save this as the last played station
+        saveLastStation()
+        
+        // Clear previous song info when changing stations
+        currentSongTitle = ""
+        currentArtist = ""
+        debugMetadata = "Loading station..."
+        
+        console.log("=== PLAYING STATION DIRECT ===")
+        console.log("Station:", station.name)
+        console.log("Stream URL:", streamUrl)
+        
+        songUpdateTimer.stop()
+        player.stop()
+        
+        // Fetch live song metadata and start timer
+        fetchStreamMetadata(streamUrl)
+        songUpdateTimer.start()
+        
+        // Play directly
+        player.source = streamUrl
+        player.play()
+        
+        return true
     }
 
     // Widget styling - no default background to show custom rounded edges

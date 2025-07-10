@@ -1,5 +1,18 @@
 # Free Radio - Changelog
 
+## Version 1.2.1 - December 2024
+
+### 🔧 Bug Fixes
+
+#### **Fixed Next/Previous Station Navigation**
+- **Context-Independent Navigation**: Next/Previous buttons now work from any screen (main menu, categories, search, etc.)
+- **Comprehensive Station Pool**: Navigation uses all available stations from RadCap, SomaFM, custom stations, and favorites
+- **Smart Station Finding**: Accurately locates current station in complete database
+- **Circular Navigation**: Wraps around from last to first station and vice versa
+- **Proper State Management**: Maintains station information and saves last played station
+
+---
+
 ## Version 1.2.0 - December 2024
 
 ### 🎉 Major Features
