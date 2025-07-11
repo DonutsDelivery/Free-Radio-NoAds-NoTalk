@@ -15,25 +15,198 @@ PlasmoidItem {
     property bool isCompactMode: plasmoid.formFactor === PlasmaCore.Types.Horizontal || 
                                 plasmoid.formFactor === PlasmaCore.Types.Vertical
     
-    // Show remote control when in compact mode, full widget otherwise
-    Loader {
-        id: compactLoader
+    // Proper D-Bus service implementation
+    property string dbusServiceName: "org.kde.freeradio.desktop"
+    property string dbusObjectPath: "/FreeRadio"
+    property string dbusInterface: "org.kde.freeradio.Remote"
+    property bool dbusServiceActive: false
+    
+    // D-Bus service registration and monitoring (desktop widget only)
+    PlasmaCore.DataSource {
+        id: dbusService
+        engine: "executable"
+        connectedSources: isCompactMode ? [] : []
+        
+        Component.onCompleted: {
+            if (!isCompactMode) {
+                registerDBusService()
+            }
+        }
+    }
+    
+    function registerDBusService() {
+        console.log("Desktop widget: Registering D-Bus service")
+        
+        // First check if service exists
+        dbusService.connectedSources = ["qdbus --session org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -q '" + dbusServiceName + "' && echo 'EXISTS' || echo 'NOT_FOUND'"]
+        
+        Timer {
+            interval: 500
+            running: true
+            onTriggered: {
+                var checkResult = dbusService.data["qdbus --session org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -q '" + dbusServiceName + "' && echo 'EXISTS' || echo 'NOT_FOUND'"]["stdout"]
+                
+                if (checkResult && checkResult.trim() === "NOT_FOUND") {
+                    // Service doesn't exist, register it
+                    console.log("Registering new D-Bus service")
+                    createDBusService()
+                } else {
+                    console.log("D-Bus service already exists")
+                    dbusServiceActive = true
+                    startDBusMonitoring()
+                }
+            }
+        }
+    }
+    
+    function createDBusService() {
+        // Create a simple D-Bus service using dbus-send simulation
+        var serviceScript = 'while true; do if [ -f /tmp/freeradio_dbus_cmd ]; then CMD=$(cat /tmp/freeradio_dbus_cmd); rm -f /tmp/freeradio_dbus_cmd; echo "COMMAND:$CMD"; fi; sleep 0.2; done'
+        
+        dbusService.connectedSources = ["bash -c '" + serviceScript + "'"]
+        dbusServiceActive = true
+        console.log("D-Bus service simulation started")
+    }
+    
+    function startDBusMonitoring() {
+        if (!dbusServiceActive) return
+        
+        console.log("Starting D-Bus command monitoring")
+        
+        dbusService.onDataChanged.connect(function() {
+            var result = dbusService.data["bash -c 'while true; do if [ -f /tmp/freeradio_dbus_cmd ]; then CMD=$(cat /tmp/freeradio_dbus_cmd); rm -f /tmp/freeradio_dbus_cmd; echo \"COMMAND:$CMD\"; fi; sleep 0.2; done'"]["stdout"]
+            
+            if (result && result.indexOf("COMMAND:") >= 0) {
+                var command = result.split("COMMAND:")[1].trim()
+                if (command === "playpause" || command === "next" || command === "previous") {
+                    console.log("D-Bus service received command:", command)
+                    handleRemoteCommand(command)
+                }
+            }
+        })
+    }
+    
+    function sendDBusCommand(command) {
+        console.log("Panel widget: Sending D-Bus command:", command)
+        
+        var sendProcess = Qt.createQmlObject('
+            import QtQuick 2.15
+            import org.kde.plasma.core 2.0 as PlasmaCore
+            PlasmaCore.DataEngineSource {
+                engine: "executable"
+                connectedSources: ["echo \\"' + command + '\\" > /tmp/freeradio_dbus_cmd"]
+            }
+        ', root)
+        
+        Timer {
+            interval: 100
+            running: true
+            onTriggered: {
+                sendProcess.destroy()
+                console.log("D-Bus command sent:", command)
+            }
+        }
+    }
+    
+    Component.onCompleted: {
+        console.log("FreeRadio: FormFactor =", plasmoid.formFactor)
+        console.log("FreeRadio: isCompactMode =", isCompactMode)
+        console.log("FreeRadio: Horizontal =", PlasmaCore.Types.Horizontal)
+        console.log("FreeRadio: Vertical =", PlasmaCore.Types.Vertical)
+        console.log("FreeRadio: Planar =", PlasmaCore.Types.Planar)
+        
+        // Initialize command ID to avoid processing old commands
+        lastCommandId = ""
+    }
+    
+    // Compact panel controls - dedicated interface for panel mode
+    Item {
         anchors.fill: parent
-        source: isCompactMode ? "RemoteControl.qml" : ""
-        active: isCompactMode
         visible: isCompactMode
+        
+        Row {
+            anchors.centerIn: parent
+            spacing: Math.max(0, (parent.width - 108) / 6)  // Adaptive spacing
+            
+            Button {
+                text: "⏮"
+                width: Math.max(24, Math.min(40, parent.width / 3.5))
+                height: Math.max(20, Math.min(32, parent.height * 0.8))
+                flat: true
+                onClicked: {
+                    console.log("Panel Remote: Previous button clicked")
+                    sendRemoteCommand("previous")
+                }
+                
+                ToolTip.text: "Previous"
+                ToolTip.visible: hovered
+                
+                contentItem: Text {
+                    text: parent.text
+                    font: parent.font
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    color: Kirigami.Theme.textColor
+                }
+            }
+            
+            Button {
+                text: "⏯"
+                width: Math.max(24, Math.min(40, parent.width / 3.5))
+                height: Math.max(20, Math.min(32, parent.height * 0.8))
+                flat: true
+                onClicked: {
+                    console.log("Panel Remote: Play/pause button clicked")
+                    sendRemoteCommand("playpause")
+                }
+                
+                ToolTip.text: "Play/Pause"
+                ToolTip.visible: hovered
+                
+                contentItem: Text {
+                    text: parent.text
+                    font: parent.font
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    color: Kirigami.Theme.textColor
+                }
+            }
+            
+            Button {
+                text: "⏭"
+                width: Math.max(24, Math.min(40, parent.width / 3.5))
+                height: Math.max(20, Math.min(32, parent.height * 0.8))
+                flat: true
+                onClicked: {
+                    console.log("Panel Remote: Next button clicked")
+                    sendRemoteCommand("next")
+                }
+                
+                ToolTip.text: "Next"
+                ToolTip.visible: hovered
+                
+                contentItem: Text {
+                    text: parent.text
+                    font: parent.font
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    color: Kirigami.Theme.textColor
+                }
+            }
+        }
     }
     
     // Responsive sizing - optimized for all screen sizes
     property real screenWidth: Screen.desktopAvailableWidth
     property real screenHeight: Screen.desktopAvailableHeight
     
-    Layout.minimumWidth: Math.max(280, Math.min(350, screenWidth * 0.15))   // Min 280px, max 350px or 15% of screen
-    Layout.minimumHeight: Math.max(350, Math.min(450, screenHeight * 0.30)) // Min 350px, max 450px or 30% of screen
-    Layout.preferredWidth: Math.max(300, Math.min(380, screenWidth * 0.15)) // Preferred 300-380px or 15% of screen
-    Layout.preferredHeight: Math.max(400, Math.min(520, screenHeight * 0.35)) // Preferred 400-520px or 35% of screen
-    Layout.maximumWidth: Math.max(350, Math.min(420, screenWidth * 0.18))   // Max 350-420px or 18% of screen
-    Layout.maximumHeight: Math.max(500, Math.min(600, screenHeight * 0.40)) // Max 500-600px or 40% of screen
+    // Dynamic sizing based on mode - resizable for panel, full for desktop
+    Layout.minimumWidth: isCompactMode ? 80 : Math.max(280, Math.min(350, screenWidth * 0.15))
+    Layout.minimumHeight: isCompactMode ? 24 : Math.max(350, Math.min(450, screenHeight * 0.30))
+    Layout.preferredWidth: isCompactMode ? 108 : Math.max(300, Math.min(380, screenWidth * 0.15))
+    Layout.preferredHeight: isCompactMode ? 30 : Math.max(400, Math.min(520, screenHeight * 0.35))
+    Layout.maximumWidth: isCompactMode ? 200 : Math.max(350, Math.min(420, screenWidth * 0.18))
+    Layout.maximumHeight: isCompactMode ? 40 : Math.max(500, Math.min(600, screenHeight * 0.40))
     
     // Default size for standalone mode
     width: Layout.preferredWidth
@@ -580,14 +753,20 @@ PlasmoidItem {
         autoPlay: false
         loops: MediaPlayer.Infinite
         playbackRate: 1.0
-        audioOutput: AudioOutput {
+        // Only enable audio output for desktop mode, not panel mode
+        audioOutput: !isCompactMode ? AudioOutput {
             id: audioOut
             volume: compactVolumeSlider.value
             muted: false
-        }
+        } : null
         
         // Start playing as soon as media is loaded (not fully buffered)
         onMediaStatusChanged: {
+            if (isCompactMode) {
+                console.log("Panel mode: ignoring media status change")
+                return
+            }
+            
             console.log("Media status changed:", mediaStatus)
             if (mediaStatus === MediaPlayer.LoadedMedia) {
                 if (preventAutoPlayOnStartup) {
@@ -612,16 +791,16 @@ PlasmoidItem {
         }
     }
     
-    // Preview player for search results
+    // Preview player for search results - only for desktop mode
     MediaPlayer {
         id: previewPlayer
         autoPlay: false
         loops: MediaPlayer.Infinite
-        audioOutput: AudioOutput {
+        audioOutput: !isCompactMode ? AudioOutput {
             id: previewAudioOut
             volume: compactVolumeSlider.value * 0.7  // Slightly lower volume for preview
             muted: false
-        }
+        } : null
         
         onErrorOccurred: function(error, errorString) {
             console.log("=== PREVIEW PLAYER ERROR ===")
@@ -667,7 +846,13 @@ PlasmoidItem {
     property string lastRemoteTimestamp: ""
     
     function handleRemoteCommand(command) {
-        console.log("Handling remote command:", command)
+        // Only handle remote commands if this is the desktop widget (not panel)
+        if (isCompactMode) {
+            console.log("Panel widget ignoring remote command handling:", command)
+            return
+        }
+        
+        console.log("Desktop widget handling remote command:", command)
         
         switch(command) {
             case "playpause":
@@ -693,7 +878,16 @@ PlasmoidItem {
     // Remote control function for unified widget
     function sendRemoteCommand(command) {
         console.log("Remote command:", command)
-        handleRemoteCommand(command)
+        
+        if (isCompactMode) {
+            // Panel mode - send command via notification
+            console.log("Panel mode: Sending command via notification")
+            sendNotificationCommand(command)
+        } else {
+            // Desktop mode - handle command directly
+            console.log("Desktop mode: Handling command locally")
+            handleRemoteCommand(command)
+        }
     }
 
     function loadSources() {
@@ -3065,6 +3259,7 @@ PlasmoidItem {
         anchors.fill: parent
         anchors.margins: Math.max(8, root.width * 0.03)  // Responsive padding: 8px min or 3% of width
         spacing: Math.max(8, root.height * 0.02)  // Responsive spacing: 8px min or 2% of height
+        visible: !isCompactMode
 
         // Search bar
         RowLayout {
