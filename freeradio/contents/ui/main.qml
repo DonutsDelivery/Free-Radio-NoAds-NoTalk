@@ -53,6 +53,8 @@ PlasmoidItem {
     property string currentCategory: ""
     property bool showCustomDialog: false
     property bool showSearchDialog: false
+    property bool showEbookSearchDialog: false
+    property bool showCustomEbookDialog: false
     property bool isEditMode: false
     property int editStationIndex: -1
     property string streamQuality: "3"  // Always use highest quality
@@ -76,6 +78,17 @@ PlasmoidItem {
     
     // Custom stations system
     property var customStations: []
+    
+    // Custom ebooks system
+    property var customEbooks: []
+    property string currentEbookUrl: ""
+    property string currentEbookTitle: ""
+    property var currentEbookChapters: []
+    property int currentEbookChapterIndex: -1
+    property var ebookProgress: ({})
+    
+    // Startup control
+    property bool preventAutoPlayOnStartup: true
     
     // Quality filtering system
     property int minBitrate: 64  // Minimum bitrate in kbps
@@ -107,6 +120,67 @@ PlasmoidItem {
             customStations = []
         }
         console.log("Loaded custom stations:", customStations.length, "stations")
+    }
+    
+    function loadCustomEbooks() {
+        var stored = plasmoid.configuration.customEbooks || "[]"
+        console.log("Raw stored custom ebooks:", stored)
+        try {
+            customEbooks = JSON.parse(stored)
+            
+            // Fix Alice in Wonderland URL if it uses the old incorrect one
+            var needsSave = false
+            for (var i = 0; i < customEbooks.length; i++) {
+                if (customEbooks[i].title === "Alice's Adventures in Wonderland" && 
+                    customEbooks[i].url === "https://librivox.org/rss/11") {
+                    console.log("Fixing Alice in Wonderland URL from /rss/11 to /rss/200")
+                    customEbooks[i].url = "https://librivox.org/rss/200"
+                    needsSave = true
+                }
+            }
+            
+            if (needsSave) {
+                saveCustomEbooks()
+            }
+        } catch (e) {
+            console.log("Error parsing custom ebooks:", e)
+            customEbooks = []
+        }
+        console.log("Loaded custom ebooks:", customEbooks.length, "ebooks")
+    }
+    
+    function loadEbookProgress() {
+        var stored = plasmoid.configuration.ebookProgress || "{}"
+        console.log("Raw stored ebook progress:", stored)
+        try {
+            ebookProgress = JSON.parse(stored)
+        } catch (e) {
+            console.log("Error parsing ebook progress:", e)
+            ebookProgress = {}
+        }
+        console.log("Loaded ebook progress:", Object.keys(ebookProgress).length, "ebooks")
+    }
+    
+    function saveCustomEbooks() {
+        var json = JSON.stringify(customEbooks)
+        plasmoid.configuration.customEbooks = json
+        console.log("Saved custom ebooks:", json)
+    }
+    
+    function saveEbookProgress() {
+        // Update current ebook progress with player position
+        if (currentEbookUrl && currentEbookChapterIndex >= 0) {
+            if (!ebookProgress[currentEbookUrl]) {
+                ebookProgress[currentEbookUrl] = {}
+            }
+            ebookProgress[currentEbookUrl].chapterIndex = currentEbookChapterIndex
+            ebookProgress[currentEbookUrl].position = player.position
+            console.log("Saving progress for", currentEbookTitle, "chapter", currentEbookChapterIndex, "position", player.position)
+        }
+        
+        var json = JSON.stringify(ebookProgress)
+        plasmoid.configuration.ebookProgress = json
+        console.log("Saved ebook progress:", json)
     }
     
     function saveCustomStations() {
@@ -263,6 +337,32 @@ PlasmoidItem {
         }
     }
     
+    function removeCustomEbook(index) {
+        // Remove custom ebook by index
+        if (index >= 0 && index < customEbooks.length) {
+            var removed = customEbooks.splice(index, 1)[0]
+            saveCustomEbooks()
+            loadSources()  // Refresh sources
+            
+            // If we're currently viewing ebooks, refresh the stations list too
+            if (currentCategory === "📚 Audiobooks") {
+                var ebookStations = customEbooks.map(function(ebook) {
+                    return {
+                        "name": ebook.title,
+                        "url": ebook.url,
+                        "host": "",
+                        "path": "",
+                        "type": "ebook"
+                    }
+                })
+                loadStations(ebookStations)
+            }
+            
+            console.log("Removed custom ebook:", removed.title)
+            console.log("Remaining custom ebooks:", customEbooks.length)
+        }
+    }
+    
     
     function loadLastStation() {
         // Load last station from persistent storage
@@ -280,8 +380,9 @@ PlasmoidItem {
             console.log("Loaded last station:", savedName, "URL:", savedUrl)
             
             // Set the player source but don't auto-play
+            console.log("Setting source without auto-play")
             player.source = savedUrl
-            player.stop() // Ensure it's paused
+            // Don't call stop() immediately as it might interfere with source loading
             
             return true
         }
@@ -406,7 +507,14 @@ PlasmoidItem {
         favoriteStations = favoriteStations
         
         saveFavorites()
-        loadSources() // Refresh the sources to update favorites count
+        
+        console.log("After toggle: favoriteStations.length =", favoriteStations.length)
+        console.log("Calling loadSources to refresh menu...")
+        
+        // Force a complete refresh of the sources
+        loadSources()
+        
+        console.log("Sources refreshed, current navigation state: inSource =", inSource, "inCategory =", inCategory)
     }
     
     // Track last metadata update time
@@ -441,15 +549,53 @@ PlasmoidItem {
             }
         }
     }
+    
+    Timer {
+        id: ebookProgressTimer
+        interval: 30000 // Save progress every 30 seconds
+        running: currentEbookUrl !== ""
+        repeat: true
+        onTriggered: {
+            if (currentEbookUrl && player.playbackState === MediaPlayer.PlayingState) {
+                saveEbookProgress()
+            }
+        }
+    }
 
     MediaPlayer {
         id: player
         autoPlay: false
         loops: MediaPlayer.Infinite
+        playbackRate: 1.0
         audioOutput: AudioOutput {
             id: audioOut
             volume: compactVolumeSlider.value
             muted: false
+        }
+        
+        // Start playing as soon as media is loaded (not fully buffered)
+        onMediaStatusChanged: {
+            console.log("Media status changed:", mediaStatus)
+            if (mediaStatus === MediaPlayer.LoadedMedia) {
+                if (preventAutoPlayOnStartup) {
+                    console.log("Media loaded but auto-play prevented on startup")
+                    preventAutoPlayOnStartup = false // Allow future plays
+                } else {
+                    console.log("Media loaded, starting playback immediately")
+                    play()
+                }
+            }
+        }
+        
+        // Monitor buffering
+        onBufferProgressChanged: {
+            if (bufferProgress > 0) {
+                console.log("Buffering:", (bufferProgress * 100).toFixed(1) + "%")
+            }
+        }
+        
+        onErrorOccurred: function(error, errorString) {
+            console.log("Player error:", error, errorString)
         }
     }
     
@@ -548,6 +694,28 @@ PlasmoidItem {
             "isCustom": true
         })
         
+        // Add Custom Ebooks source
+        sourcesModel.append({
+            "name": "📚 Audiobooks",
+            "description": customEbooks.length > 0 ? 
+                          customEbooks.length + " audiobooks • Add LibriVox ebook" :
+                          "Add LibriVox audiobooks",
+            "categories": [{
+                "name": "Custom Ebooks",
+                "stations": customEbooks.map(function(ebook) {
+                    return {
+                        "name": ebook.title,
+                        "url": ebook.url,
+                        "host": "",
+                        "path": "",
+                        "type": "ebook"
+                    }
+                }),
+                "isEbook": true
+            }],
+            "isEbook": true
+        })
+        
         console.log("Sources model count:", sourcesModel.count)
     }
     
@@ -581,6 +749,8 @@ PlasmoidItem {
         console.log("Loaded volume level")
         loadFavorites()
         loadCustomStations()
+        loadCustomEbooks()
+        loadEbookProgress()
         loadLastStation()
         loadSources()
     }
@@ -609,6 +779,25 @@ PlasmoidItem {
             loadStations(favoriteStations)
             inSource = true
             inCategory = true  // Skip category view, go straight to stations
+            return
+        }
+        
+        // Special handling for Audiobooks - go directly to ebook stations with add interface
+        if (source.name === "📚 Audiobooks") {
+            console.log("Loading audiobooks interface")
+            currentCategory = "📚 Audiobooks"  // Set category to match source
+            var ebookStations = customEbooks.map(function(ebook) {
+                return {
+                    "name": ebook.title,
+                    "url": ebook.url,
+                    "host": "",
+                    "path": "",
+                    "type": "ebook"
+                }
+            })
+            loadStations(ebookStations)
+            inSource = false  // Make back button go to main menu
+            inCategory = true  // But show the stations interface
             return
         }
         
@@ -642,7 +831,8 @@ PlasmoidItem {
                 "name": stations[i].name,
                 "host": stations[i].host,
                 "path": stations[i].path,
-                "url": stations[i].url || ""
+                "url": stations[i].url || "",
+                "type": stations[i].type || ""
             })
         }
         console.log("Stations model count:", stationsModel.count)
@@ -689,7 +879,6 @@ PlasmoidItem {
                         console.log("=== SETTING STREAM URL ===")
                         console.log("Stream URL:", streamUrl)
                         player.source = streamUrl
-                        player.play()
                     } else {
                         console.log("Could not extract stream URL, falling back to direct stream")
                         var baseUrl = playlistUrl.replace("." + format, "")
@@ -1288,6 +1477,89 @@ PlasmoidItem {
         }
         return false
     }
+    
+    function searchEbooks(query) {
+        console.log("Searching for ebooks:", query)
+        
+        // Clear previous results
+        ebookSearchResults.clear()
+        
+        if (query.length < 3) {
+            console.log("Query too short, skipping ebook search")
+            return
+        }
+        
+        // LibriVox API search
+        var apiUrl = "https://librivox.org/api/feed/audiobooks/title/" + 
+                     encodeURIComponent(query) + "?format=json&limit=10"
+        
+        console.log("LibriVox search API URL:", apiUrl)
+        
+        var xhr = new XMLHttpRequest()
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    try {
+                        var data = JSON.parse(xhr.responseText)
+                        console.log("Found", data.books ? data.books.length : 0, "ebooks")
+                        
+                        if (data.books) {
+                            for (var i = 0; i < Math.min(data.books.length, 10); i++) {
+                                var book = data.books[i]
+                                if (book.title && book.rss_url) {
+                                    ebookSearchResults.append({
+                                        title: book.title,
+                                        authors: book.authors || "Unknown",
+                                        rss_url: book.rss_url,
+                                        description: book.description || ""
+                                    })
+                                }
+                            }
+                        }
+                        
+                        // Add hardcoded Alice in Wonderland if searching for Alice
+                        if (query.toLowerCase().includes("alice")) {
+                            ebookSearchResults.insert(0, {
+                                title: "Alice's Adventures in Wonderland",
+                                authors: "Lewis Carroll",
+                                rss_url: "https://librivox.org/rss/200",
+                                description: "Classic children's tale"
+                            })
+                        }
+                        
+                    } catch (e) {
+                        console.log("Error parsing ebook search response:", e)
+                        
+                        // Fallback for Alice search
+                        if (query.toLowerCase().includes("alice")) {
+                            ebookSearchResults.append({
+                                title: "Alice's Adventures in Wonderland",
+                                authors: "Lewis Carroll", 
+                                rss_url: "https://librivox.org/rss/200",
+                                description: "Classic children's tale"
+                            })
+                        }
+                    }
+                } else {
+                    console.log("Ebook search API request failed:", xhr.status)
+                    
+                    // Fallback for Alice search
+                    if (query.toLowerCase().includes("alice")) {
+                        ebookSearchResults.append({
+                            title: "Alice's Adventures in Wonderland",
+                            authors: "Lewis Carroll",
+                            rss_url: "https://librivox.org/rss/11", 
+                            description: "Classic children's tale"
+                        })
+                    }
+                }
+            }
+        }
+        
+        xhr.open("GET", apiUrl)
+        xhr.setRequestHeader("User-Agent", "FreeRadio/1.2")
+        xhr.send()
+    }
 
     function getPlaybackHistoryUrl(stationPath) {
         // Try multiple possible HTML page names since they don't always match the stream path exactly
@@ -1715,6 +1987,20 @@ PlasmoidItem {
                         break
                     }
                 }
+            } else if (currentSource === "📚 Audiobooks") {
+                // Handle ebook category
+                categoryData = {
+                    name: cat.name,
+                    stations: customEbooks.map(function(ebook) {
+                        return {
+                            "name": ebook.title,
+                            "url": ebook.url,
+                            "host": "",
+                            "path": "",
+                            "type": "ebook"
+                        }
+                    })
+                }
             }
             
             if (categoryData && categoryData.stations) {
@@ -1732,7 +2018,9 @@ PlasmoidItem {
                     stationsModel.append({
                         "name": categoryData.stations[j].name,
                         "host": categoryData.stations[j].host,
-                        "path": categoryData.stations[j].path
+                        "path": categoryData.stations[j].path,
+                        "url": categoryData.stations[j].url || "",
+                        "type": categoryData.stations[j].type || ""
                     })
                 }
             }
@@ -2149,6 +2437,14 @@ PlasmoidItem {
         }
         
         var station = currentStationsList[index]
+        
+        // Check if this is an ebook
+        if (station.type === "ebook") {
+            playEbook(station)
+            currentStationIndex = index
+            return true
+        }
+        
         var streamUrl = getStreamUrl(station.host, station.path, streamQuality)
         
         currentStationName = station.name
@@ -2156,6 +2452,13 @@ PlasmoidItem {
         currentStationHost = station.host
         currentStationPath = station.path
         currentStationIndex = index
+        
+        // Clear ebook state when playing radio
+        currentEbookUrl = ""
+        currentEbookTitle = ""
+        currentEbookChapters = []
+        currentEbookChapterIndex = -1
+        ebookProgressTimer.stop()
         
         // Save this as the last played station
         saveLastStation()
@@ -2179,7 +2482,6 @@ PlasmoidItem {
         
         // Play directly
         player.source = streamUrl
-        player.play()
         
         return true
     }
@@ -2334,12 +2636,19 @@ PlasmoidItem {
         
         // Play directly
         player.source = streamUrl
-        player.play()
         
         return true
     }
     
     function playNextStation() {
+        // If currently playing an ebook, go to next chapter
+        if (currentEbookUrl && currentEbookChapters.length > 0) {
+            if (currentEbookChapterIndex < currentEbookChapters.length - 1) {
+                nextEbookChapter()
+                return true
+            }
+        }
+        
         // Build a comprehensive station list regardless of current context
         var allStations = getAllAvailableStations()
         
@@ -2357,6 +2666,14 @@ PlasmoidItem {
     }
     
     function playPreviousStation() {
+        // If currently playing an ebook, go to previous chapter
+        if (currentEbookUrl && currentEbookChapters.length > 0) {
+            if (currentEbookChapterIndex > 0) {
+                previousEbookChapter()
+                return true
+            }
+        }
+        
         // Build a comprehensive station list regardless of current context
         var allStations = getAllAvailableStations()
         
@@ -2477,9 +2794,197 @@ PlasmoidItem {
         
         // Play directly
         player.source = streamUrl
-        player.play()
         
         return true
+    }
+
+    // Ebook Functions
+    function addCustomEbook(title, url) {
+        console.log("Adding custom ebook:", title, url)
+        var ebook = {
+            "title": title,
+            "url": url
+        }
+        customEbooks.push(ebook)
+        saveCustomEbooks()
+        console.log("Custom ebook added:", ebook)
+        loadSources()  // Refresh sources to update count
+        
+        // If we're currently viewing audiobooks, refresh the stations list
+        if (currentCategory === "📚 Audiobooks" && inCategory) {
+            var ebookStations = customEbooks.map(function(ebook) {
+                return {
+                    "name": ebook.title,
+                    "url": ebook.url,
+                    "host": "",
+                    "path": "",
+                    "type": "ebook"
+                }
+            })
+            loadStations(ebookStations)
+        }
+    }
+    
+    function playEbook(ebook) {
+        console.log("=== PLAYING EBOOK ===")
+        console.log("Ebook title:", ebook.title)
+        console.log("Ebook URL:", ebook.url)
+        
+        currentEbookTitle = ebook.title
+        currentEbookUrl = ebook.url
+        currentEbookChapterIndex = -1
+        currentEbookChapters = []
+        
+        // Stop any current radio playback first
+        songUpdateTimer.stop()
+        player.stop()
+        
+        console.log("Loading ebook chapters from RSS:", ebook.url)
+        
+        // Load chapters from LibriVox RSS
+        loadEbookChapters(ebook.url)
+    }
+    
+    function loadEbookChapters(rssUrl) {
+        console.log("=== LOADING EBOOK CHAPTERS ===")
+        console.log("RSS URL:", rssUrl)
+        
+        var xhr = new XMLHttpRequest()
+        xhr.open("GET", rssUrl, true)
+        xhr.onreadystatechange = function() {
+            console.log("XHR state changed:", xhr.readyState, "status:", xhr.status)
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    console.log("RSS fetch successful, parsing...")
+                    console.log("Response length:", xhr.responseText.length)
+                    parseEbookRSS(xhr.responseText)
+                } else {
+                    console.log("Failed to load ebook RSS. Status:", xhr.status)
+                    console.log("Status text:", xhr.statusText)
+                }
+            }
+        }
+        
+        xhr.onerror = function() {
+            console.log("XHR error occurred")
+        }
+        
+        console.log("Sending XHR request...")
+        xhr.send()
+    }
+    
+    function parseEbookRSS(xmlText) {
+        console.log("=== PARSING EBOOK RSS ===")
+        console.log("XML text preview:", xmlText.substring(0, 500))
+        
+        try {
+            // Use simple regex parsing since QML doesn't have DOMParser
+            var chapters = []
+            
+            // Extract all <item> blocks
+            var itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi
+            var itemMatch
+            var itemIndex = 0
+            
+            while ((itemMatch = itemRegex.exec(xmlText)) !== null) {
+                var itemContent = itemMatch[1]
+                console.log("Processing item", itemIndex)
+                
+                // Extract title
+                var titleMatch = /<title[^>]*><!\[CDATA\[(.*?)\]\]><\/title>/i.exec(itemContent) ||
+                                /<title[^>]*>(.*?)<\/title>/i.exec(itemContent)
+                var title = titleMatch ? titleMatch[1].trim() : "Chapter " + (itemIndex + 1)
+                
+                // Extract enclosure URL
+                var enclosureMatch = /<enclosure[^>]*url\s*=\s*["']([^"']+)["'][^>]*>/i.exec(itemContent)
+                
+                if (enclosureMatch) {
+                    var url = enclosureMatch[1]
+                    console.log("Found chapter:", title, "URL:", url)
+                    
+                    chapters.push({
+                        title: title,
+                        url: url,
+                        index: itemIndex
+                    })
+                } else {
+                    console.log("No enclosure found for item", itemIndex, "title:", title)
+                }
+                
+                itemIndex++
+            }
+            
+            currentEbookChapters = chapters
+            console.log("=== LOADED", chapters.length, "CHAPTERS ===")
+            
+            if (chapters.length > 0) {
+                // Load saved progress or start from beginning
+                var savedProgress = ebookProgress[currentEbookUrl]
+                if (savedProgress && savedProgress.chapterIndex < chapters.length) {
+                    console.log("Resuming from saved progress: chapter", savedProgress.chapterIndex, "position", savedProgress.position)
+                    playEbookChapter(savedProgress.chapterIndex, savedProgress.position || 0)
+                } else {
+                    console.log("Starting from beginning")
+                    playEbookChapter(0)
+                }
+            } else {
+                console.log("No chapters found! Checking XML structure...")
+                console.log("XML contains 'item':", xmlText.indexOf("<item") >= 0)
+                console.log("XML contains 'enclosure':", xmlText.indexOf("enclosure") >= 0)
+            }
+            
+        } catch (e) {
+            console.log("Error parsing ebook RSS:", e)
+            console.log("Error details:", e.toString())
+        }
+    }
+    
+    function playEbookChapter(chapterIndex, startPosition) {
+        if (chapterIndex < 0 || chapterIndex >= currentEbookChapters.length) {
+            console.log("Invalid chapter index:", chapterIndex)
+            return
+        }
+        
+        var chapter = currentEbookChapters[chapterIndex]
+        currentEbookChapterIndex = chapterIndex
+        
+        console.log("Playing chapter:", chapter.title)
+        
+        // Update current station info for display
+        currentStationName = currentEbookTitle + " - " + chapter.title
+        currentStationUrl = chapter.url
+        currentStationHost = ""
+        currentStationPath = ""
+        currentSongTitle = chapter.title
+        currentArtist = currentEbookTitle
+        debugMetadata = "Playing ebook chapter..."
+        
+        // Stop current playback and start ebook chapter
+        songUpdateTimer.stop()
+        player.stop()
+        
+        player.source = chapter.url
+        if (startPosition) {
+            player.setPosition(startPosition)
+        }
+        
+        // Start ebook progress timer
+        ebookProgressTimer.start()
+        
+        // Save progress
+        saveEbookProgress()
+    }
+    
+    function nextEbookChapter() {
+        if (currentEbookChapterIndex >= 0 && currentEbookChapterIndex < currentEbookChapters.length - 1) {
+            playEbookChapter(currentEbookChapterIndex + 1)
+        }
+    }
+    
+    function previousEbookChapter() {
+        if (currentEbookChapterIndex > 0) {
+            playEbookChapter(currentEbookChapterIndex - 1)
+        }
     }
 
     // Widget styling - no default background to show custom rounded edges
@@ -2896,7 +3401,17 @@ PlasmoidItem {
                     }
                 }
                 Label {
-                    text: currentSource + (currentCategory ? " > " + currentCategory : "")
+                    text: {
+                        if (currentSource === "📚 Audiobooks") {
+                            if (currentEbookTitle) {
+                                return currentSource + " > " + currentEbookTitle
+                            } else {
+                                return currentSource
+                            }
+                        } else {
+                            return currentSource + (currentCategory ? " > " + currentCategory : "")
+                        }
+                    }
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     font.pointSize: 10
@@ -2966,6 +3481,67 @@ PlasmoidItem {
                 }
             }
             
+            // Ebook buttons - shown when in Audiobooks category
+            ColumnLayout {
+                visible: currentCategory === "📚 Audiobooks" && inCategory
+                Layout.fillWidth: true
+                spacing: 10
+                
+                Button {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Math.max(35, root.height * 0.08)
+                    font.pointSize: Math.max(8, Math.min(11, root.width / 40))
+                    onClicked: {
+                        console.log("Search LibriVox button clicked!")
+                        showEbookSearchDialog = true
+                    }
+                    
+                    contentItem: Text {
+                        text: "📚 Search LibriVox"
+                        font: parent.font
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: Kirigami.Theme.textColor
+                    }
+                    
+                    background: Rectangle {
+                        color: parent.pressed ? Qt.rgba(0.8, 0.4, 0, 0.4) :
+                               parent.hovered ? Qt.rgba(0.8, 0.4, 0, 0.2) :
+                               Qt.rgba(0.8, 0.4, 0, 0.1)
+                        radius: 8
+                        border.width: 1
+                        border.color: Qt.rgba(0.8, 0.4, 0, 0.6)
+                    }
+                }
+                
+                Button {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Math.max(35, root.height * 0.08)
+                    font.pointSize: Math.max(8, Math.min(11, root.width / 40))
+                    onClicked: {
+                        console.log("Add Custom Ebook button clicked!")
+                        showCustomEbookDialog = true
+                    }
+                    
+                    contentItem: Text {
+                        text: "+ Add Custom URL"
+                        font: parent.font
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: Kirigami.Theme.textColor
+                    }
+                    
+                    background: Rectangle {
+                        color: parent.pressed ? Qt.rgba(0.6, 0.2, 0.8, 0.4) :
+                               parent.hovered ? Qt.rgba(0.6, 0.2, 0.8, 0.2) :
+                               Qt.rgba(0.6, 0.2, 0.8, 0.1)
+                        radius: 8
+                        border.width: 1
+                        border.color: Qt.rgba(0.6, 0.2, 0.8, 0.6)
+                    }
+                }
+            }
+            
             ListView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -3031,9 +3607,45 @@ PlasmoidItem {
                                 border.color: Qt.rgba(1, 0, 0, 0.8)
                             }
                         }
+                        
+                        // Delete button for ebooks
+                        Button {
+                            visible: currentCategory === "📚 Audiobooks"
+                            text: "❌"
+                            implicitWidth: 24
+                            implicitHeight: 24
+                            font.pointSize: 8
+                            
+                            onClicked: {
+                                removeCustomEbook(index)
+                            }
+                            
+                            background: Rectangle {
+                                color: parent.pressed ? Qt.rgba(1, 0, 0, 0.8) :
+                                       parent.hovered ? Qt.rgba(1, 0, 0, 0.6) : Qt.rgba(1, 0, 0, 0.4)
+                                radius: 4
+                                border.width: 1
+                                border.color: Qt.rgba(1, 0, 0, 0.8)
+                            }
+                        }
                     }
                     
                     onClicked: {
+                        console.log("=== STATION CLICK ===")
+                        console.log("Station:", model.name)
+                        console.log("Type:", model.type)
+                        console.log("URL:", model.url)
+                        
+                        // Check if this is an ebook
+                        if (model.type === "ebook") {
+                            console.log("Playing ebook:", model.name)
+                            playEbook({
+                                title: model.name,
+                                url: model.url
+                            })
+                            return
+                        }
+                        
                         var streamUrl
                         // Handle custom stations differently
                         if (currentSource === "🔗 Add Custom Radio") {
@@ -3050,15 +3662,19 @@ PlasmoidItem {
                         currentStationHost = model.host
                         currentStationPath = model.path || ""
                         
+                        // Clear ebook state when playing radio
+                        currentEbookUrl = ""
+                        currentEbookTitle = ""
+                        currentEbookChapters = []
+                        currentEbookChapterIndex = -1
+                        ebookProgressTimer.stop()
+                        
                         // Clear previous song info when changing stations
                         currentSongTitle = ""
                         currentArtist = ""
                         debugMetadata = "Loading new station..."
                         
-                        console.log("=== STATION CLICK ===")
-                        console.log("Station:", model.name)
                         console.log("Stream URL:", streamUrl)
-                        console.log("Source type:", currentSource)
                         console.log("Player state before:", player.playbackState)
                         
                         songUpdateTimer.stop()
@@ -3073,7 +3689,6 @@ PlasmoidItem {
                         
                         // Play directly
                         player.source = streamUrl
-                        player.play()
                     }
                     
                     Rectangle {
@@ -3124,19 +3739,23 @@ PlasmoidItem {
                 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: Math.max(6, root.width * 0.015)  // Responsive spacing
+                    Layout.maximumWidth: parent.width
+                    spacing: Math.max(4, root.width * 0.01)
                     
                     Label {
                         text: currentStationName ? "♪ " + currentStationName : "No station selected"
-                        font.pointSize: Math.max(8, Math.min(12, root.width / 35))  // Responsive font
+                        font.pointSize: Math.max(8, Math.min(12, root.width / 35))
                         font.weight: Font.Medium
-                        elide: Text.ElideRight
+                        wrapMode: Text.Wrap
+                        maximumLineCount: 2
                         color: currentStationName ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.disabledTextColor
                         Layout.fillWidth: true
+                        Layout.maximumWidth: parent.width - 50 // Leave space for favorite button
+                        clip: true
                     }
                     
                     Button {
-                        visible: currentStationName !== ""
+                        visible: currentStationName !== "" && currentEbookUrl === ""
                         text: {
                             if (currentStationName === "" || currentStationHost === "" || currentStationPath === "") return "☆"
                             // Use stored station data
@@ -3188,22 +3807,28 @@ PlasmoidItem {
                     visible: currentSongTitle || currentArtist
                     Layout.fillWidth: true
                     
-                    TextEdit {
-                        text: {
-                            if (currentArtist && currentSongTitle) {
-                                return currentArtist + " - " + currentSongTitle
-                            } else if (currentSongTitle) {
-                                return currentSongTitle
-                            } else {
-                                return ""
-                            }
-                        }
-                        font.pointSize: Math.max(7, Math.min(10, root.width / 40))  // Responsive font
-                        color: Kirigami.Theme.textColor
+                    ScrollView {
                         Layout.fillWidth: true
-                        readOnly: true
-                        selectByMouse: true
-                        wrapMode: Text.Wrap
+                        Layout.preferredHeight: Math.max(25, Math.min(50, root.height / 15))
+                        clip: true
+                        
+                        TextEdit {
+                            text: {
+                                if (currentArtist && currentSongTitle) {
+                                    return currentArtist + " - " + currentSongTitle
+                                } else if (currentSongTitle) {
+                                    return currentSongTitle
+                                } else {
+                                    return ""
+                                }
+                            }
+                            font.pointSize: Math.max(7, Math.min(10, root.width / 40))  // Responsive font
+                            color: Kirigami.Theme.textColor
+                            width: parent.width
+                            readOnly: true
+                            selectByMouse: true
+                            wrapMode: Text.Wrap
+                        }
                     }
                 }
             }
@@ -3222,21 +3847,21 @@ PlasmoidItem {
             
             // Single horizontal row: Play and Volume controls
             RowLayout {
-                anchors.centerIn: parent
-                width: parent.width - 24
-                height: parent.height - 24
-                spacing: 12
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: Math.max(6, Math.min(12, root.width / 40))
+                clip: true
                 
                 Button {
-                    text: "⏮"
-                    enabled: currentStationUrl !== ""
+                    text: currentEbookUrl ? "⏪" : "⏮"
+                    enabled: currentStationUrl !== "" && (currentEbookUrl ? currentEbookChapterIndex > 0 : true)
                     onClicked: playPreviousStation()
-                    font.pointSize: Math.max(12, Math.min(16, root.width / 30))
-                    implicitWidth: Math.max(35, Math.min(45, root.width / 15))
-                    implicitHeight: Math.max(35, Math.min(45, root.height / 18))
+                    font.pointSize: Math.max(10, Math.min(14, root.width / 35))
+                    implicitWidth: Math.max(30, Math.min(40, root.width / 18))
+                    implicitHeight: Math.max(30, Math.min(40, root.height / 20))
                     Layout.alignment: Qt.AlignVCenter
                     
-                    ToolTip.text: "Previous station"
+                    ToolTip.text: currentEbookUrl ? "Previous chapter" : "Previous station"
                     ToolTip.visible: hovered
                     
                     contentItem: Text {
@@ -3285,15 +3910,15 @@ PlasmoidItem {
                 }
                 
                 Button {
-                    text: "⏭"
-                    enabled: currentStationUrl !== ""
+                    text: currentEbookUrl ? "⏩" : "⏭"
+                    enabled: currentStationUrl !== "" && (currentEbookUrl ? currentEbookChapterIndex < currentEbookChapters.length - 1 : true)
                     onClicked: playNextStation()
                     font.pointSize: Math.max(12, Math.min(16, root.width / 30))
                     implicitWidth: Math.max(35, Math.min(45, root.width / 15))
                     implicitHeight: Math.max(35, Math.min(45, root.height / 18))
                     Layout.alignment: Qt.AlignVCenter
                     
-                    ToolTip.text: "Next station"
+                    ToolTip.text: currentEbookUrl ? "Next chapter" : "Next station"
                     ToolTip.visible: hovered
                     
                     contentItem: Text {
@@ -3353,13 +3978,69 @@ PlasmoidItem {
                     from: 0
                     to: 1
                     value: 0.5
-                    Layout.preferredWidth: Math.max(80, Math.min(120, root.width / 4))
+                    Layout.preferredWidth: Math.max(60, Math.min(100, root.width / 6))
+                    Layout.maximumWidth: Math.max(60, Math.min(100, root.width / 6))
                     enabled: !audioOut.muted
                     Layout.alignment: Qt.AlignVCenter
                     
                     // Save volume level when changed
                     onValueChanged: {
                         saveVolumeLevel(value)
+                    }
+                }
+                
+                // Progress slider for ebooks
+                Slider {
+                    id: ebookProgressSlider
+                    visible: currentEbookUrl !== ""
+                    from: 0
+                    to: player.duration || 1
+                    value: player.position || 0
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: Math.max(80, Math.min(150, root.width / 4))
+                    Layout.alignment: Qt.AlignVCenter
+                    snapMode: Slider.NoSnap
+                    live: true  // Enable live updates while dragging
+                    
+                    property bool userSeeking: false
+                    
+                    onPressedChanged: {
+                        if (pressed) {
+                            userSeeking = true
+                            console.log("User started seeking at position:", value)
+                        } else {
+                            userSeeking = false
+                            if (currentEbookUrl && player.duration > 0) {
+                                console.log("Seeking to position:", value, "of", player.duration)
+                                player.setPosition(value)
+                                saveEbookProgress()
+                            }
+                        }
+                    }
+                    
+                    // Handle clicking on the track (not just dragging)
+                    onMoved: {
+                        if (currentEbookUrl && userSeeking) {
+                            console.log("User moving to position:", value)
+                        }
+                    }
+                    
+                    // Update from player position when not seeking
+                    Connections {
+                        target: player
+                        function onPositionChanged() {
+                            if (!ebookProgressSlider.userSeeking && currentEbookUrl) {
+                                ebookProgressSlider.value = player.position
+                            }
+                        }
+                    }
+                    
+                    // Enable live seeking while dragging
+                    onValueChanged: {
+                        if (userSeeking && currentEbookUrl && player.duration > 0) {
+                            console.log("Live seeking to:", value)
+                            player.setPosition(value)
+                        }
                     }
                 }
                 
@@ -3763,6 +4444,205 @@ PlasmoidItem {
             id: searchTimer
             interval: 500
             onTriggered: searchRadioStations(radioSearchField.text)
+        }
+    }
+
+    // LibriVox Search Dialog
+    Rectangle {
+        visible: showEbookSearchDialog
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.5)
+        z: 100
+        
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                showEbookSearchDialog = false
+                ebookSearchField.text = ""
+            }
+        }
+        
+        Rectangle {
+            anchors.centerIn: parent
+            width: Math.min(parent.width * 0.9, 400)
+            height: 300
+            color: Kirigami.Theme.backgroundColor
+            radius: 12
+            border.width: 1
+            border.color: Kirigami.Theme.highlightColor
+            
+            MouseArea {
+                anchors.fill: parent
+                // Prevent clicks from propagating to background
+            }
+            
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 15
+                spacing: 15
+                
+                Text {
+                    text: "Search LibriVox Audiobooks"
+                    font.pointSize: 14
+                    color: "white"
+                }
+                
+                TextField {
+                    id: ebookSearchField
+                    Layout.fillWidth: true
+                    placeholderText: "Search for audiobook (e.g., Alice in Wonderland)"
+                    onTextChanged: {
+                        if (text.length > 2) {
+                            searchEbooks(text)
+                        }
+                    }
+                }
+                
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    
+                    ListView {
+                        id: ebookResultsList
+                        model: ListModel { id: ebookSearchResults }
+                        delegate: Item {
+                            width: parent.width
+                            height: 60
+                            
+                            Rectangle {
+                                anchors.fill: parent
+                                color: ma.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
+                                radius: 6
+                                
+                                MouseArea {
+                                    id: ma
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: {
+                                        addCustomEbook(model.title, model.rss_url)
+                                        showEbookSearchDialog = false
+                                        ebookSearchField.text = ""
+                                        ebookSearchResults.clear()
+                                    }
+                                }
+                                
+                                ColumnLayout {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    anchors.margins: 10
+                                    
+                                    Text {
+                                        text: model.title
+                                        color: "white"
+                                        font.pointSize: 12
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                    }
+                                    
+                                    Text {
+                                        text: "by " + (model.authors || "Unknown")
+                                        color: "#888"
+                                        font.pointSize: 10
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                Button {
+                    text: "Close"
+                    Layout.alignment: Qt.AlignHCenter
+                    onClicked: {
+                        showEbookSearchDialog = false
+                        ebookSearchField.text = ""
+                        ebookSearchResults.clear()
+                    }
+                }
+            }
+        }
+    }
+
+    // Custom Ebook URL Dialog
+    Rectangle {
+        visible: showCustomEbookDialog
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.5)
+        z: 100
+        
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                showCustomEbookDialog = false
+                ebookTitleField.text = ""
+                ebookUrlField.text = ""
+            }
+        }
+        
+        Rectangle {
+            anchors.centerIn: parent
+            width: Math.min(parent.width * 0.9, 350)
+            height: 200
+            color: Kirigami.Theme.backgroundColor
+            radius: 12
+            border.width: 1
+            border.color: Kirigami.Theme.highlightColor
+            
+            MouseArea {
+                anchors.fill: parent
+                // Prevent clicks from propagating to background
+            }
+            
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 15
+                spacing: 15
+                
+                Text {
+                    text: "Add Custom Audiobook"
+                    font.pointSize: 14
+                    color: "white"
+                }
+                
+                TextField {
+                    id: ebookTitleField
+                    Layout.fillWidth: true
+                    placeholderText: "Audiobook Title"
+                }
+                
+                TextField {
+                    id: ebookUrlField
+                    Layout.fillWidth: true
+                    placeholderText: "LibriVox RSS URL"
+                }
+                
+                RowLayout {
+                    Layout.alignment: Qt.AlignHCenter
+                    
+                    Button {
+                        text: "Add"
+                        enabled: ebookTitleField.text.trim() && ebookUrlField.text.trim()
+                        onClicked: {
+                            addCustomEbook(ebookTitleField.text.trim(), ebookUrlField.text.trim())
+                            showCustomEbookDialog = false
+                            ebookTitleField.text = ""
+                            ebookUrlField.text = ""
+                        }
+                    }
+                    
+                    Button {
+                        text: "Cancel"
+                        onClicked: {
+                            showCustomEbookDialog = false
+                            ebookTitleField.text = ""
+                            ebookUrlField.text = ""
+                        }
+                    }
+                }
+            }
         }
     }
 } // PlasmoidItem

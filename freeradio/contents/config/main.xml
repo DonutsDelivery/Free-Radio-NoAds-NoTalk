@@ -38,6 +38,14 @@
       <label>Last selected station path</label>
       <default></default>
     </entry>
+    <entry name="customEbooks" type="String">
+      <label>Custom ebooks</label>
+      <default>[]</default>
+    </entry>
+    <entry name="ebookProgress" type="String">
+      <label>Ebook playback progress</label>
+      <default>{}</default>
+    </entry>
   </group>
 
 </kcfg>
