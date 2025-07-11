@@ -8,15 +8,23 @@ import org.kde.kirigami 2.20 as Kirigami
 Item {
     id: remoteRoot
     
+    // Set compact size constraints for panel mode
+    Layout.minimumWidth: 120
+    Layout.minimumHeight: 32
+    Layout.preferredWidth: 120
+    Layout.preferredHeight: 32
+    Layout.maximumWidth: 120
+    Layout.maximumHeight: 32
+    
     // Simple row of control buttons
     Row {
         anchors.centerIn: parent
-        spacing: 4
+        spacing: 2
         
         Button {
             text: "⏮"
-            width: 32
-            height: 32
+            width: 36
+            height: 28
             flat: true
             onClicked: {
                 console.log("Remote: Previous button clicked")
@@ -31,8 +39,8 @@ Item {
         
         Button {
             text: "⏯"
-            width: 32
-            height: 32
+            width: 36
+            height: 28
             flat: true
             onClicked: {
                 console.log("Remote: Play/pause button clicked")
@@ -47,8 +55,8 @@ Item {
         
         Button {
             text: "⏭"
-            width: 32
-            height: 32
+            width: 36
+            height: 28
             flat: true
             onClicked: {
                 console.log("Remote: Next button clicked")
