@@ -46,6 +46,16 @@
       <label>Ebook playback progress</label>
       <default>{}</default>
     </entry>
+
+    <!-- Remote control commands -->
+    <entry name="remoteCommand" type="String">
+      <label>Remote control command</label>
+      <default></default>
+    </entry>
+    <entry name="remoteTimestamp" type="String">
+      <label>Command timestamp</label>
+      <default></default>
+    </entry>
   </group>
 
 </kcfg>

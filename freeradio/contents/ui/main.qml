@@ -11,6 +11,19 @@ import "radiodata.js" as RadioData
 PlasmoidItem {
     id: root
     
+    // Detect if this is a compact representation (panel mode)
+    property bool isCompactMode: plasmoid.formFactor === PlasmaCore.Types.Horizontal || 
+                                plasmoid.formFactor === PlasmaCore.Types.Vertical
+    
+    // Show remote control when in compact mode, full widget otherwise
+    Loader {
+        id: compactLoader
+        anchors.fill: parent
+        source: isCompactMode ? "RemoteControl.qml" : ""
+        active: isCompactMode
+        visible: isCompactMode
+    }
+    
     // Responsive sizing - optimized for all screen sizes
     property real screenWidth: Screen.desktopAvailableWidth
     property real screenHeight: Screen.desktopAvailableHeight
@@ -648,6 +661,39 @@ PlasmoidItem {
         previewPlayer.stop()
         previewStationUrl = ""
         isPreviewPlaying = false
+    }
+
+    // Remote control support
+    property string lastRemoteTimestamp: ""
+    
+    function handleRemoteCommand(command) {
+        console.log("Handling remote command:", command)
+        
+        switch(command) {
+            case "playpause":
+                if (player.playbackState === MediaPlayer.PlayingState) {
+                    player.stop()
+                    songUpdateTimer.stop()
+                } else if (currentStationUrl !== "") {
+                    player.play()
+                    songUpdateTimer.start()
+                }
+                break
+            
+            case "next":
+                playNextStation()
+                break
+                
+            case "previous":
+                playPreviousStation()
+                break
+        }
+    }
+    
+    // Remote control function for unified widget
+    function sendRemoteCommand(command) {
+        console.log("Remote command:", command)
+        handleRemoteCommand(command)
     }
 
     function loadSources() {
@@ -2794,6 +2840,9 @@ PlasmoidItem {
         
         // Play directly
         player.source = streamUrl
+        console.log("About to call player.play(), current state:", player.playbackState)
+        player.play()
+        console.log("Called player.play(), new state:", player.playbackState)
         
         return true
     }
@@ -2998,6 +3047,7 @@ PlasmoidItem {
         border.width: 1
         border.color: Qt.rgba(1, 1, 1, 0.15)
         antialiasing: true
+        visible: !isCompactMode
         
         // Subtle shadow effect
         Rectangle {
@@ -3689,6 +3739,7 @@ PlasmoidItem {
                         
                         // Play directly
                         player.source = streamUrl
+                        player.play()
                     }
                     
                     Rectangle {
@@ -3725,7 +3776,7 @@ PlasmoidItem {
         // Status display
         Rectangle {
             Layout.fillWidth: true
-            height: Math.max(60, Math.min(80, root.height * 0.15))  // Responsive height
+            height: Math.max(80, Math.min(100, root.height * 0.18))
             color: Kirigami.Theme.backgroundColor
             radius: 12
             border.width: 1
@@ -3739,8 +3790,10 @@ PlasmoidItem {
                 
                 RowLayout {
                     Layout.fillWidth: true
+                    Layout.fillHeight: true
                     Layout.maximumWidth: parent.width
                     spacing: Math.max(4, root.width * 0.01)
+                    Layout.alignment: Qt.AlignVCenter
                     
                     Label {
                         text: currentStationName ? "♪ " + currentStationName : "No station selected"
@@ -3751,6 +3804,8 @@ PlasmoidItem {
                         color: currentStationName ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.disabledTextColor
                         Layout.fillWidth: true
                         Layout.maximumWidth: parent.width - 50 // Leave space for favorite button
+                        Layout.alignment: Qt.AlignVCenter
+                        verticalAlignment: Text.AlignVCenter
                         clip: true
                     }
                     
@@ -3822,12 +3877,16 @@ PlasmoidItem {
                                     return ""
                                 }
                             }
-                            font.pointSize: Math.max(7, Math.min(10, root.width / 40))  // Responsive font
+                            font.pointSize: Math.max(7, Math.min(10, root.width / 40))
                             color: Kirigami.Theme.textColor
                             width: parent.width
                             readOnly: true
                             selectByMouse: true
                             wrapMode: Text.Wrap
+                            leftPadding: 8
+                            rightPadding: 8
+                            topPadding: 4
+                            bottomPadding: 4
                         }
                     }
                 }
@@ -3855,7 +3914,11 @@ PlasmoidItem {
                 Button {
                     text: currentEbookUrl ? "⏪" : "⏮"
                     enabled: currentStationUrl !== "" && (currentEbookUrl ? currentEbookChapterIndex > 0 : true)
-                    onClicked: playPreviousStation()
+                    onClicked: {
+        console.log("=== PREVIOUS BUTTON CLICKED ===")
+        var result = playPreviousStation()
+        console.log("playPreviousStation returned:", result)
+    }
                     font.pointSize: Math.max(10, Math.min(14, root.width / 35))
                     implicitWidth: Math.max(30, Math.min(40, root.width / 18))
                     implicitHeight: Math.max(30, Math.min(40, root.height / 20))
@@ -3874,11 +3937,11 @@ PlasmoidItem {
                 }
                 
                 Button {
-                    text: player.playbackState === MediaPlayer.PlayingState ? "⏹" : "▶"
+                    text: player.playbackState === MediaPlayer.PlayingState ? "⏸" : "▶"
                     enabled: currentStationUrl !== ""
                     onClicked: {
                         if (player.playbackState === MediaPlayer.PlayingState) {
-                            player.stop()
+                            player.pause()
                             songUpdateTimer.stop()
                         } else if (currentStationUrl !== "") {
                             // When resuming playback, refresh song metadata
@@ -3904,6 +3967,7 @@ PlasmoidItem {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         color: parent.enabled ? Kirigami.Theme.textColor : Kirigami.Theme.disabledTextColor
+                        anchors.centerIn: parent
                         // Adjust padding for play symbol to appear more centered
                         leftPadding: parent.text === "▶" ? 2 : 0
                     }
@@ -3912,7 +3976,11 @@ PlasmoidItem {
                 Button {
                     text: currentEbookUrl ? "⏩" : "⏭"
                     enabled: currentStationUrl !== "" && (currentEbookUrl ? currentEbookChapterIndex < currentEbookChapters.length - 1 : true)
-                    onClicked: playNextStation()
+                    onClicked: {
+        console.log("=== NEXT BUTTON CLICKED ===")
+        var result = playNextStation()
+        console.log("playNextStation returned:", result)
+    }
                     font.pointSize: Math.max(12, Math.min(16, root.width / 30))
                     implicitWidth: Math.max(35, Math.min(45, root.width / 15))
                     implicitHeight: Math.max(35, Math.min(45, root.height / 18))
