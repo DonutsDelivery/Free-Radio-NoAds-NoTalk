@@ -1,0 +1,17 @@
+{
+  "KPlugin": {
+    "Id": "freeradio-panel",
+    "Name": "Free Radio Panel",
+    "Description": "Compact panel controls for Free Radio with popup interface",
+    "Version": "1.2.1",
+    "EnabledByDefault": true,
+    "License": "GPL"
+  },
+  "KPackage": {
+    "Structure": "Plasma/Applet"
+  },
+  "X-Plasma-API-Minimum-Version": "6.0",
+  "X-Plasma-API": "declarativeappletscript",
+  "X-Plasma-MainScript": "ui/main.qml",
+  "Categories": ["Audio", "Network"]
+}

@@ -1,0 +1,17 @@
+{
+  "KPlugin": {
+    "Id": "freeradio-remote",
+    "Name": "Free Radio Remote",
+    "Description": "Panel remote control for Free Radio widget",
+    "Version": "1.0.0",
+    "EnabledByDefault": true,
+    "License": "GPL"
+  },
+  "KPackage": {
+    "Structure": "Plasma/Applet"
+  },
+  "X-Plasma-API-Minimum-Version": "6.0",
+  "X-Plasma-API": "declarativeappletscript",
+  "X-Plasma-MainScript": "ui/main.qml",
+  "Categories": ["Audio"]
+}
