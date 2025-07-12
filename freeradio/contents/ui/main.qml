@@ -15,109 +15,11 @@ PlasmoidItem {
     property bool isCompactMode: plasmoid.formFactor === PlasmaCore.Types.Horizontal || 
                                 plasmoid.formFactor === PlasmaCore.Types.Vertical
     
-    // Proper D-Bus service implementation
-    property string dbusServiceName: "org.kde.freeradio.desktop"
-    property string dbusObjectPath: "/FreeRadio"
-    property string dbusInterface: "org.kde.freeradio.Remote"
-    property bool dbusServiceActive: false
+    // Popup state
+    property bool showPopup: false
     
-    // D-Bus service registration and monitoring (desktop widget only)
-    PlasmaCore.DataSource {
-        id: dbusService
-        engine: "executable"
-        connectedSources: isCompactMode ? [] : []
-        
-        Component.onCompleted: {
-            if (!isCompactMode) {
-                registerDBusService()
-            }
-        }
-    }
-    
-    function registerDBusService() {
-        console.log("Desktop widget: Registering D-Bus service")
-        
-        // First check if service exists
-        dbusService.connectedSources = ["qdbus --session org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -q '" + dbusServiceName + "' && echo 'EXISTS' || echo 'NOT_FOUND'"]
-        
-        Timer {
-            interval: 500
-            running: true
-            onTriggered: {
-                var checkResult = dbusService.data["qdbus --session org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -q '" + dbusServiceName + "' && echo 'EXISTS' || echo 'NOT_FOUND'"]["stdout"]
-                
-                if (checkResult && checkResult.trim() === "NOT_FOUND") {
-                    // Service doesn't exist, register it
-                    console.log("Registering new D-Bus service")
-                    createDBusService()
-                } else {
-                    console.log("D-Bus service already exists")
-                    dbusServiceActive = true
-                    startDBusMonitoring()
-                }
-            }
-        }
-    }
-    
-    function createDBusService() {
-        // Create a simple D-Bus service using dbus-send simulation
-        var serviceScript = 'while true; do if [ -f /tmp/freeradio_dbus_cmd ]; then CMD=$(cat /tmp/freeradio_dbus_cmd); rm -f /tmp/freeradio_dbus_cmd; echo "COMMAND:$CMD"; fi; sleep 0.2; done'
-        
-        dbusService.connectedSources = ["bash -c '" + serviceScript + "'"]
-        dbusServiceActive = true
-        console.log("D-Bus service simulation started")
-    }
-    
-    function startDBusMonitoring() {
-        if (!dbusServiceActive) return
-        
-        console.log("Starting D-Bus command monitoring")
-        
-        dbusService.onDataChanged.connect(function() {
-            var result = dbusService.data["bash -c 'while true; do if [ -f /tmp/freeradio_dbus_cmd ]; then CMD=$(cat /tmp/freeradio_dbus_cmd); rm -f /tmp/freeradio_dbus_cmd; echo \"COMMAND:$CMD\"; fi; sleep 0.2; done'"]["stdout"]
-            
-            if (result && result.indexOf("COMMAND:") >= 0) {
-                var command = result.split("COMMAND:")[1].trim()
-                if (command === "playpause" || command === "next" || command === "previous") {
-                    console.log("D-Bus service received command:", command)
-                    handleRemoteCommand(command)
-                }
-            }
-        })
-    }
-    
-    function sendDBusCommand(command) {
-        console.log("Panel widget: Sending D-Bus command:", command)
-        
-        var sendProcess = Qt.createQmlObject('
-            import QtQuick 2.15
-            import org.kde.plasma.core 2.0 as PlasmaCore
-            PlasmaCore.DataEngineSource {
-                engine: "executable"
-                connectedSources: ["echo \\"' + command + '\\" > /tmp/freeradio_dbus_cmd"]
-            }
-        ', root)
-        
-        Timer {
-            interval: 100
-            running: true
-            onTriggered: {
-                sendProcess.destroy()
-                console.log("D-Bus command sent:", command)
-            }
-        }
-    }
-    
-    Component.onCompleted: {
-        console.log("FreeRadio: FormFactor =", plasmoid.formFactor)
-        console.log("FreeRadio: isCompactMode =", isCompactMode)
-        console.log("FreeRadio: Horizontal =", PlasmaCore.Types.Horizontal)
-        console.log("FreeRadio: Vertical =", PlasmaCore.Types.Vertical)
-        console.log("FreeRadio: Planar =", PlasmaCore.Types.Planar)
-        
-        // Initialize command ID to avoid processing old commands
-        lastCommandId = ""
-    }
+    // Playback state tracking
+    property bool userPaused: false
     
     // Compact panel controls - dedicated interface for panel mode
     Item {
@@ -126,13 +28,38 @@ PlasmoidItem {
         
         Row {
             anchors.centerIn: parent
-            spacing: Math.max(0, (parent.width - 108) / 6)  // Adaptive spacing
+            spacing: Math.max(1, (parent.width - (parent.width / 3.8) * 4) / 5)  // Tighter spacing for larger buttons
+            
+            Button {
+                text: "📻"
+                width: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
+                height: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
+                flat: true
+                onClicked: {
+                    console.log("Panel: Open Radio button clicked")
+                    if (showPopup) {
+                        hideRadioPopup()
+                    } else {
+                        showRadioPopup()
+                    }
+                }
+                
+                ToolTip.text: showPopup ? "Close Radio" : "Open Radio"
+                ToolTip.visible: hovered
+                
+                contentItem: Text {
+                    text: parent.text
+                    font.pixelSize: Math.max(16, parent.height * 0.6)
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    color: Kirigami.Theme.textColor
+                }
+            }
             
             Button {
                 text: "⏮"
-                width: Math.max(24, Math.min(40, parent.width / 3.5))
-                height: Math.max(20, Math.min(32, parent.height * 0.8))
-                flat: true
+                width: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
+                height: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
                 onClicked: {
                     console.log("Panel Remote: Previous button clicked")
                     sendRemoteCommand("previous")
@@ -141,19 +68,64 @@ PlasmoidItem {
                 ToolTip.text: "Previous"
                 ToolTip.visible: hovered
                 
+                // Modern rounded button design
+                background: Rectangle {
+                    radius: parent.width / 2
+                    color: {
+                        if (parent.pressed) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 1.0)
+                        if (parent.hovered) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8)
+                        return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.6)
+                    }
+                    border.width: 1
+                    border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8)
+                    
+                    // Subtle glow effect
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width + 4
+                        height: parent.height + 4
+                        radius: width / 2
+                        color: "transparent"
+                        border.width: parent.parent.hovered ? 2 : 0
+                        border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
+                        
+                        Behavior on border.width {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                    }
+                    
+                    Behavior on color {
+                        ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    }
+                }
+                
                 contentItem: Text {
                     text: parent.text
-                    font: parent.font
+                    font.pixelSize: Math.max(16, parent.height * 0.6)
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
-                    color: Kirigami.Theme.textColor
+                    color: {
+                        if (parent.pressed || parent.hovered) return Kirigami.Theme.highlightedTextColor
+                        return Kirigami.Theme.textColor
+                    }
+                    anchors.centerIn: parent
+                    
+                    // Enhanced scale animation
+                    scale: parent.pressed ? 0.9 : 1.0
+                    Behavior on scale {
+                        NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                    }
+                    
+                    Behavior on color {
+                        ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                    }
                 }
             }
             
             Button {
                 text: "⏯"
-                width: Math.max(24, Math.min(40, parent.width / 3.5))
-                height: Math.max(20, Math.min(32, parent.height * 0.8))
+                width: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
+                height: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
                 flat: true
                 onClicked: {
                     console.log("Panel Remote: Play/pause button clicked")
@@ -165,7 +137,7 @@ PlasmoidItem {
                 
                 contentItem: Text {
                     text: parent.text
-                    font: parent.font
+                    font.pixelSize: Math.max(16, parent.height * 0.6)
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     color: Kirigami.Theme.textColor
@@ -174,11 +146,13 @@ PlasmoidItem {
             
             Button {
                 text: "⏭"
-                width: Math.max(24, Math.min(40, parent.width / 3.5))
-                height: Math.max(20, Math.min(32, parent.height * 0.8))
+                width: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
+                height: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
                 flat: true
                 onClicked: {
                     console.log("Panel Remote: Next button clicked")
+                    console.log("Current station URL:", currentStationUrl)
+                    console.log("Current station name:", currentStationName)
                     sendRemoteCommand("next")
                 }
                 
@@ -187,7 +161,7 @@ PlasmoidItem {
                 
                 contentItem: Text {
                     text: parent.text
-                    font: parent.font
+                    font.pixelSize: Math.max(16, parent.height * 0.6)
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     color: Kirigami.Theme.textColor
@@ -201,11 +175,11 @@ PlasmoidItem {
     property real screenHeight: Screen.desktopAvailableHeight
     
     // Dynamic sizing based on mode - resizable for panel, full for desktop
-    Layout.minimumWidth: isCompactMode ? 80 : Math.max(280, Math.min(350, screenWidth * 0.15))
+    Layout.minimumWidth: isCompactMode ? 100 : Math.max(280, Math.min(350, screenWidth * 0.15))
     Layout.minimumHeight: isCompactMode ? 24 : Math.max(350, Math.min(450, screenHeight * 0.30))
-    Layout.preferredWidth: isCompactMode ? 108 : Math.max(300, Math.min(380, screenWidth * 0.15))
+    Layout.preferredWidth: isCompactMode ? 140 : Math.max(300, Math.min(380, screenWidth * 0.15))
     Layout.preferredHeight: isCompactMode ? 30 : Math.max(400, Math.min(520, screenHeight * 0.35))
-    Layout.maximumWidth: isCompactMode ? 200 : Math.max(350, Math.min(420, screenWidth * 0.18))
+    Layout.maximumWidth: isCompactMode ? 220 : Math.max(350, Math.min(420, screenWidth * 0.18))
     Layout.maximumHeight: isCompactMode ? 40 : Math.max(500, Math.min(600, screenHeight * 0.40))
     
     // Default size for standalone mode
@@ -426,7 +400,7 @@ PlasmoidItem {
         console.log("Reloaded sources")
         
         // If we're currently viewing custom stations, refresh the stations list too
-        if (currentSource === "🔗 Add Custom Radio") {
+        if (currentSource === "🔗 Custom Radio") {
             console.log("Currently in custom radio view, refreshing stations")
             loadStations(customStations)
         }
@@ -470,7 +444,7 @@ PlasmoidItem {
                         saveCustomStations()
                         loadSources()
                         
-                        if (currentSource === "🔗 Add Custom Radio") {
+                        if (currentSource === "🔗 Custom Radio") {
                             loadStations(customStations)
                         }
                         
@@ -514,7 +488,7 @@ PlasmoidItem {
             loadSources()  // Refresh sources
             
             // If we're currently viewing custom stations, refresh the stations list too
-            if (currentSource === "🔗 Add Custom Radio") {
+            if (currentSource === "🔗 Custom Radio") {
                 loadStations(customStations)
             }
             
@@ -584,7 +558,7 @@ PlasmoidItem {
             plasmoid.configuration.lastStationUrl = currentStationUrl
             plasmoid.configuration.lastStationHost = currentStationHost
             plasmoid.configuration.lastStationPath = currentStationPath
-            plasmoid.writeConfig()
+            // plasmoid.writeConfig() // This function doesn't exist in Plasma 6
             
             console.log("Saved last station:", currentStationName, "URL:", currentStationUrl)
         }
@@ -753,20 +727,14 @@ PlasmoidItem {
         autoPlay: false
         loops: MediaPlayer.Infinite
         playbackRate: 1.0
-        // Only enable audio output for desktop mode, not panel mode
-        audioOutput: !isCompactMode ? AudioOutput {
+        audioOutput: AudioOutput {
             id: audioOut
             volume: compactVolumeSlider.value
             muted: false
-        } : null
+        }
         
         // Start playing as soon as media is loaded (not fully buffered)
         onMediaStatusChanged: {
-            if (isCompactMode) {
-                console.log("Panel mode: ignoring media status change")
-                return
-            }
-            
             console.log("Media status changed:", mediaStatus)
             if (mediaStatus === MediaPlayer.LoadedMedia) {
                 if (preventAutoPlayOnStartup) {
@@ -791,16 +759,16 @@ PlasmoidItem {
         }
     }
     
-    // Preview player for search results - only for desktop mode
+    // Preview player for search results
     MediaPlayer {
         id: previewPlayer
         autoPlay: false
         loops: MediaPlayer.Infinite
-        audioOutput: !isCompactMode ? AudioOutput {
+        audioOutput: AudioOutput {
             id: previewAudioOut
             volume: compactVolumeSlider.value * 0.7  // Slightly lower volume for preview
             muted: false
-        } : null
+        }
         
         onErrorOccurred: function(error, errorString) {
             console.log("=== PREVIEW PLAYER ERROR ===")
@@ -846,27 +814,27 @@ PlasmoidItem {
     property string lastRemoteTimestamp: ""
     
     function handleRemoteCommand(command) {
-        // Only handle remote commands if this is the desktop widget (not panel)
-        if (isCompactMode) {
-            console.log("Panel widget ignoring remote command handling:", command)
-            return
-        }
-        
-        console.log("Desktop widget handling remote command:", command)
+        console.log("Handling remote command:", command)
         
         switch(command) {
             case "playpause":
                 if (player.playbackState === MediaPlayer.PlayingState) {
-                    player.stop()
+                    console.log("Remote: Pausing playback")
+                    player.pause()
+                    userPaused = true
                     songUpdateTimer.stop()
-                } else if (currentStationUrl !== "") {
+                } else if (currentStationUrl !== "" && (player.playbackState === MediaPlayer.PausedState || userPaused)) {
+                    console.log("Remote: Resuming playback")
                     player.play()
+                    userPaused = false
                     songUpdateTimer.start()
                 }
                 break
             
             case "next":
-                playNextStation()
+                console.log("Remote command: next - calling playNextStation()")
+                var result = playNextStation()
+                console.log("playNextStation() returned:", result)
                 break
                 
             case "previous":
@@ -878,16 +846,17 @@ PlasmoidItem {
     // Remote control function for unified widget
     function sendRemoteCommand(command) {
         console.log("Remote command:", command)
-        
-        if (isCompactMode) {
-            // Panel mode - send command via notification
-            console.log("Panel mode: Sending command via notification")
-            sendNotificationCommand(command)
-        } else {
-            // Desktop mode - handle command directly
-            console.log("Desktop mode: Handling command locally")
-            handleRemoteCommand(command)
-        }
+        handleRemoteCommand(command)
+    }
+    
+    function showRadioPopup() {
+        console.log("Opening radio popup")
+        showPopup = true
+    }
+    
+    function hideRadioPopup() {
+        console.log("Closing radio popup")
+        showPopup = false
     }
 
     function loadSources() {
@@ -922,7 +891,7 @@ PlasmoidItem {
         
         // Add Custom Stations source last (always show for adding)
         sourcesModel.append({
-            "name": "🔗 Add Custom Radio",
+            "name": "🔗 Custom Radio",
             "description": customStations.length > 0 ? 
                           customStations.length + " custom stations • Add new station" :
                           "Add your own radio stream URLs",
@@ -1000,7 +969,7 @@ PlasmoidItem {
         currentSource = source.name
         
         // Special handling for Custom Stations - go directly to stations with add interface
-        if (source.name === "🔗 Add Custom Radio") {
+        if (source.name === "🔗 Custom Radio") {
             console.log("Loading custom stations interface")
             console.log("Current source set to:", currentSource)
             console.log("inSource:", inSource, "inCategory:", inCategory)
@@ -1323,7 +1292,7 @@ PlasmoidItem {
         console.log("Fetching live song metadata")
         
         // Check if this is a custom station
-        if (currentSource === "🔗 Add Custom Radio") {
+        if (currentSource === "🔗 Custom Radio") {
             console.log("Custom station detected, skipping metadata fetch")
             currentSongTitle = ""
             currentArtist = ""
@@ -2720,8 +2689,10 @@ PlasmoidItem {
         fetchStreamMetadata(streamUrl)
         songUpdateTimer.start()
         
-        // Play directly
+        // Reset pause state and play directly
+        userPaused = false
         player.source = streamUrl
+        player.play()
         
         return true
     }
@@ -2874,60 +2845,94 @@ PlasmoidItem {
         fetchStreamMetadata(streamUrl)
         songUpdateTimer.start()
         
-        // Play directly
+        // Reset pause state and play directly
+        userPaused = false
         player.source = streamUrl
+        player.play()
         
         return true
     }
     
     function playNextStation() {
-        // If currently playing an ebook, go to next chapter
-        if (currentEbookUrl && currentEbookChapters.length > 0) {
-            if (currentEbookChapterIndex < currentEbookChapters.length - 1) {
-                nextEbookChapter()
-                return true
-            }
+        console.log("=== PLAY NEXT STATION CALLED ===")
+        console.log("currentEbookUrl:", currentEbookUrl)
+        console.log("currentEbookChapters.length:", currentEbookChapters.length)
+        console.log("currentEbookChapterIndex:", currentEbookChapterIndex)
+        
+        // FORCE CLEAR EBOOK STATE FOR RADIO NAVIGATION
+        currentEbookUrl = ""
+        currentEbookChapters = []
+        currentEbookChapterIndex = -1
+        console.log("Cleared ebook state for radio navigation")
+        
+        // Simple approach: if we have a current station list, use it
+        if (currentStationsList.length > 0 && currentStationIndex >= 0) {
+            var nextIndex = (currentStationIndex + 1) % currentStationsList.length
+            console.log("Using currentStationsList, moving from", currentStationIndex, "to", nextIndex)
+            console.log("Next station:", currentStationsList[nextIndex].name)
+            
+            // Directly call playStationByIndex - this is what the UI uses
+            console.log("About to call playStationByIndex with index:", nextIndex)
+            console.log("Station list has", currentStationsList.length, "stations")
+            console.log("Target station:", currentStationsList[nextIndex] ? currentStationsList[nextIndex].name : "UNDEFINED")
+            var result = playStationByIndex(nextIndex)
+            console.log("playStationByIndex returned:", result)
+            return result
         }
         
-        // Build a comprehensive station list regardless of current context
+        // Fallback: try with all stations
         var allStations = getAllAvailableStations()
-        
         if (allStations.length === 0) {
-            console.log("No stations available for next")
+            console.log("No stations available")
             return false
         }
         
-        // Find current station in the comprehensive list
-        var currentIndex = findCurrentStationIndex(allStations)
-        var nextIndex = (currentIndex + 1) % allStations.length
-        
-        console.log("Playing next station, current:", currentIndex, "next:", nextIndex, "total:", allStations.length)
-        return playStationDirect(allStations[nextIndex])
+        // Just play the first station if we can't find current
+        console.log("Fallback: playing first station from all stations")
+        var station = allStations[0]
+        currentStationIndex = 0
+        return playStationByIndex(0)
     }
     
     function playPreviousStation() {
-        // If currently playing an ebook, go to previous chapter
-        if (currentEbookUrl && currentEbookChapters.length > 0) {
-            if (currentEbookChapterIndex > 0) {
-                previousEbookChapter()
-                return true
-            }
+        console.log("=== PLAY PREVIOUS STATION CALLED ===")
+        console.log("currentEbookUrl:", currentEbookUrl)
+        console.log("currentEbookChapters.length:", currentEbookChapters.length)
+        console.log("currentEbookChapterIndex:", currentEbookChapterIndex)
+        
+        // FORCE CLEAR EBOOK STATE FOR RADIO NAVIGATION
+        currentEbookUrl = ""
+        currentEbookChapters = []
+        currentEbookChapterIndex = -1
+        console.log("Cleared ebook state for radio navigation")
+        
+        // Simple approach: if we have a current station list, use it
+        if (currentStationsList.length > 0 && currentStationIndex >= 0) {
+            var prevIndex = currentStationIndex <= 0 ? currentStationsList.length - 1 : currentStationIndex - 1
+            console.log("Using currentStationsList, moving from", currentStationIndex, "to", prevIndex)
+            console.log("Previous station:", currentStationsList[prevIndex].name)
+            
+            // Directly call playStationByIndex - this is what the UI uses
+            console.log("About to call playStationByIndex with index:", prevIndex)
+            console.log("Station list has", currentStationsList.length, "stations")
+            console.log("Target station:", currentStationsList[prevIndex] ? currentStationsList[prevIndex].name : "UNDEFINED")
+            var result = playStationByIndex(prevIndex)
+            console.log("playStationByIndex returned:", result)
+            return result
         }
         
-        // Build a comprehensive station list regardless of current context
+        // Fallback: try with all stations
         var allStations = getAllAvailableStations()
-        
         if (allStations.length === 0) {
-            console.log("No stations available for previous")
+            console.log("No stations available")
             return false
         }
         
-        // Find current station in the comprehensive list
-        var currentIndex = findCurrentStationIndex(allStations)
-        var prevIndex = currentIndex <= 0 ? allStations.length - 1 : currentIndex - 1
-        
-        console.log("Playing previous station, current:", currentIndex, "prev:", prevIndex, "total:", allStations.length)
-        return playStationDirect(allStations[prevIndex])
+        // Just play the last station if we can't find current
+        console.log("Fallback: playing last station from all stations")
+        var lastIndex = allStations.length - 1
+        currentStationIndex = lastIndex
+        return playStationByIndex(lastIndex)
     }
     
     function getAllAvailableStations() {
@@ -3006,7 +3011,15 @@ PlasmoidItem {
     }
     
     function playStationDirect(station) {
+        console.log("*** playStationDirect called with station:", station ? station.name : "NULL")
+        
+        if (!station) {
+            console.log("ERROR: playStationDirect called with null/undefined station")
+            return false
+        }
+        
         var streamUrl = getStreamUrl(station.host, station.path, streamQuality)
+        console.log("Generated stream URL:", streamUrl)
         
         currentStationName = station.name
         currentStationUrl = streamUrl
@@ -3034,9 +3047,7 @@ PlasmoidItem {
         
         // Play directly
         player.source = streamUrl
-        console.log("About to call player.play(), current state:", player.playbackState)
         player.play()
-        console.log("Called player.play(), new state:", player.playbackState)
         
         return true
     }
@@ -3256,10 +3267,12 @@ PlasmoidItem {
     }
 
     ColumnLayout {
+        id: mainWidget
         anchors.fill: parent
-        anchors.margins: Math.max(8, root.width * 0.03)  // Responsive padding: 8px min or 3% of width
-        spacing: Math.max(8, root.height * 0.02)  // Responsive spacing: 8px min or 2% of height
-        visible: !isCompactMode
+        anchors.margins: Math.max(8, (showPopup ? radioPopup.width : root.width) * 0.03)
+        spacing: Math.max(8, (showPopup ? radioPopup.height : root.height) * 0.02)
+        visible: !isCompactMode || showPopup
+        parent: showPopup ? contentContainer : root
 
         // Search bar
         RowLayout {
@@ -3624,7 +3637,7 @@ PlasmoidItem {
                     onClicked: {
                         if (inCategory) {
                             // Special handling for favorites and custom stations - go directly back to sources
-                            if (currentSource === "⭐ Favorites" || currentSource === "🔗 Add Custom Radio") {
+                            if (currentSource === "⭐ Favorites" || currentSource === "🔗 Custom Radio") {
                                 inCategory = false
                                 inSource = false
                                 stationsModel.clear()
@@ -3665,7 +3678,7 @@ PlasmoidItem {
             
             // Custom Radio action buttons
             RowLayout {
-                visible: currentSource === "🔗 Add Custom Radio" && inCategory
+                visible: currentSource === "🔗 Custom Radio" && inCategory
                 Layout.fillWidth: true
                 spacing: 10
                 
@@ -3804,16 +3817,18 @@ PlasmoidItem {
                         anchors.margins: 4
                         spacing: 4  // Reduced spacing
                         
-                        Label {
+                        Text {
                             text: model.name
-                            font.pointSize: Math.max(7, Math.min(11, root.width / 40))  // Responsive font
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: Kirigami.Theme.textColor
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                         }
                         
                         // Edit button for custom stations
                         Button {
-                            visible: currentSource === "🔗 Add Custom Radio"
+                            visible: currentSource === "🔗 Custom Radio"
                             text: "✏️"
                             implicitWidth: 24
                             implicitHeight: 24
@@ -3834,7 +3849,7 @@ PlasmoidItem {
                         
                         // Delete button for custom stations
                         Button {
-                            visible: currentSource === "🔗 Add Custom Radio"
+                            visible: currentSource === "🔗 Custom Radio"
                             text: "❌"
                             implicitWidth: 24
                             implicitHeight: 24
@@ -3893,7 +3908,7 @@ PlasmoidItem {
                         
                         var streamUrl
                         // Handle custom stations differently
-                        if (currentSource === "🔗 Add Custom Radio") {
+                        if (currentSource === "🔗 Custom Radio") {
                             // For custom stations, use the URL directly
                             streamUrl = model.host || model.url
                             console.log("Custom station clicked - URL:", streamUrl)
@@ -4092,55 +4107,128 @@ PlasmoidItem {
         // Controls
         Rectangle {
             Layout.fillWidth: true
-            height: Math.max(60, Math.min(80, root.height * 0.15))  // Taller responsive height for better centering
+            height: Math.max(75, Math.min(95, root.height * 0.18))  // Extra height for enhanced button designs and glow effects
             color: Kirigami.Theme.backgroundColor
             radius: 12
             border.width: 1
             border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.25)
             antialiasing: true
             
-            // Single horizontal row: Play and Volume controls
-            RowLayout {
+            // Vertical layout: Playback controls and timeline
+            ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 12
-                spacing: Math.max(6, Math.min(12, root.width / 40))
-                clip: true
+                anchors.margins: Math.max(8, Math.min(16, root.height / 25))
+                spacing: Math.max(4, Math.min(8, root.height / 60))
+                clip: false  // Allow button glow effects to extend beyond bounds
+                
+                // Top row: Play and Volume controls
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Math.max(6, Math.min(12, root.width / 40))
                 
                 Button {
                     text: currentEbookUrl ? "⏪" : "⏮"
                     enabled: currentStationUrl !== "" && (currentEbookUrl ? currentEbookChapterIndex > 0 : true)
                     onClicked: {
-        console.log("=== PREVIOUS BUTTON CLICKED ===")
-        var result = playPreviousStation()
-        console.log("playPreviousStation returned:", result)
-    }
-                    font.pointSize: Math.max(10, Math.min(14, root.width / 35))
-                    implicitWidth: Math.max(30, Math.min(40, root.width / 18))
-                    implicitHeight: Math.max(30, Math.min(40, root.height / 20))
+                        console.log("=== PREVIOUS BUTTON CLICKED ===")
+                        var result = playPreviousStation()
+                        console.log("playPreviousStation returned:", result)
+                    }
+                    
+                    font.pointSize: Math.max(12, Math.min(16, root.width / 30))
+                    implicitWidth: Math.max(42, Math.min(50, root.width / 15))
+                    implicitHeight: Math.max(42, Math.min(50, root.height / 18))
                     Layout.alignment: Qt.AlignVCenter
                     
                     ToolTip.text: currentEbookUrl ? "Previous chapter" : "Previous station"
                     ToolTip.visible: hovered
                     
+                    // Modern rounded button design
+                    background: Rectangle {
+                        radius: parent.width / 2
+                        color: {
+                            if (!parent.enabled) return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                            if (parent.pressed) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8)
+                            if (parent.hovered) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.6)
+                            return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.4)
+                        }
+                        border.width: 1
+                        border.color: parent.enabled ? Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
+                        
+                        // Subtle glow effect
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width + 4
+                            height: parent.height + 4
+                            radius: width / 2
+                            color: "transparent"
+                            border.width: parent.parent.hovered ? 2 : 0
+                            border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
+                            visible: parent.parent.enabled
+                            
+                            Behavior on border.width {
+                                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                            }
+                        }
+                        
+                        Behavior on color {
+                            ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                    }
+                    
                     contentItem: Text {
                         text: parent.text
-                        font: parent.font
+                        font.pixelSize: Math.max(18, Math.min(24, parent.height * 0.5))
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        color: parent.enabled ? Kirigami.Theme.textColor : Kirigami.Theme.disabledTextColor
+                        color: {
+                            if (!parent.enabled) return Kirigami.Theme.disabledTextColor
+                            if (parent.pressed || parent.hovered) return Kirigami.Theme.highlightedTextColor
+                            return Kirigami.Theme.textColor
+                        }
+                        anchors.centerIn: parent
+                        
+                        // Enhanced scale animation
+                        scale: parent.pressed ? 0.9 : 1.0
+                        Behavior on scale {
+                            NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                        }
+                        
+                        Behavior on color {
+                            ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                        }
                     }
                 }
                 
                 Button {
                     text: player.playbackState === MediaPlayer.PlayingState ? "⏸" : "▶"
-                    enabled: currentStationUrl !== ""
+                    enabled: currentStationUrl !== "" || currentEbookUrl !== ""
                     onClicked: {
                         if (player.playbackState === MediaPlayer.PlayingState) {
                             player.pause()
                             songUpdateTimer.stop()
+                            if (currentEbookUrl) {
+                                ebookProgressTimer.stop()
+                            }
+                        } else if (currentEbookUrl !== "") {
+                            // Playing an ebook
+                            console.log("=== RESUMING EBOOK PLAYBACK ===")
+                            console.log("Current ebook:", currentEbookTitle)
+                            console.log("Current chapter index:", currentEbookChapterIndex)
+                            
+                            if (currentEbookChapterIndex >= 0 && currentEbookChapterIndex < currentEbookChapters.length) {
+                                // Resume current chapter
+                                player.play()
+                                ebookProgressTimer.start()
+                            } else if (currentEbookChapters.length > 0) {
+                                // Start from first chapter
+                                playEbookChapter(0)
+                            } else {
+                                console.log("No ebook chapters available")
+                            }
                         } else if (currentStationUrl !== "") {
-                            // When resuming playback, refresh song metadata
-                            console.log("=== RESUMING PLAYBACK ===")
+                            // Playing radio
+                            console.log("=== RESUMING RADIO PLAYBACK ===")
                             console.log("Fetching updated song metadata")
                             debugMetadata = "Resuming, checking for new song..."
                             
@@ -4151,20 +4239,103 @@ PlasmoidItem {
                             songUpdateTimer.start()
                         }
                     }
-                    font.pointSize: Math.max(14, Math.min(18, root.width / 25))
-                    implicitWidth: Math.max(50, Math.min(60, root.width / 12))
-                    implicitHeight: Math.max(40, Math.min(50, root.height / 15))
+                    
+                    font.pointSize: Math.max(18, Math.min(22, root.width / 22))
+                    implicitWidth: Math.max(55, Math.min(65, root.width / 11))
+                    implicitHeight: Math.max(55, Math.min(65, root.height / 13))
                     Layout.alignment: Qt.AlignVCenter
+                    
+                    // Enhanced main play button design
+                    background: Rectangle {
+                        radius: parent.width / 2
+                        color: {
+                            if (!parent.enabled) return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                            if (parent.pressed) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 1.0)
+                            if (parent.hovered) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8)
+                            return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.6)
+                        }
+                        border.width: 2
+                        border.color: parent.enabled ? Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 1.0) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
+                        
+                        // Enhanced glow effect for main button
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width + (parent.parent.hovered ? 8 : 4)
+                            height: parent.height + (parent.parent.hovered ? 8 : 4)
+                            radius: width / 2
+                            color: "transparent"
+                            border.width: parent.parent.hovered ? 3 : 1
+                            border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, parent.parent.hovered ? 0.4 : 0.2)
+                            visible: parent.parent.enabled
+                            
+                            Behavior on width {
+                                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            }
+                            Behavior on height {
+                                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            }
+                            Behavior on border.width {
+                                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            }
+                            Behavior on border.color {
+                                ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            }
+                        }
+                        
+                        // Pulsing animation when playing
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width + 12
+                            height: parent.height + 12
+                            radius: width / 2
+                            color: "transparent"
+                            border.width: 2
+                            border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
+                            visible: parent.parent.enabled && player.playbackState === MediaPlayer.PlayingState
+                            
+                            SequentialAnimation on opacity {
+                                running: parent.visible
+                                loops: Animation.Infinite
+                                NumberAnimation { from: 0.3; to: 1.0; duration: 1000; easing.type: Easing.InOutSine }
+                                NumberAnimation { from: 1.0; to: 0.3; duration: 1000; easing.type: Easing.InOutSine }
+                            }
+                        }
+                        
+                        Behavior on color {
+                            ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                        }
+                        
+                        // Scale animation
+                        scale: parent.pressed ? 0.9 : 1.0
+                        Behavior on scale {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                    }
                     
                     contentItem: Text {
                         text: parent.text
                         font: parent.font
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        color: parent.enabled ? Kirigami.Theme.textColor : Kirigami.Theme.disabledTextColor
+                        color: {
+                            if (!parent.enabled) return Kirigami.Theme.disabledTextColor
+                            if (parent.pressed || parent.hovered) return Kirigami.Theme.highlightedTextColor
+                            return Kirigami.Theme.textColor
+                        }
                         anchors.centerIn: parent
-                        // Adjust padding for play symbol to appear more centered
-                        leftPadding: parent.text === "▶" ? 2 : 0
+                        // Shift play symbol for visual centering
+                        anchors.horizontalCenterOffset: parent.text === "▶" ? 2 : 0
+                        anchors.verticalCenterOffset: parent.text === "▶" ? -2 : 0
+                        
+                        // Enhanced scale animation
+                        scale: parent.pressed ? 0.9 : 1.0
+                        Behavior on scale {
+                            NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                        }
+                        
+                        Behavior on color {
+                            ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                        }
                     }
                 }
                 
@@ -4172,24 +4343,73 @@ PlasmoidItem {
                     text: currentEbookUrl ? "⏩" : "⏭"
                     enabled: currentStationUrl !== "" && (currentEbookUrl ? currentEbookChapterIndex < currentEbookChapters.length - 1 : true)
                     onClicked: {
-        console.log("=== NEXT BUTTON CLICKED ===")
-        var result = playNextStation()
-        console.log("playNextStation returned:", result)
-    }
+                        console.log("=== NEXT BUTTON CLICKED ===")
+                        var result = playNextStation()
+                        console.log("playNextStation returned:", result)
+                    }
+                    
                     font.pointSize: Math.max(12, Math.min(16, root.width / 30))
-                    implicitWidth: Math.max(35, Math.min(45, root.width / 15))
-                    implicitHeight: Math.max(35, Math.min(45, root.height / 18))
+                    implicitWidth: Math.max(42, Math.min(50, root.width / 15))
+                    implicitHeight: Math.max(42, Math.min(50, root.height / 18))
                     Layout.alignment: Qt.AlignVCenter
                     
                     ToolTip.text: currentEbookUrl ? "Next chapter" : "Next station"
                     ToolTip.visible: hovered
                     
+                    // Modern rounded button design
+                    background: Rectangle {
+                        radius: parent.width / 2
+                        color: {
+                            if (!parent.enabled) return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                            if (parent.pressed) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8)
+                            if (parent.hovered) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.6)
+                            return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.4)
+                        }
+                        border.width: 1
+                        border.color: parent.enabled ? Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
+                        
+                        // Subtle glow effect
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width + 4
+                            height: parent.height + 4
+                            radius: width / 2
+                            color: "transparent"
+                            border.width: parent.parent.hovered ? 2 : 0
+                            border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
+                            visible: parent.parent.enabled
+                            
+                            Behavior on border.width {
+                                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                            }
+                        }
+                        
+                        Behavior on color {
+                            ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                    }
+                    
                     contentItem: Text {
                         text: parent.text
-                        font: parent.font
+                        font.pixelSize: Math.max(18, Math.min(24, parent.height * 0.5))
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        color: parent.enabled ? Kirigami.Theme.textColor : Kirigami.Theme.disabledTextColor
+                        color: {
+                            if (!parent.enabled) return Kirigami.Theme.disabledTextColor
+                            if (parent.pressed || parent.hovered) return Kirigami.Theme.highlightedTextColor
+                            return Kirigami.Theme.textColor
+                        }
+                        anchors.centerIn: parent
+                        
+                        // Enhanced scale animation
+                        scale: parent.pressed ? 0.9 : 1.0
+                        Behavior on scale {
+                            NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                        }
+                        
+                        Behavior on color {
+                            ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                        }
                     }
                 }
                 
@@ -4197,20 +4417,73 @@ PlasmoidItem {
                     text: "🎲"
                     enabled: true  // Always enabled since it can pick from all sources
                     onClicked: playRandomStation()
-                    font.pointSize: Math.max(10, Math.min(14, root.width / 32))
-                    implicitWidth: Math.max(35, Math.min(45, root.width / 15))
-                    implicitHeight: Math.max(35, Math.min(45, root.height / 18))
+                    font.pointSize: Math.max(12, Math.min(16, root.width / 30))
+                    implicitWidth: Math.max(40, Math.min(48, root.width / 16))
+                    implicitHeight: Math.max(40, Math.min(48, root.height / 19))
                     Layout.alignment: Qt.AlignVCenter
                     
                     ToolTip.text: "Random station"
                     ToolTip.visible: hovered
+                    
+                    // Modern rounded button design
+                    background: Rectangle {
+                        radius: parent.width / 2
+                        color: {
+                            if (!parent.enabled) return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                            if (parent.pressed) return Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.8)
+                            if (parent.hovered) return Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.6)
+                            return Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.3)
+                        }
+                        border.width: 1
+                        border.color: parent.enabled ? Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.8) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
+                        
+                        // Subtle glow effect
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width + 4
+                            height: parent.height + 4
+                            radius: width / 2
+                            color: "transparent"
+                            border.width: parent.parent.hovered ? 2 : 0
+                            border.color: Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.3)
+                            visible: parent.parent.enabled
+                            
+                            Behavior on border.width {
+                                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                            }
+                        }
+                        
+                        Behavior on color {
+                            ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                    }
                     
                     contentItem: Text {
                         text: parent.text
                         font: parent.font
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        color: parent.enabled ? Kirigami.Theme.textColor : Kirigami.Theme.disabledTextColor
+                        color: {
+                            if (!parent.enabled) return Kirigami.Theme.disabledTextColor
+                            if (parent.pressed) return Kirigami.Theme.highlightedTextColor
+                            return Kirigami.Theme.textColor
+                        }
+                        
+                        // Rotation animation on click
+                        rotation: parent.pressed ? 360 : 0
+                        Behavior on rotation {
+                            NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                        }
+                        
+                        // Scale animation on press
+                        scale: parent.pressed ? 0.95 : 1.0
+                        Behavior on scale {
+                            NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                        }
+                        
+                        Behavior on color {
+                            ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
                     }
                 }
                 
@@ -4251,6 +4524,23 @@ PlasmoidItem {
                         saveVolumeLevel(value)
                     }
                 }
+                } // End of top RowLayout
+                
+                // Bottom row: Timeline for ebooks
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Math.max(8, Math.min(16, root.width / 30))
+                    Layout.rightMargin: Math.max(8, Math.min(16, root.width / 30))
+                    Layout.topMargin: Math.max(4, Math.min(8, root.height / 80))
+                    visible: currentEbookUrl !== ""
+                    spacing: Math.max(8, Math.min(12, root.width / 50))
+                    
+                    Label {
+                        text: "Timeline:"
+                        font.pointSize: Math.max(8, Math.min(10, root.width / 45))
+                        color: Kirigami.Theme.textColor
+                        Layout.alignment: Qt.AlignVCenter
+                    }
                 
                 // Progress slider for ebooks
                 Slider {
@@ -4260,7 +4550,7 @@ PlasmoidItem {
                     to: player.duration || 1
                     value: player.position || 0
                     Layout.fillWidth: true
-                    Layout.maximumWidth: Math.max(80, Math.min(150, root.width / 4))
+                    Layout.preferredWidth: Math.max(120, root.width * 0.6)
                     Layout.alignment: Qt.AlignVCenter
                     snapMode: Slider.NoSnap
                     live: true  // Enable live updates while dragging
@@ -4319,6 +4609,7 @@ PlasmoidItem {
                     visible: actualBitrate !== "" || actualChannels !== ""
                     Layout.alignment: Qt.AlignVCenter
                 }
+                } // End of timeline RowLayout
             }
         }
         
@@ -4411,7 +4702,7 @@ PlasmoidItem {
                                     saveCustomStations()
                                     loadSources()
                                     
-                                    if (currentSource === "🔗 Add Custom Radio") {
+                                    if (currentSource === "🔗 Custom Radio") {
                                         loadStations(customStations)
                                     }
                                     
@@ -4618,7 +4909,7 @@ PlasmoidItem {
                                     Text {
                                         text: station.name || ""
                                         color: "white"
-                                        font.pointSize: 10
+                                        font.pointSize: 16
                                         font.bold: true
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
@@ -4627,7 +4918,7 @@ PlasmoidItem {
                                     Text {
                                         text: (station.tags || "") + (station.country ? " • " + station.country : "")
                                         color: Kirigami.Theme.disabledTextColor
-                                        font.pointSize: 8
+                                        font.pointSize: 10
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
                                     }
@@ -4906,6 +5197,103 @@ PlasmoidItem {
                     }
                 }
             }
+        }
+    }
+    
+    // Popup window for compact mode
+    Window {
+        id: radioPopup
+        visible: showPopup && isCompactMode
+        flags: Qt.Popup | Qt.FramelessWindowHint
+        color: "transparent"
+        
+        width: Math.max(320, Math.min(400, Screen.desktopAvailableWidth * 0.25))
+        height: Math.max(480, Math.min(650, Screen.desktopAvailableHeight * 0.5))
+        
+        // Position popup near the panel widget
+        x: {
+            if (!parent) return 0
+            var pos = parent.mapToGlobal(0, 0)
+            // Position to the right of the panel widget, with some margin
+            return Math.min(pos.x + parent.width + 10, Screen.desktopAvailableWidth - width - 20)
+        }
+        
+        y: {
+            if (!parent) return 0
+            var pos = parent.mapToGlobal(0, 0)
+            // Center vertically relative to the panel widget
+            return Math.max(20, Math.min(pos.y - height/2 + parent.height/2, Screen.desktopAvailableHeight - height - 20))
+        }
+        
+        Rectangle {
+            anchors.fill: parent
+            color: Kirigami.Theme.backgroundColor
+            radius: 12
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.15)
+            
+            // Header with close button
+            Rectangle {
+                id: popupHeader
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 40
+                color: Qt.rgba(0, 0, 0, 0.1)
+                radius: 12
+                
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: parent.radius
+                    color: parent.color
+                }
+                
+                Text {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 16
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Free Radio"
+                    font.bold: true
+                    color: Kirigami.Theme.textColor
+                }
+                
+                Button {
+                    anchors.right: parent.right
+                    anchors.rightMargin: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "✕"
+                    flat: true
+                    width: 24
+                    height: 24
+                    onClicked: hideRadioPopup()
+                    
+                    contentItem: Text {
+                        text: parent.text
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: Kirigami.Theme.textColor
+                    }
+                }
+            }
+            
+            // Content container for the main widget when in popup mode
+            Item {
+                id: contentContainer
+                anchors.top: popupHeader.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.margins: 8
+            }
+        }
+        
+        // Close popup when clicking outside
+        MouseArea {
+            anchors.fill: parent
+            z: -1
+            onClicked: hideRadioPopup()
         }
     }
 } // PlasmoidItem
