@@ -3,16 +3,22 @@
     "Id": "freeradio",
     "Name": "Free Radio",
     "Description": "Stream radio stations from various sources without ads or talk",
-    "Version": "1.3.0",
-    "EnabledByDefault": true,
-    "License": "GPL"
+    "Version": "1.5.6",
+    "Website": "",
+    "Authors": [
+      {
+        "Name": "Unknown",
+        "Email": ""
+      }
+    ],
+    "Category": "Multimedia",
+    "License": "GPL-2.0+",
+    "EnabledByDefault": true
   },
   "KPackage": {
-    "Structure": "Plasma/Applet"
+    "Type": "Plasma/Applet"
   },
-  "X-Plasma-API-Minimum-Version": "6.0",
-  "X-KDE-ServiceTypes": ["Plasma/Applet"],
   "X-Plasma-API": "declarativeappletscript",
   "X-Plasma-MainScript": "ui/main.qml",
-  "Categories": ["Audio", "Network"]
+  "X-Plasma-API-Minimum-Version": "6.0"
 }

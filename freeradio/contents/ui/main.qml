@@ -1,3 +1,4 @@
+// Free Radio Widget - Updated by Claude Code
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -14,12 +15,71 @@ PlasmoidItem {
     // Detect if this is a compact representation (panel mode)
     property bool isCompactMode: plasmoid.formFactor === PlasmaCore.Types.Horizontal || 
                                 plasmoid.formFactor === PlasmaCore.Types.Vertical
+    property bool isHorizontalPanel: plasmoid.formFactor === PlasmaCore.Types.Horizontal
+    property bool isVerticalPanel: plasmoid.formFactor === PlasmaCore.Types.Vertical
     
     // Popup state
     property bool showPopup: false
     
     // Playback state tracking
     property bool userPaused: false
+    
+    // Adaptive sizing properties - FORCE 720P SIMULATION MODE with optimized text sizing
+    // Simulate widget running on 720p screen by scaling down effective dimensions
+    property real simulatedWidth: Math.min(root.width, root.width * 720 / 2560) // Scale down from your 2560px to 720p equivalent
+    property real simulatedHeight: Math.min(root.height, root.height * 720 / 1440) // Scale down from your 1440px to 720p equivalent
+    
+    // Optimized text sizing hierarchy that makes better use of space
+    property real availableTextWidth: simulatedWidth - (marginSize * 2) // Account for margins
+    property real availableTextHeight: simulatedHeight - (marginSize * 2)
+    property real marginSize: Math.max(8, Math.min(16, simulatedWidth * 0.04)) // 4% margin but clamped
+    
+    // Text size hierarchy optimized for space utilization
+    property real microFontSize: Math.max(7, Math.min(9, availableTextWidth / 80))     // Very small text (codec info, etc)
+    property real smallFontSize: Math.max(8, Math.min(11, availableTextWidth / 65))    // Small text (secondary info)
+    property real baseFontSize: Math.max(10, Math.min(13, availableTextWidth / 50))    // Base text (most content)
+    property real titleFontSize: Math.max(12, Math.min(16, availableTextWidth / 40))   // Titles and important text
+    property real largeFontSize: Math.max(14, Math.min(18, availableTextWidth / 35))   // Large headings
+    property real headerFontSize: Math.max(16, Math.min(20, availableTextWidth / 30))  // Main headers
+    
+    // Size classifications
+    property bool isVerySmall: simulatedWidth < 180 || simulatedHeight < 120
+    property bool isSmall: simulatedWidth < 250 || simulatedHeight < 160
+    property bool isMedium: simulatedWidth < 350 || simulatedHeight < 220
+    
+    // Button and control sizing
+    property real buttonSize: Math.max(28, Math.min(40, Math.min(simulatedWidth / 12, simulatedHeight / 15)))
+    
+    // Panel mode sizing - scales properly with panel orientation and size
+    property real panelButtonSize: {
+        if (!isCompactMode) return compactButtonSize
+        if (isHorizontalPanel) {
+            // For horizontal panels, scale with panel height
+            return Math.max(16, Math.min(root.height * 0.8, 48))
+        } else if (isVerticalPanel) {
+            // For vertical panels, scale with panel width  
+            return Math.max(16, Math.min(root.width * 0.8, 48))
+        }
+        return compactButtonSize
+    }
+    property real panelSpacing: isCompactMode ? Math.max(1, Math.min(4, panelButtonSize / 10)) : spacingSmall
+    property real panelFontSize: isCompactMode ? Math.max(8, Math.min(16, panelButtonSize * 0.45)) : baseFontSize
+    
+    // Fallback compact button size for non-panel use
+    property real compactButtonSize: Math.max(24, Math.min(36, Math.min(simulatedWidth / 5.5, simulatedHeight * 0.75)))
+    
+    // Layout spacing that scales with size
+    property real spacingSmall: Math.max(2, Math.min(6, simulatedWidth / 80))
+    property real spacingMedium: Math.max(4, Math.min(10, simulatedWidth / 60))
+    property real spacingLarge: Math.max(6, Math.min(15, simulatedWidth / 40))
+    
+    // Scrollbar management - smart sizing and visibility with proper boundaries
+    // Use actual widget width for scrollbar sizing, not simulated width
+    property real scrollbarWidth: 50  // HUGE scrollbar for testing - should be very obvious
+    property real scrollbarMargin: Math.max(6, Math.min(12, scrollbarWidth + 4))
+    property real scrollbarTotalSpace: scrollbarWidth + scrollbarMargin * 2  // Total space needed for scrollbar
+    property bool enableScrollbars: !isVerySmall && root.width > 250
+    property bool forceHideScrollbars: isVerySmall || root.width < 220
     
     // Compact panel controls - dedicated interface for panel mode
     Item {
@@ -28,12 +88,12 @@ PlasmoidItem {
         
         Row {
             anchors.centerIn: parent
-            spacing: Math.max(1, (parent.width - (parent.width / 3.8) * 4) / 5)  // Tighter spacing for larger buttons
+            spacing: panelSpacing
             
             Button {
                 text: "📻"
-                width: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
-                height: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
+                width: panelButtonSize
+                height: panelButtonSize
                 flat: true
                 onClicked: {
                     console.log("Panel: Open Radio button clicked")
@@ -46,10 +106,12 @@ PlasmoidItem {
                 
                 ToolTip.text: showPopup ? "Close Radio" : "Open Radio"
                 ToolTip.visible: hovered
+                ToolTip.delay: isCompactMode ? 1500 : 1000
+                ToolTip.timeout: isCompactMode ? 2000 : 3000
                 
                 contentItem: Text {
                     text: parent.text
-                    font.pixelSize: Math.max(16, parent.height * 0.6)
+                    font.pixelSize: panelFontSize
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     color: Kirigami.Theme.textColor
@@ -58,8 +120,8 @@ PlasmoidItem {
             
             Button {
                 text: "⏮"
-                width: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
-                height: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
+                width: panelButtonSize
+                height: panelButtonSize
                 onClicked: {
                     console.log("Panel Remote: Previous button clicked")
                     sendRemoteCommand("previous")
@@ -67,6 +129,8 @@ PlasmoidItem {
                 
                 ToolTip.text: "Previous"
                 ToolTip.visible: hovered
+                ToolTip.delay: isCompactMode ? 1500 : 1000
+                ToolTip.timeout: isCompactMode ? 2000 : 3000
                 
                 // Modern rounded button design
                 background: Rectangle {
@@ -101,7 +165,7 @@ PlasmoidItem {
                 
                 contentItem: Text {
                     text: parent.text
-                    font.pixelSize: Math.max(16, parent.height * 0.6)
+                    font.pixelSize: panelFontSize
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     color: {
@@ -124,8 +188,8 @@ PlasmoidItem {
             
             Button {
                 text: "⏯"
-                width: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
-                height: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
+                width: panelButtonSize
+                height: panelButtonSize
                 onClicked: {
                     console.log("Panel Remote: Play/pause button clicked")
                     sendRemoteCommand("playpause")
@@ -133,6 +197,8 @@ PlasmoidItem {
                 
                 ToolTip.text: "Play/Pause"
                 ToolTip.visible: hovered
+                ToolTip.delay: isCompactMode ? 1500 : 1000
+                ToolTip.timeout: isCompactMode ? 2000 : 3000
                 
                 // Modern rounded button design
                 background: Rectangle {
@@ -167,7 +233,7 @@ PlasmoidItem {
                 
                 contentItem: Text {
                     text: parent.text
-                    font.pixelSize: Math.max(16, parent.height * 0.6)
+                    font.pixelSize: panelFontSize
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     color: {
@@ -190,8 +256,8 @@ PlasmoidItem {
             
             Button {
                 text: "⏭"
-                width: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
-                height: Math.max(40, Math.min(parent.width / 3.8, parent.height * 0.95))
+                width: panelButtonSize
+                height: panelButtonSize
                 onClicked: {
                     console.log("Panel Remote: Next button clicked")
                     console.log("Current station URL:", currentStationUrl)
@@ -201,6 +267,8 @@ PlasmoidItem {
                 
                 ToolTip.text: "Next"
                 ToolTip.visible: hovered
+                ToolTip.delay: isCompactMode ? 1500 : 1000
+                ToolTip.timeout: isCompactMode ? 2000 : 3000
                 
                 // Modern rounded button design
                 background: Rectangle {
@@ -235,7 +303,7 @@ PlasmoidItem {
                 
                 contentItem: Text {
                     text: parent.text
-                    font.pixelSize: Math.max(16, parent.height * 0.6)
+                    font.pixelSize: panelFontSize
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     color: {
@@ -816,6 +884,34 @@ PlasmoidItem {
         }
     }
 
+    Timer {
+        id: idleResetTimer
+        interval: 300000 // Check every 5 minutes (300000 ms)
+        running: false
+        repeat: true
+        onTriggered: {
+            // Only reinitialize if we have a station URL and player should be playing
+            if (currentStationUrl !== "" && !userPaused && 
+                (player.mediaStatus === MediaPlayer.NoMedia || 
+                 player.mediaStatus === MediaPlayer.InvalidMedia ||
+                 player.playbackState === MediaPlayer.StoppedState)) {
+                console.log("Idle reset: Reinitializing player after idle timeout")
+                console.log("Current media status:", player.mediaStatus)
+                console.log("Current playback state:", player.playbackState)
+                
+                // Reinitialize the player
+                player.stop()
+                player.source = ""
+                player.source = currentStationUrl
+                
+                // Fetch fresh metadata and restart playback
+                fetchStreamMetadata(currentStationUrl)
+                player.play()
+                songUpdateTimer.start()
+            }
+        }
+    }
+
     MediaPlayer {
         id: player
         autoPlay: false
@@ -885,6 +981,7 @@ PlasmoidItem {
         if (player.playbackState === MediaPlayer.PlayingState) {
             player.stop()
             songUpdateTimer.stop()
+            idleResetTimer.stop()
         }
         
         // Stop any existing preview
@@ -917,26 +1014,59 @@ PlasmoidItem {
                     player.pause()
                     userPaused = true
                     songUpdateTimer.stop()
+                    idleResetTimer.stop()
                 } else if (currentStationUrl !== "" && (player.playbackState === MediaPlayer.PausedState || userPaused)) {
                     console.log("Remote: Resuming playback")
                     console.log("Fetching updated song metadata")
                     
+                    // Check if player source is still valid after idle period
+                    if (player.source !== currentStationUrl) {
+                        console.log("Remote: Player source mismatch after idle, resetting...")
+                        player.source = currentStationUrl
+                    }
+                    
+                    // Force source refresh if player seems to have lost connection
+                    if (player.mediaStatus === MediaPlayer.NoMedia || 
+                        player.mediaStatus === MediaPlayer.InvalidMedia) {
+                        console.log("Remote: Media lost after idle, refreshing source...")
+                        player.stop()
+                        player.source = ""
+                        player.source = currentStationUrl
+                    }
+                    
                     // Fetch fresh metadata before playing (same as popup button)
                     fetchStreamMetadata(currentStationUrl)
                     
                     player.play()
                     userPaused = false
                     songUpdateTimer.start()
+                    idleResetTimer.start()
                 } else if (currentStationUrl !== "" && player.playbackState === MediaPlayer.StoppedState) {
                     console.log("Remote: Starting playback from stopped state")
                     console.log("Fetching updated song metadata")
                     
+                    // Check if player source is still valid after idle period
+                    if (player.source !== currentStationUrl) {
+                        console.log("Remote: Player source mismatch after stopped, resetting...")
+                        player.source = currentStationUrl
+                    }
+                    
+                    // Force source refresh if player seems to have lost connection
+                    if (player.mediaStatus === MediaPlayer.NoMedia || 
+                        player.mediaStatus === MediaPlayer.InvalidMedia) {
+                        console.log("Remote: Media lost, refreshing source...")
+                        player.stop()
+                        player.source = ""
+                        player.source = currentStationUrl
+                    }
+                    
                     // Fetch fresh metadata before playing (same as popup button)
                     fetchStreamMetadata(currentStationUrl)
                     
                     player.play()
                     userPaused = false
                     songUpdateTimer.start()
+                    idleResetTimer.start()
                 } else if (currentStationUrl === "") {
                     console.log("Remote: No station selected, starting random station")
                     console.log("Current state - inSource:", inSource, "currentSource:", currentSource)
@@ -2281,6 +2411,7 @@ PlasmoidItem {
             // Fetch live song metadata
             fetchStreamMetadata(streamUrl)
             songUpdateTimer.start()
+            idleResetTimer.start()
             
             player.source = streamUrl
             player.play()
@@ -2803,6 +2934,7 @@ PlasmoidItem {
         // Fetch live song metadata and start timer
         fetchStreamMetadata(streamUrl)
         songUpdateTimer.start()
+        idleResetTimer.start()
         
         // Reset pause state and play directly
         userPaused = false
@@ -3384,8 +3516,8 @@ PlasmoidItem {
     ColumnLayout {
         id: mainWidget
         anchors.fill: parent
-        anchors.margins: Math.max(8, (showPopup ? radioPopup.width : root.width) * 0.03)
-        spacing: Math.max(8, (showPopup ? radioPopup.height : root.height) * 0.02)
+        anchors.margins: marginSize
+        spacing: spacingMedium
         visible: !isCompactMode || showPopup
         parent: showPopup ? contentContainer : root
         
@@ -3407,7 +3539,7 @@ PlasmoidItem {
                 id: searchField
                 Layout.fillWidth: true
                 placeholderText: "🔍 Search radio stations..."
-                font.pointSize: Math.max(9, Math.min(12, root.width / 35))
+                font.pointSize: baseFontSize
                 
                 onTextChanged: {
                     if (text.trim() === "") {
@@ -3435,9 +3567,9 @@ PlasmoidItem {
             Button {
                 text: "✕"
                 visible: searchField.text !== ""
-                font.pointSize: Math.max(10, Math.min(14, root.width / 30))
-                implicitWidth: Math.max(30, Math.min(40, root.width / 15))
-                implicitHeight: Math.max(25, Math.min(35, root.height / 25))
+                font.pointSize: titleFontSize
+                implicitWidth: buttonSize
+                implicitHeight: buttonSize * 0.8
                 flat: true
                 
                 onClicked: {
@@ -3549,10 +3681,15 @@ PlasmoidItem {
             }
             
             ScrollBar.vertical: ScrollBar {
-                active: true
+                width: scrollbarWidth
                 anchors.right: parent.right
-                anchors.rightMargin: 4
-                width: 6
+                anchors.rightMargin: scrollbarMargin
+                visible: enableScrollbars && !forceHideScrollbars
+                policy: forceHideScrollbars ? ScrollBar.AlwaysOff : ScrollBar.AsNeeded
+                background: Rectangle {
+                    color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                    radius: width / 2
+                }
             }
             
             // Show search status
@@ -3642,10 +3779,15 @@ PlasmoidItem {
             }
             
             ScrollBar.vertical: ScrollBar {
-                active: true
+                width: scrollbarWidth
                 anchors.right: parent.right
-                anchors.rightMargin: 4
-                width: 6
+                anchors.rightMargin: scrollbarMargin
+                visible: enableScrollbars && !forceHideScrollbars
+                policy: forceHideScrollbars ? ScrollBar.AlwaysOff : ScrollBar.AsNeeded
+                background: Rectangle {
+                    color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                    radius: width / 2
+                }
             }
         }
         
@@ -3730,10 +3872,15 @@ PlasmoidItem {
                 }
                 
                 ScrollBar.vertical: ScrollBar {
-                    active: true
+                    width: scrollbarWidth
                     anchors.right: parent.right
-                    anchors.rightMargin: 4
-                    width: 6
+                    anchors.rightMargin: scrollbarMargin
+                    visible: enableScrollbars && !forceHideScrollbars
+                    policy: forceHideScrollbars ? ScrollBar.AlwaysOff : ScrollBar.AsNeeded
+                    background: Rectangle {
+                        color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                        radius: width / 2
+                    }
                 }
             }
         }
@@ -3796,7 +3943,7 @@ PlasmoidItem {
                     }
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
-                    font.pointSize: 10
+                    font.pointSize: baseFontSize
                 }
             }
             
@@ -3804,7 +3951,7 @@ PlasmoidItem {
             RowLayout {
                 visible: currentSource === "🔗 Custom Radio" && inCategory
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: spacingMedium
                 
                 Button {
                     Layout.fillWidth: true
@@ -3867,7 +4014,7 @@ PlasmoidItem {
             ColumnLayout {
                 visible: currentCategory === "📚 Audiobooks" && inCategory
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: spacingMedium
                 
                 Button {
                     Layout.fillWidth: true
@@ -3956,7 +4103,7 @@ PlasmoidItem {
                             text: "✏️"
                             implicitWidth: 24
                             implicitHeight: 24
-                            font.pointSize: 8
+                            font.pointSize: microFontSize
                             
                             onClicked: {
                                 editCustomStation(index)
@@ -3977,7 +4124,7 @@ PlasmoidItem {
                             text: "❌"
                             implicitWidth: 24
                             implicitHeight: 24
-                            font.pointSize: 8
+                            font.pointSize: microFontSize
                             
                             onClicked: {
                                 removeCustomStation(index)
@@ -3998,7 +4145,7 @@ PlasmoidItem {
                             text: "❌"
                             implicitWidth: 24
                             implicitHeight: 24
-                            font.pointSize: 8
+                            font.pointSize: microFontSize
                             
                             onClicked: {
                                 removeCustomEbook(index)
@@ -4099,10 +4246,15 @@ PlasmoidItem {
                 }
                 
                 ScrollBar.vertical: ScrollBar {
-                    active: true
+                    width: scrollbarWidth
                     anchors.right: parent.right
-                    anchors.rightMargin: 4
-                    width: 6
+                    anchors.rightMargin: scrollbarMargin
+                    visible: enableScrollbars && !forceHideScrollbars
+                    policy: forceHideScrollbars ? ScrollBar.AlwaysOff : ScrollBar.AsNeeded
+                    background: Rectangle {
+                        color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                        radius: width / 2
+                    }
                 }
             }
         }
@@ -4150,9 +4302,9 @@ PlasmoidItem {
                             // Use stored station data
                             return isFavorite(currentStationName, currentStationHost, currentStationPath) ? "⭐" : "☆"
                         }
-                        font.pointSize: Math.max(10, Math.min(14, root.width / 30))
-                        implicitWidth: Math.max(25, Math.min(35, root.width / 15))
-                        implicitHeight: Math.max(25, Math.min(35, root.height / 25))
+                        font.pointSize: titleFontSize
+                        implicitWidth: buttonSize * 0.8
+                        implicitHeight: buttonSize * 0.8
                         flat: true
                         
                         // Custom content item to control star color
@@ -4198,8 +4350,10 @@ PlasmoidItem {
                     
                     ScrollView {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: Math.max(25, Math.min(50, root.height / 15))
+                        Layout.preferredHeight: isVerySmall ? Math.max(15, simulatedHeight / 25) : Math.max(20, Math.min(40, simulatedHeight / 18))
                         clip: true
+                        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                        ScrollBar.vertical.policy: ScrollBar.AlwaysOff
                         
                         TextEdit {
                             text: {
@@ -4211,14 +4365,14 @@ PlasmoidItem {
                                     return ""
                                 }
                             }
-                            font.pointSize: Math.max(7, Math.min(10, root.width / 40))
+                            font.pointSize: smallFontSize
                             color: Kirigami.Theme.textColor
                             width: parent.width
                             readOnly: true
                             selectByMouse: true
                             wrapMode: Text.Wrap
-                            leftPadding: 8
-                            rightPadding: 8
+                            leftPadding: spacingSmall
+                            rightPadding: spacingSmall + (enableScrollbars ? scrollbarTotalSpace : 0)
                             topPadding: 4
                             bottomPadding: 4
                         }
@@ -4241,14 +4395,15 @@ PlasmoidItem {
             // Vertical layout: Playback controls and timeline
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: Math.max(8, Math.min(16, root.height / 25))
-                spacing: Math.max(4, Math.min(8, root.height / 60))
+                anchors.margins: marginSize
+                spacing: spacingMedium
                 clip: false  // Allow button glow effects to extend beyond bounds
                 
                 // Top row: Play and Volume controls
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: Math.max(6, Math.min(12, root.width / 40))
+                    Layout.alignment: Qt.AlignHCenter
+                    spacing: spacingMedium
                 
                 Button {
                     text: currentEbookUrl ? "⏪" : "⏮"
@@ -4264,9 +4419,9 @@ PlasmoidItem {
                         }
                     }
                     
-                    font.pointSize: Math.max(12, Math.min(16, root.width / 30))
-                    implicitWidth: Math.max(42, Math.min(50, root.width / 15))
-                    implicitHeight: Math.max(42, Math.min(50, root.height / 18))
+                    font.pointSize: largeFontSize
+                    implicitWidth: buttonSize
+                    implicitHeight: buttonSize
                     Layout.alignment: Qt.AlignVCenter
                     
                     ToolTip.text: currentEbookUrl ? "Previous chapter" : "Previous station"
@@ -4289,7 +4444,8 @@ PlasmoidItem {
                             anchors.centerIn: parent
                             width: parent.width + 4
                             height: parent.height + 4
-                            radius: width / 2
+                            radius: 10
+                            width: 20
                             color: "transparent"
                             border.width: parent.parent.hovered ? 2 : 0
                             border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
@@ -4364,6 +4520,23 @@ PlasmoidItem {
                             // Fetch fresh metadata before playing
                             fetchStreamMetadata(currentStationUrl)
                             
+                            // Check if player source is still valid after idle period
+                            if (player.source !== currentStationUrl) {
+                                console.log("Player source mismatch after idle, resetting...")
+                                console.log("Expected:", currentStationUrl)
+                                console.log("Current:", player.source)
+                                player.source = currentStationUrl
+                            }
+                            
+                            // Force source refresh if player seems to have lost connection
+                            if (player.mediaStatus === MediaPlayer.NoMedia || 
+                                player.mediaStatus === MediaPlayer.InvalidMedia) {
+                                console.log("Media lost after idle, refreshing source...")
+                                player.stop()
+                                player.source = ""  // Clear source first
+                                player.source = currentStationUrl  // Reset source
+                            }
+                            
                             player.play()
                             songUpdateTimer.start()
                         }
@@ -4391,7 +4564,8 @@ PlasmoidItem {
                             anchors.centerIn: parent
                             width: parent.width + (parent.parent.hovered ? 8 : 4)
                             height: parent.height + (parent.parent.hovered ? 8 : 4)
-                            radius: width / 2
+                            radius: 10
+                            width: 20
                             color: "transparent"
                             border.width: parent.parent.hovered ? 3 : 1
                             border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, parent.parent.hovered ? 0.4 : 0.2)
@@ -4416,7 +4590,8 @@ PlasmoidItem {
                             anchors.centerIn: parent
                             width: parent.width + 12
                             height: parent.height + 12
-                            radius: width / 2
+                            radius: 10
+                            width: 20
                             color: "transparent"
                             border.width: 2
                             border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
@@ -4482,9 +4657,9 @@ PlasmoidItem {
                         }
                     }
                     
-                    font.pointSize: Math.max(12, Math.min(16, root.width / 30))
-                    implicitWidth: Math.max(42, Math.min(50, root.width / 15))
-                    implicitHeight: Math.max(42, Math.min(50, root.height / 18))
+                    font.pointSize: largeFontSize
+                    implicitWidth: buttonSize
+                    implicitHeight: buttonSize
                     Layout.alignment: Qt.AlignVCenter
                     
                     ToolTip.text: currentEbookUrl ? "Next chapter" : "Next station"
@@ -4507,7 +4682,8 @@ PlasmoidItem {
                             anchors.centerIn: parent
                             width: parent.width + 4
                             height: parent.height + 4
-                            radius: width / 2
+                            radius: 10
+                            width: 20
                             color: "transparent"
                             border.width: parent.parent.hovered ? 2 : 0
                             border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
@@ -4551,9 +4727,9 @@ PlasmoidItem {
                     text: "🎲"
                     enabled: true  // Always enabled since it can pick from all sources
                     onClicked: playRandomStation()
-                    font.pointSize: Math.max(12, Math.min(16, root.width / 30))
-                    implicitWidth: Math.max(40, Math.min(48, root.width / 16))
-                    implicitHeight: Math.max(40, Math.min(48, root.height / 19))
+                    font.pointSize: largeFontSize
+                    implicitWidth: buttonSize
+                    implicitHeight: buttonSize
                     Layout.alignment: Qt.AlignVCenter
                     
                     ToolTip.text: "Random station"
@@ -4576,7 +4752,8 @@ PlasmoidItem {
                             anchors.centerIn: parent
                             width: parent.width + 4
                             height: parent.height + 4
-                            radius: width / 2
+                            radius: 10
+                            width: 20
                             color: "transparent"
                             border.width: parent.parent.hovered ? 2 : 0
                             border.color: Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.3)
@@ -4621,20 +4798,39 @@ PlasmoidItem {
                     }
                 }
                 
-                // Volume Control
+                // Volume Control - adaptive visibility
                 Slider {
                     id: compactVolumeSlider
                     from: 0
                     to: 1
                     value: 0.5
                     Layout.fillWidth: true
-                    Layout.minimumWidth: 60
+                    Layout.minimumWidth: isVerySmall ? 30 : 50
+                    Layout.preferredWidth: isVerySmall ? Math.max(30, simulatedWidth * 0.2) : Math.max(60, simulatedWidth * 0.25)
                     Layout.alignment: Qt.AlignVCenter
+                    visible: !forceHideScrollbars
+                    opacity: isSmall ? 0.7 : 1.0
+                    
+                    // Adaptive handle size
+                    handle: Rectangle {
+                        x: compactVolumeSlider.leftPadding + compactVolumeSlider.visualPosition * (compactVolumeSlider.availableWidth - width)
+                        y: compactVolumeSlider.topPadding + compactVolumeSlider.availableHeight / 2 - height / 2
+                        implicitWidth: Math.max(8, Math.min(14, simulatedWidth / 40))
+                        implicitHeight: Math.max(8, Math.min(14, simulatedWidth / 40))
+                        radius: width / 2
+                        color: compactVolumeSlider.pressed ? Kirigami.Theme.highlightColor : Kirigami.Theme.buttonBackgroundColor
+                        border.color: Kirigami.Theme.highlightColor
+                        border.width: 1
+                    }
                     
                     // Save volume level when changed
                     onValueChanged: {
                         saveVolumeLevel(value)
                     }
+                    
+                    ToolTip.text: Math.round(value * 100) + "%"
+                    ToolTip.visible: hovered || pressed
+                    ToolTip.delay: 500
                 }
                 } // End of top RowLayout
                 
@@ -4673,11 +4869,11 @@ PlasmoidItem {
             RowLayout {
                 anchors.fill: parent
                 anchors.margins: 12
-                spacing: 10
+                spacing: spacingMedium
                 
                 Label {
                     text: "Timeline:"
-                    font.pointSize: 10
+                    font.pointSize: baseFontSize
                     font.bold: true
                     color: Kirigami.Theme.textColor
                     Layout.alignment: Qt.AlignVCenter
@@ -4737,7 +4933,7 @@ PlasmoidItem {
                         }
                         return ""
                     }
-                    font.pointSize: 9
+                    font.pointSize: baseFontSize
                     color: Kirigami.Theme.textColor
                     Layout.alignment: Qt.AlignVCenter
                 }
@@ -4777,12 +4973,12 @@ PlasmoidItem {
             
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 15
-                spacing: 15
+                anchors.margins: marginSize
+                spacing: spacingLarge
                 
                 Text {
                     text: isEditMode ? "Edit Radio Station" : "Add Custom Radio Station"
-                    font.pointSize: 14
+                    font.pointSize: headerFontSize
                     color: "white"
                 }
                 
@@ -4800,7 +4996,7 @@ PlasmoidItem {
                 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 10
+                    spacing: spacingMedium
                     
                     Button {
                         Layout.fillWidth: true
@@ -4888,18 +5084,18 @@ PlasmoidItem {
             
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 15
-                spacing: 10
+                anchors.margins: marginSize
+                spacing: spacingMedium
                 
                 Text {
                     text: "Search Radio Directory"
-                    font.pointSize: 14
+                    font.pointSize: headerFontSize
                     color: "white"
                 }
                 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 10
+                    spacing: spacingMedium
                     
                     TextField {
                         id: radioSearchField
@@ -4928,7 +5124,7 @@ PlasmoidItem {
                     
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 10
+                        spacing: spacingMedium
                         
                         CheckBox {
                             id: enableFiltersCheckbox
@@ -4947,13 +5143,13 @@ PlasmoidItem {
                     
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 10
+                        spacing: spacingMedium
                         visible: enableSearchFilters
                         
                         Text {
                             text: "Min Bitrate:"
                             color: "white"
-                            font.pointSize: 9
+                            font.pointSize: baseFontSize
                         }
                         
                         ComboBox {
@@ -4972,7 +5168,7 @@ PlasmoidItem {
                         Text {
                             text: "Codec:"
                             color: "white"
-                            font.pointSize: 9
+                            font.pointSize: baseFontSize
                         }
                         
                         ComboBox {
@@ -4994,13 +5190,36 @@ PlasmoidItem {
                     Layout.fillHeight: true
                     visible: root.radioSearchResults.length > 0
                     clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                    
+                    ScrollBar.vertical: ScrollBar {
+                        width: 24
+                        implicitWidth: 24
+                        x: parent.width - 24 - scrollbarMargin
+                        visible: enableScrollbars && !forceHideScrollbars
+                        policy: ScrollBar.AsNeeded
+                        active: enableScrollbars && !forceHideScrollbars
+                        background: Rectangle {
+                            color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                            radius: 10
+                            width: 24
+                            implicitHeight: parent.height
+                        }
+                        contentItem: Rectangle {
+                            color: Kirigami.Theme.highlightColor
+                            radius: 10
+                            width: 24 - 2
+                        }
+                    }
                     
                     ListView {
                         model: root.radioSearchResults.length
                         clip: true
+                        rightMargin: enableScrollbars ? scrollbarTotalSpace : 0
                         delegate: Rectangle {
+                            property real containerHeight: Math.max(50, Math.min(80, simulatedHeight / 8))
                             width: ListView.view.width
-                            height: 60
+                            height: containerHeight
                             color: {
                                 if (isPreviewPlaying && previewStationUrl === station.url) {
                                     return Qt.rgba(0.6, 0.2, 1, 0.3)  // Purple tint when previewing
@@ -5030,7 +5249,7 @@ PlasmoidItem {
                             RowLayout {
                                 anchors.fill: parent
                                 anchors.margins: 8
-                                spacing: 10
+                                spacing: spacingMedium
                                 
                                 ColumnLayout {
                                     Layout.fillWidth: true
@@ -5039,7 +5258,7 @@ PlasmoidItem {
                                     Text {
                                         text: station.name || ""
                                         color: "white"
-                                        font.pointSize: 16
+                                        font.pointSize: Math.max(10, Math.min(16, containerHeight * 0.25))
                                         font.bold: true
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
@@ -5048,7 +5267,7 @@ PlasmoidItem {
                                     Text {
                                         text: (station.tags || "") + (station.country ? " • " + station.country : "")
                                         color: Kirigami.Theme.disabledTextColor
-                                        font.pointSize: 10
+                                        font.pointSize: Math.max(8, Math.min(12, containerHeight * 0.18))
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
                                     }
@@ -5056,7 +5275,7 @@ PlasmoidItem {
                                     Text {
                                         text: station.codec + " " + station.bitrate + "kbps"
                                         color: Kirigami.Theme.disabledTextColor
-                                        font.pointSize: 8
+                                        font.pointSize: Math.max(6, Math.min(9, containerHeight * 0.13))
                                     }
                                 }
                                 
@@ -5068,7 +5287,7 @@ PlasmoidItem {
                                         text: alreadyAdded ? "✓" : "+"
                                         width: 30
                                         height: 30
-                                        font.pointSize: 16
+                                        font.pointSize: largeFontSize
                                         font.bold: true
                                         enabled: !alreadyAdded
                                         
@@ -5106,7 +5325,7 @@ PlasmoidItem {
                     visible: radioSearchField.text.length > 2 && root.radioSearchResults.length === 0
                     text: "No stations found. Try a different search term."
                     color: Kirigami.Theme.disabledTextColor
-                    font.pointSize: 9
+                    font.pointSize: baseFontSize
                     Layout.alignment: Qt.AlignHCenter
                 }
                 
@@ -5162,12 +5381,12 @@ PlasmoidItem {
             
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 15
-                spacing: 15
+                anchors.margins: marginSize
+                spacing: spacingLarge
                 
                 Text {
                     text: "Search LibriVox Audiobooks"
-                    font.pointSize: 14
+                    font.pointSize: headerFontSize
                     color: "white"
                 }
                 
@@ -5185,13 +5404,36 @@ PlasmoidItem {
                 ScrollView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                    
+                    ScrollBar.vertical: ScrollBar {
+                        width: 24
+                        implicitWidth: 24
+                        x: parent.width - 24 - scrollbarMargin
+                        visible: enableScrollbars && !forceHideScrollbars
+                        policy: ScrollBar.AsNeeded
+                        active: enableScrollbars && !forceHideScrollbars
+                        background: Rectangle {
+                            color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                            radius: 10
+                            width: 24
+                            implicitHeight: parent.height
+                        }
+                        contentItem: Rectangle {
+                            color: Kirigami.Theme.highlightColor
+                            radius: 10
+                            width: 24 - 2
+                        }
+                    }
                     
                     ListView {
                         id: ebookResultsList
                         model: ListModel { id: ebookSearchResults }
+                        rightMargin: enableScrollbars ? scrollbarTotalSpace : 0
                         delegate: Item {
+                            property real containerHeight: Math.max(50, Math.min(80, simulatedHeight / 8))
                             width: parent.width
-                            height: 60
+                            height: containerHeight
                             
                             Rectangle {
                                 anchors.fill: parent
@@ -5219,7 +5461,7 @@ PlasmoidItem {
                                     Text {
                                         text: model.title
                                         color: "white"
-                                        font.pointSize: 12
+                                        font.pointSize: Math.max(10, Math.min(16, containerHeight * 0.25))
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
                                     }
@@ -5227,7 +5469,7 @@ PlasmoidItem {
                                     Text {
                                         text: "by " + (model.authors || "Unknown")
                                         color: "#888"
-                                        font.pointSize: 10
+                                        font.pointSize: Math.max(8, Math.min(12, containerHeight * 0.18))
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
                                     }
@@ -5282,12 +5524,12 @@ PlasmoidItem {
             
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 15
-                spacing: 15
+                anchors.margins: marginSize
+                spacing: spacingLarge
                 
                 Text {
                     text: "Add Custom Audiobook"
-                    font.pointSize: 14
+                    font.pointSize: headerFontSize
                     color: "white"
                 }
                 
