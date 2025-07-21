@@ -56,6 +56,10 @@
       <label>Command timestamp</label>
       <default></default>
     </entry>
+    <entry name="showSpectrumVisualizer" type="Bool">
+      <label>Show spectrum visualizer</label>
+      <default>false</default>
+    </entry>
   </group>
 
 </kcfg>

@@ -3,10 +3,11 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
-import QtMultimedia 6.5
+import QtMultimedia
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.kirigami 2.20 as Kirigami
+// import Freeradio 1.0  // Commented out - using standard MediaPlayer
 import "radiodata.js" as RadioData
 
 PlasmoidItem {
@@ -21,8 +22,15 @@ PlasmoidItem {
     // Popup state
     property bool showPopup: false
     
+    // Spectrum visualizer state
+    property bool showSpectrumVisualizer: plasmoid.configuration.showSpectrumVisualizer
+    
     // Playback state tracking
     property bool userPaused: false
+    property real lastBufferProgress: 0
+    property int lastBufferUpdateTime: 0
+    property int restartAttempts: 0
+    property int maxRestartAttempts: 3
     
     // Adaptive sizing properties - FORCE 720P SIMULATION MODE with optimized text sizing
     // Simulate widget running on 720p screen by scaling down effective dimensions
@@ -32,7 +40,7 @@ PlasmoidItem {
     // Optimized text sizing hierarchy that makes better use of space
     property real availableTextWidth: simulatedWidth - (marginSize * 2) // Account for margins
     property real availableTextHeight: simulatedHeight - (marginSize * 2)
-    property real marginSize: Math.max(8, Math.min(16, simulatedWidth * 0.04)) // 4% margin but clamped
+    property real marginSize: Math.max(6, Math.min(15, simulatedWidth / 40)) // Match spacingLarge value for consistent gaps
     
     // Text size hierarchy optimized for space utilization
     property real microFontSize: Math.max(7, Math.min(9, availableTextWidth / 80))     // Very small text (codec info, etc)
@@ -75,11 +83,11 @@ PlasmoidItem {
     
     // Scrollbar management - smart sizing and visibility with proper boundaries
     // Use actual widget width for scrollbar sizing, not simulated width
-    property real scrollbarWidth: 50  // HUGE scrollbar for testing - should be very obvious
-    property real scrollbarMargin: Math.max(6, Math.min(12, scrollbarWidth + 4))
+    property real scrollbarWidth: 12  // Medium scrollbar width
+    property real scrollbarMargin: 10  // Adjusted margin for 12px scrollbar
     property real scrollbarTotalSpace: scrollbarWidth + scrollbarMargin * 2  // Total space needed for scrollbar
-    property bool enableScrollbars: !isVerySmall && root.width > 250
-    property bool forceHideScrollbars: isVerySmall || root.width < 220
+    property bool enableScrollbars: !isVerySmall && root.width > 200
+    property bool forceHideScrollbars: isVerySmall || root.width < 180
     
     // Compact panel controls - dedicated interface for panel mode
     Item {
@@ -695,6 +703,9 @@ PlasmoidItem {
             
             console.log("Loaded last station:", savedName, "URL:", savedUrl)
             
+            // Set userPaused to true since this is a restored session, not active playback
+            userPaused = true
+            
             // Set the player source but don't auto-play
             console.log("Setting source without auto-play")
             player.source = savedUrl
@@ -885,6 +896,48 @@ PlasmoidItem {
     }
 
     Timer {
+        id: silentPlaybackDetector
+        interval: 60000 // Check every 60 seconds instead of 10 (less aggressive)
+        running: false
+        repeat: true
+        onTriggered: {
+            // Only restart if we have a real network issue, not just silence
+            if (player.playbackState === MediaPlayer.PlayingState && 
+                currentStationUrl !== "" && 
+                !userPaused && 
+                !audioOut.muted) {
+                
+                // Check if buffer progress has changed recently (indicates active stream)
+                var now = Date.now()
+                var timeSinceLastBuffer = now - lastBufferUpdateTime
+                
+                // Only restart if no buffer activity for 45+ seconds (real network issue)
+                if (timeSinceLastBuffer > 45000 && restartAttempts < maxRestartAttempts) {
+                    console.log("Network issue detected - restarting stream")
+                    restartAttempts++
+                    
+                    // Force a complete restart
+                    player.stop()
+                    player.source = ""
+                    Qt.callLater(function() {
+                        if (currentStationUrl !== "" && !userPaused) {
+                            console.log("Restarting stream due to network issue (attempt", restartAttempts, ")")
+                            player.source = currentStationUrl
+                            silentPlaybackDetector.start()
+                            player.play()
+                        }
+                    })
+                } else {
+                    // Reset attempt counter if stream is actually working
+                    if (timeSinceLastBuffer < 30000) {
+                        restartAttempts = 0
+                    }
+                }
+            }
+        }
+    }
+
+    Timer {
         id: idleResetTimer
         interval: 300000 // Check every 5 minutes (300000 ms)
         running: false
@@ -899,39 +952,103 @@ PlasmoidItem {
                 console.log("Current media status:", player.mediaStatus)
                 console.log("Current playback state:", player.playbackState)
                 
-                // Reinitialize the player
+                // Reinitialize the player more robustly
                 player.stop()
-                player.source = ""
-                player.source = currentStationUrl
                 
-                // Fetch fresh metadata and restart playback
+                // Use Qt.callLater to ensure proper cleanup before reconnecting
+                Qt.callLater(function() {
+                    player.source = ""
+                    Qt.callLater(function() {
+                        if (currentStationUrl !== "" && !userPaused) {
+                            console.log("Reconnecting to:", currentStationUrl)
+                            player.source = currentStationUrl
+                            player.play()
+                        }
+                    })
+                })
+                
+                // Fetch fresh metadata
                 fetchStreamMetadata(currentStationUrl)
-                player.play()
+                lastBufferProgress = 0
+                lastBufferUpdateTime = Date.now()
                 songUpdateTimer.start()
             }
         }
     }
 
+    // Main audio player with enhanced spectrum integration
     MediaPlayer {
         id: player
         autoPlay: false
         loops: MediaPlayer.Infinite
-        playbackRate: 1.0
         audioOutput: AudioOutput {
             id: audioOut
             volume: compactVolumeSlider.value
             muted: false
         }
+
+        onPlaybackStateChanged: {
+            var stateNames = ["Stopped", "Playing", "Paused"]
+            console.log("AudioStreamer: Main player state changed to:", stateNames[playbackState] || playbackState)
+            
+            // Enhanced spectrum integration - trigger more realistic patterns when playing
+            if (spectrumVisualizer) {
+                if (playbackState === MediaPlayer.PlayingState) {
+                    console.log("AudioStreamer: Starting enhanced spectrum simulation")
+                    spectrumVisualizer.setEnhancedMode(true)
+                } else {
+                    console.log("AudioStreamer: Stopping spectrum simulation") 
+                    spectrumVisualizer.setEnhancedMode(false)
+                }
+            }
+            
+            // Detect unexpected stops (not caused by user pause/stop)
+            if (playbackState === MediaPlayer.StoppedState && 
+                currentStationUrl !== "" && 
+                !userPaused) {
+                console.log("AudioStreamer: Unexpected stop detected - attempting restart...")
+                
+                if (restartAttempts < maxRestartAttempts) {
+                    restartAttempts++
+                    
+                    Qt.callLater(function() {
+                        if (currentStationUrl !== "" && !userPaused) {
+                            console.log("AudioStreamer: Reinitializing connection after unexpected stop (attempt", restartAttempts, ")")
+                            player.stop()
+                            player.source = ""
+                            Qt.callLater(function() {
+                                player.source = currentStationUrl
+                                fetchStreamMetadata(currentStationUrl)
+                                silentPlaybackDetector.start()
+                                player.play()
+                            })
+                        }
+                    })
+                }
+            }
+            
+            // Reset restart counter on successful playback
+            if (playbackState === MediaPlayer.PlayingState) {
+                restartAttempts = 0
+                silentPlaybackDetector.start()
+            }
+        }
+        
+        onSourceChanged: {
+            if (source && source !== "" && autoPlay) {
+                play()
+            }
+        }
         
         // Start playing as soon as media is loaded (not fully buffered)
         onMediaStatusChanged: {
-            console.log("Media status changed:", mediaStatus)
+            console.log("AudioStreamer: Media status changed:", mediaStatus)
             if (mediaStatus === MediaPlayer.LoadedMedia) {
                 if (preventAutoPlayOnStartup) {
-                    console.log("Media loaded but auto-play prevented on startup")
+                    console.log("AudioStreamer: Media loaded but auto-play prevented on startup")
                     preventAutoPlayOnStartup = false // Allow future plays
                 } else {
-                    console.log("Media loaded, starting playback immediately")
+                    console.log("AudioStreamer: Media loaded, starting playback immediately")
                     play()
                 }
             }
@@ -940,14 +1057,63 @@ PlasmoidItem {
         // Monitor buffering
         onBufferProgressChanged: {
             if (bufferProgress > 0) {
-                console.log("Buffering:", (bufferProgress * 100).toFixed(1) + "%")
+                console.log("AudioStreamer: Buffering:", (bufferProgress * 100).toFixed(1) + "%")
+                
+                // Track buffer progress for stale detection
+                var currentTime = Date.now()
+                if (bufferProgress > lastBufferProgress) {
+                    lastBufferProgress = bufferProgress
+                    lastBufferUpdateTime = currentTime
+                }
+                
+                // If buffer hasn't progressed for 60 seconds and we should be playing
+                if (false && currentTime - lastBufferUpdateTime > 60000 && 
+                    currentStationUrl !== "" && 
+                    !userPaused &&
+                    playbackState === MediaPlayer.PlayingState) {
+                    console.log("AudioStreamer: Buffer stalled for 60 seconds, reinitializing connection...")
+                    
+                    Qt.callLater(function() {
+                        if (currentStationUrl !== "" && !userPaused) {
+                            // console.log("Reinitializing due to stalled buffer") // DISABLED
+                            player.stop()
+                            player.source = ""
+                            player.source = currentStationUrl
+                            fetchStreamMetadata(currentStationUrl)
+                            player.play()
+                            lastBufferProgress = 0
+                            lastBufferUpdateTime = Date.now()
+                        }
+                    })
+                }
             }
         }
         
         onErrorOccurred: function(error, errorString) {
-            console.log("Player error:", error, errorString)
+            console.log("AudioStreamer: Player error:", error, errorString)
+            
+            // Attempt restart on network/resource errors if we have a valid station
+            if (currentStationUrl !== "" && !userPaused && restartAttempts < maxRestartAttempts) {
+                console.log("AudioStreamer: Attempting restart due to player error...")
+                restartAttempts++
+                
+                Qt.callLater(function() {
+                    if (currentStationUrl !== "" && !userPaused) {
+                        console.log("AudioStreamer: Restarting after error (attempt", restartAttempts, "of", maxRestartAttempts + ")")
+                        player.stop()
+                        player.source = ""
+                        Qt.callLater(function() {
+                            player.source = currentStationUrl
+                            silentPlaybackDetector.start()
+                            player.play()
+                        })
+                    }
+                })
+            }
         }
+
     }
+    
     
     // Preview player for search results
     MediaPlayer {
@@ -982,6 +1148,7 @@ PlasmoidItem {
             player.stop()
             songUpdateTimer.stop()
             idleResetTimer.stop()
+            silentPlaybackDetector.stop()
         }
         
         // Stop any existing preview
@@ -1037,6 +1204,8 @@ PlasmoidItem {
                     // Fetch fresh metadata before playing (same as popup button)
                     fetchStreamMetadata(currentStationUrl)
                     
+                    lastBufferProgress = 0
+                    lastBufferUpdateTime = Date.now()
                     player.play()
                     userPaused = false
                     songUpdateTimer.start()
@@ -1063,6 +1232,8 @@ PlasmoidItem {
                     // Fetch fresh metadata before playing (same as popup button)
                     fetchStreamMetadata(currentStationUrl)
                     
+                    lastBufferProgress = 0
+                    lastBufferUpdateTime = Date.now()
                     player.play()
                     userPaused = false
                     songUpdateTimer.start()
@@ -1483,7 +1654,7 @@ PlasmoidItem {
                     console.log("Fetched server status page, length:", response.length, "chars")
                     
                     // Look for the specific mount point section for our station
-                    var mountPattern = new RegExp('<h3>Mount Point /' + stationPath + '</h3>.*?<td class="streamdata">([^<]+)</td>', 'si')
+                    var mountPattern = new RegExp('<h3>Mount Point /' + stationPath + '</h3>[\\s\\S]*?<td class="streamdata">([^<]+)</td>', 'i')
                     var currentSongMatch = response.match(mountPattern)
                     
                     if (currentSongMatch && currentSongMatch[1]) {
@@ -2412,7 +2583,10 @@ PlasmoidItem {
             fetchStreamMetadata(streamUrl)
             songUpdateTimer.start()
             idleResetTimer.start()
+            silentPlaybackDetector.start()
             
+            lastBufferProgress = 0
+            lastBufferUpdateTime = Date.now()
             player.source = streamUrl
             player.play()
         }
@@ -2935,9 +3109,12 @@ PlasmoidItem {
         fetchStreamMetadata(streamUrl)
         songUpdateTimer.start()
         idleResetTimer.start()
+        silentPlaybackDetector.start()
         
         // Reset pause state and play directly
         userPaused = false
+        lastBufferProgress = 0
+        lastBufferUpdateTime = Date.now()
         player.source = streamUrl
         player.play()
         
@@ -3091,9 +3268,13 @@ PlasmoidItem {
         // Fetch live song metadata and start timer
         fetchStreamMetadata(streamUrl)
         songUpdateTimer.start()
+        idleResetTimer.start()
+        silentPlaybackDetector.start()
         
         // Reset pause state and play directly
         userPaused = false
+        lastBufferProgress = 0
+        lastBufferUpdateTime = Date.now()
         player.source = streamUrl
         player.play()
         
@@ -3516,7 +3697,7 @@ PlasmoidItem {
     ColumnLayout {
         id: mainWidget
         anchors.fill: parent
-        anchors.margins: marginSize
+        anchors.margins: spacingLarge
         spacing: spacingMedium
         visible: !isCompactMode || showPopup
         parent: showPopup ? contentContainer : root
@@ -3591,10 +3772,10 @@ PlasmoidItem {
             model: searchResultsModel
             spacing: Math.max(1, root.height / 250)  // Responsive spacing
             clip: true
-            rightMargin: 10  // Space for scrollbar
+            rightMargin: 20  // Reserve space for medium scrollbar
             
             delegate: ItemDelegate {
-                width: ListView.view.width - ListView.view.rightMargin
+                width: ListView.view.width - 20  // Reserve 20px for medium scrollbar and spacing
                 height: contentColumn.implicitHeight + 16  // Dynamic height based on content + padding
                 
                 // Modern card background
@@ -3619,7 +3800,7 @@ PlasmoidItem {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.leftMargin: 12
-                    anchors.rightMargin: 12
+                    anchors.rightMargin: 30
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 2
                     
@@ -3683,12 +3864,17 @@ PlasmoidItem {
             ScrollBar.vertical: ScrollBar {
                 width: scrollbarWidth
                 anchors.right: parent.right
-                anchors.rightMargin: scrollbarMargin
-                visible: enableScrollbars && !forceHideScrollbars
-                policy: forceHideScrollbars ? ScrollBar.AlwaysOff : ScrollBar.AsNeeded
+                anchors.rightMargin: 4
+                visible: true
+                policy: ScrollBar.AsNeeded
                 background: Rectangle {
                     color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
                     radius: width / 2
+                }
+                contentItem: Rectangle {
+                    implicitWidth: scrollbarWidth
+                    radius: width / 2
+                    color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.7)
                 }
             }
             
@@ -3719,10 +3905,10 @@ PlasmoidItem {
             model: sourcesModel
             spacing: Math.max(6, root.height * 0.01)  // Responsive spacing: 6px min or 1% of height
             clip: true
-            rightMargin: 10  // Space for scrollbar
+            rightMargin: 20  // Reserve space for medium scrollbar
             
             delegate: ItemDelegate {
-                width: ListView.view.width - ListView.view.rightMargin
+                width: ListView.view.width - 20  // Reserve 20px for medium scrollbar and spacing
                 height: Math.max(50, root.height * 0.12)  // Responsive height: 50px min or 12% of widget height
                 
                 // Modern card background
@@ -3781,12 +3967,17 @@ PlasmoidItem {
             ScrollBar.vertical: ScrollBar {
                 width: scrollbarWidth
                 anchors.right: parent.right
-                anchors.rightMargin: scrollbarMargin
-                visible: enableScrollbars && !forceHideScrollbars
-                policy: forceHideScrollbars ? ScrollBar.AlwaysOff : ScrollBar.AsNeeded
+                anchors.rightMargin: 4
+                visible: true
+                policy: ScrollBar.AsNeeded
                 background: Rectangle {
                     color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
                     radius: width / 2
+                }
+                contentItem: Rectangle {
+                    implicitWidth: scrollbarWidth
+                    radius: width / 2
+                    color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.7)
                 }
             }
         }
@@ -3830,10 +4021,10 @@ PlasmoidItem {
                 Layout.fillHeight: true
                 model: categoriesModel
                 clip: true
-                rightMargin: 10  // Space for scrollbar
+                rightMargin: 20  // Reserve space for medium scrollbar
                 
                 // 2 columns layout
-                cellWidth: (width - rightMargin) / 2
+                cellWidth: (width - 20) / 2  // Reserve 20px for medium scrollbar and spacing
                 cellHeight: Math.max(45, Math.min(60, root.height / 20))
                 
                 delegate: ItemDelegate {
@@ -3874,12 +4065,17 @@ PlasmoidItem {
                 ScrollBar.vertical: ScrollBar {
                     width: scrollbarWidth
                     anchors.right: parent.right
-                    anchors.rightMargin: scrollbarMargin
-                    visible: enableScrollbars && !forceHideScrollbars
-                    policy: forceHideScrollbars ? ScrollBar.AlwaysOff : ScrollBar.AsNeeded
+                    anchors.rightMargin: 4
+                    visible: true
+                    policy: ScrollBar.AsNeeded
                     background: Rectangle {
                         color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
                         radius: width / 2
+                    }
+                    contentItem: Rectangle {
+                        implicitWidth: scrollbarWidth
+                        radius: width / 2
+                        color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.7)
                     }
                 }
             }
@@ -4077,10 +4273,10 @@ PlasmoidItem {
                 model: stationsModel
                 spacing: Math.max(1, root.height / 250)  // Responsive spacing
                 clip: true
-                rightMargin: 10  // Space for scrollbar
+                rightMargin: 20  // Reserve space for medium scrollbar
                 
                 delegate: ItemDelegate {
-                    width: ListView.view.width - ListView.view.rightMargin
+                    width: ListView.view.width - 20  // Reserve 20px for medium scrollbar and spacing
                     height: Math.max(40, Math.min(50, root.height / 20))  // Increased height for buttons
                     
                     RowLayout {
@@ -4248,12 +4444,17 @@ PlasmoidItem {
                 ScrollBar.vertical: ScrollBar {
                     width: scrollbarWidth
                     anchors.right: parent.right
-                    anchors.rightMargin: scrollbarMargin
-                    visible: enableScrollbars && !forceHideScrollbars
-                    policy: forceHideScrollbars ? ScrollBar.AlwaysOff : ScrollBar.AsNeeded
+                    anchors.rightMargin: 4
+                    visible: true
+                    policy: ScrollBar.AsNeeded
                     background: Rectangle {
                         color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
                         radius: width / 2
+                    }
+                    contentItem: Rectangle {
+                        implicitWidth: scrollbarWidth
+                        radius: width / 2
+                        color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.7)
                     }
                 }
             }
@@ -4350,7 +4551,7 @@ PlasmoidItem {
                     
                     ScrollView {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: isVerySmall ? Math.max(15, simulatedHeight / 25) : Math.max(20, Math.min(40, simulatedHeight / 18))
+                        Layout.preferredHeight: isVerySmall ? Math.max(20, simulatedHeight / 20) : Math.max(30, Math.min(50, simulatedHeight / 15))
                         clip: true
                         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                         ScrollBar.vertical.policy: ScrollBar.AlwaysOff
@@ -4393,16 +4594,21 @@ PlasmoidItem {
             antialiasing: true
             
             // Vertical layout: Playback controls and timeline
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: marginSize
-                spacing: spacingMedium
-                clip: false  // Allow button glow effects to extend beyond bounds
+            Item {
+                anchors.centerIn: parent
+                width: parent.width - (showPopup ? 60 : 100)  // Smaller margins for popup
+                height: parent.height - (showPopup ? 20 : 40)  // Smaller margins for popup
                 
-                // Top row: Play and Volume controls
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    width: parent.width
+                    spacing: spacingMedium
+                    clip: false  // Allow button glow effects to extend beyond bounds
+                    
+                    // Top row: Play and Volume controls
                 RowLayout {
                     Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignHCenter
+                    Layout.alignment: Qt.AlignVCenter
                     spacing: spacingMedium
                 
                 Button {
@@ -4442,10 +4648,9 @@ PlasmoidItem {
                         // Subtle glow effect
                         Rectangle {
                             anchors.centerIn: parent
-                            width: parent.width + 4
+                            width: 20
                             height: parent.height + 4
                             radius: 10
-                            width: 20
                             color: "transparent"
                             border.width: parent.parent.hovered ? 2 : 0
                             border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
@@ -4491,7 +4696,10 @@ PlasmoidItem {
                     onClicked: {
                         if (player.playbackState === MediaPlayer.PlayingState) {
                             player.pause()
+                            userPaused = true
                             songUpdateTimer.stop()
+                            idleResetTimer.stop()
+                            silentPlaybackDetector.stop()
                             if (currentEbookUrl) {
                                 ebookProgressTimer.stop()
                             }
@@ -4517,6 +4725,10 @@ PlasmoidItem {
                             console.log("Fetching updated song metadata")
                             debugMetadata = "Resuming, checking for new song..."
                             
+                            // Reset pause state when user manually plays
+                            userPaused = false
+                            restartAttempts = 0
+                            
                             // Fetch fresh metadata before playing
                             fetchStreamMetadata(currentStationUrl)
                             
@@ -4528,17 +4740,31 @@ PlasmoidItem {
                                 player.source = currentStationUrl
                             }
                             
-                            // Force source refresh if player seems to have lost connection
+                            // Force source refresh if player seems to have lost connection or is in problematic state
                             if (player.mediaStatus === MediaPlayer.NoMedia || 
-                                player.mediaStatus === MediaPlayer.InvalidMedia) {
-                                console.log("Media lost after idle, refreshing source...")
+                                player.mediaStatus === MediaPlayer.InvalidMedia ||
+                                player.playbackState === MediaPlayer.StoppedState) {
+                                console.log("Media lost/stopped after idle, refreshing source...")
+                                console.log("Media status:", player.mediaStatus, "Playback state:", player.playbackState)
                                 player.stop()
                                 player.source = ""  // Clear source first
-                                player.source = currentStationUrl  // Reset source
+                                Qt.callLater(function() {
+                                    player.source = currentStationUrl  // Reset source
+                                    Qt.callLater(function() {
+                                        // Start playback after source is set
+                                        player.play()
+                                        songUpdateTimer.start()
+                                        idleResetTimer.start()
+                                        silentPlaybackDetector.start()
+                                    })
+                                })
+                            } else {
+                                // Normal playback path
+                                player.play()
+                                songUpdateTimer.start()
+                                idleResetTimer.start()
+                                silentPlaybackDetector.start()
                             }
-                            
-                            player.play()
-                            songUpdateTimer.start()
                         }
                     }
                     
@@ -4558,52 +4784,6 @@ PlasmoidItem {
                         }
                         border.width: 2
                         border.color: parent.enabled ? Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 1.0) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
-                        
-                        // Enhanced glow effect for main button
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: parent.width + (parent.parent.hovered ? 8 : 4)
-                            height: parent.height + (parent.parent.hovered ? 8 : 4)
-                            radius: 10
-                            width: 20
-                            color: "transparent"
-                            border.width: parent.parent.hovered ? 3 : 1
-                            border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, parent.parent.hovered ? 0.4 : 0.2)
-                            visible: parent.parent.enabled
-                            
-                            Behavior on width {
-                                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                            }
-                            Behavior on height {
-                                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                            }
-                            Behavior on border.width {
-                                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                            }
-                            Behavior on border.color {
-                                ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
-                            }
-                        }
-                        
-                        // Pulsing animation when playing
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: parent.width + 12
-                            height: parent.height + 12
-                            radius: 10
-                            width: 20
-                            color: "transparent"
-                            border.width: 2
-                            border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
-                            visible: parent.parent.enabled && player.playbackState === MediaPlayer.PlayingState
-                            
-                            SequentialAnimation on opacity {
-                                running: parent.visible
-                                loops: Animation.Infinite
-                                NumberAnimation { from: 0.3; to: 1.0; duration: 1000; easing.type: Easing.InOutSine }
-                                NumberAnimation { from: 1.0; to: 0.3; duration: 1000; easing.type: Easing.InOutSine }
-                            }
-                        }
                         
                         Behavior on color {
                             ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
@@ -4680,10 +4860,9 @@ PlasmoidItem {
                         // Subtle glow effect
                         Rectangle {
                             anchors.centerIn: parent
-                            width: parent.width + 4
+                            width: 20
                             height: parent.height + 4
                             radius: 10
-                            width: 20
                             color: "transparent"
                             border.width: parent.parent.hovered ? 2 : 0
                             border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
@@ -4723,6 +4902,8 @@ PlasmoidItem {
                     }
                 }
                 
+                Item { Layout.fillWidth: true }  // Spacer
+                
                 Button {
                     text: "🎲"
                     enabled: true  // Always enabled since it can pick from all sources
@@ -4750,10 +4931,9 @@ PlasmoidItem {
                         // Subtle glow effect
                         Rectangle {
                             anchors.centerIn: parent
-                            width: parent.width + 4
+                            width: 20
                             height: parent.height + 4
                             radius: 10
-                            width: 20
                             color: "transparent"
                             border.width: parent.parent.hovered ? 2 : 0
                             border.color: Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.3)
@@ -4798,30 +4978,110 @@ PlasmoidItem {
                     }
                 }
                 
+                // Spectrum Visualizer Toggle Button
+                Button {
+                    text: "🎵"
+                    enabled: true
+                    onClicked: {
+                        showSpectrumVisualizer = !showSpectrumVisualizer
+                        plasmoid.configuration.showSpectrumVisualizer = showSpectrumVisualizer
+                        console.log("Spectrum visualizer toggled:", showSpectrumVisualizer)
+                    }
+                    font.pointSize: largeFontSize
+                    implicitWidth: buttonSize
+                    implicitHeight: buttonSize
+                    Layout.alignment: Qt.AlignVCenter
+                    
+                    ToolTip.text: "Toggle spectrum visualizer"
+                    ToolTip.visible: hovered
+                    
+                    // Modern rounded button design
+                    background: Rectangle {
+                        radius: parent.width / 2
+                        color: {
+                            if (!parent.enabled) return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                            if (parent.pressed) return Qt.rgba(Kirigami.Theme.activeTextColor.r, Kirigami.Theme.activeTextColor.g, Kirigami.Theme.activeTextColor.b, 0.8)
+                            if (parent.hovered) return Qt.rgba(Kirigami.Theme.activeTextColor.r, Kirigami.Theme.activeTextColor.g, Kirigami.Theme.activeTextColor.b, 0.6)
+                            return showSpectrumVisualizer ? 
+                                Qt.rgba(Kirigami.Theme.activeTextColor.r, Kirigami.Theme.activeTextColor.g, Kirigami.Theme.activeTextColor.b, 0.5) :
+                                Qt.rgba(Kirigami.Theme.activeTextColor.r, Kirigami.Theme.activeTextColor.g, Kirigami.Theme.activeTextColor.b, 0.3)
+                        }
+                        border.width: 1
+                        border.color: parent.enabled ? Qt.rgba(Kirigami.Theme.activeTextColor.r, Kirigami.Theme.activeTextColor.g, Kirigami.Theme.activeTextColor.b, 0.8) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
+                        
+                        // Subtle glow effect
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 20
+                            height: parent.height + 4
+                            radius: 10
+                            color: "transparent"
+                            border.width: parent.parent.hovered ? 2 : 0
+                            border.color: Qt.rgba(Kirigami.Theme.activeTextColor.r, Kirigami.Theme.activeTextColor.g, Kirigami.Theme.activeTextColor.b, 0.3)
+                            visible: parent.parent.enabled
+                            
+                            Behavior on border.width {
+                                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                            }
+                        }
+                        
+                        Behavior on color {
+                            ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                    }
+                    
+                    contentItem: Text {
+                        text: parent.text
+                        font: parent.font
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: {
+                            if (!parent.enabled) return Kirigami.Theme.disabledTextColor
+                            if (parent.pressed) return Kirigami.Theme.highlightedTextColor
+                            return Kirigami.Theme.textColor
+                        }
+                        
+                        // Pulse animation when active
+                        scale: showSpectrumVisualizer ? (parent.pressed ? 0.95 : 1.1) : (parent.pressed ? 0.95 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                        }
+                        
+                        Behavior on color {
+                            ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                    }
+                }
+                
+                Item { Layout.fillWidth: true }  // Spacer
+                
                 // Volume Control - adaptive visibility
                 Slider {
                     id: compactVolumeSlider
                     from: 0
                     to: 1
                     value: 0.5
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: isVerySmall ? 30 : 50
-                    Layout.preferredWidth: isVerySmall ? Math.max(30, simulatedWidth * 0.2) : Math.max(60, simulatedWidth * 0.25)
-                    Layout.alignment: Qt.AlignVCenter
-                    visible: !forceHideScrollbars
-                    opacity: isSmall ? 0.7 : 1.0
+                    Layout.fillWidth: false
                     
-                    // Adaptive handle size
-                    handle: Rectangle {
-                        x: compactVolumeSlider.leftPadding + compactVolumeSlider.visualPosition * (compactVolumeSlider.availableWidth - width)
-                        y: compactVolumeSlider.topPadding + compactVolumeSlider.availableHeight / 2 - height / 2
-                        implicitWidth: Math.max(8, Math.min(14, simulatedWidth / 40))
-                        implicitHeight: Math.max(8, Math.min(14, simulatedWidth / 40))
-                        radius: width / 2
-                        color: compactVolumeSlider.pressed ? Kirigami.Theme.highlightColor : Kirigami.Theme.buttonBackgroundColor
-                        border.color: Kirigami.Theme.highlightColor
-                        border.width: 1
+                    property real scaledWidth: {
+                        if (showPopup) {
+                            // Popup mode - larger size for better usability
+                            return Math.max(150, Math.min(200, root.width / 3.5))
+                        } else {
+                            // Desktop mode - more aggressive scaling
+                            return Math.max(80, Math.min(200, root.width / 6))
+                        }
                     }
+                    Layout.preferredWidth: scaledWidth
+                    Layout.minimumWidth: showPopup ? 100 : 80
+                    Layout.maximumWidth: showPopup ? root.width / 3 : root.width / 4
+                    
+                    onScaledWidthChanged: {
+                        console.log("Volume slider width changed to:", scaledWidth)
+                    }
+                    Layout.alignment: Qt.AlignVCenter
+                    visible: true
+                    opacity: isSmall ? 0.7 : 1.0
                     
                     // Save volume level when changed
                     onValueChanged: {
@@ -4845,6 +5105,8 @@ PlasmoidItem {
                     color: Kirigami.Theme.disabledTextColor
                     visible: actualBitrate !== "" || actualChannels !== ""
                     Layout.alignment: Qt.AlignVCenter
+                }
+                
                 }
             }
         }
@@ -4936,6 +5198,40 @@ PlasmoidItem {
                     font.pointSize: baseFontSize
                     color: Kirigami.Theme.textColor
                     Layout.alignment: Qt.AlignVCenter
+                }
+            }
+        }
+        
+        // Spectrum Visualizer Container
+        Rectangle {
+            id: spectrumContainer
+            visible: showSpectrumVisualizer
+            Layout.fillWidth: true
+            Layout.preferredHeight: showSpectrumVisualizer ? 80 : 0
+            Layout.maximumHeight: showSpectrumVisualizer ? 120 : 0
+            color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.95)
+            radius: 8
+            border.width: 1
+            border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
+            
+            // Smooth height animation
+            Behavior on Layout.preferredHeight {
+                NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+            }
+            
+            // Spectrum Visualizer Component (Fixed Version)
+            SpectrumVisualizer {
+                id: spectrumVisualizer
+                anchors.fill: parent
+                anchors.margins: 8
+                player: player
+                audioOutput: player.audioOutput
+                visible: showSpectrumVisualizer
+                
+                // Fade in/out animation
+                opacity: showSpectrumVisualizer ? 1.0 : 0.0
+                Behavior on opacity {
+                    NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
                 }
             }
         }
@@ -5196,9 +5492,9 @@ PlasmoidItem {
                         width: 24
                         implicitWidth: 24
                         x: parent.width - 24 - scrollbarMargin
-                        visible: enableScrollbars && !forceHideScrollbars
+                        visible: true
                         policy: ScrollBar.AsNeeded
-                        active: enableScrollbars && !forceHideScrollbars
+                        active: true
                         background: Rectangle {
                             color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
                             radius: 10
@@ -5218,7 +5514,7 @@ PlasmoidItem {
                         rightMargin: enableScrollbars ? scrollbarTotalSpace : 0
                         delegate: Rectangle {
                             property real containerHeight: Math.max(50, Math.min(80, simulatedHeight / 8))
-                            width: ListView.view.width
+                            width: ListView.view.width - 20  // Reserve 20px for medium scrollbar and spacing
                             height: containerHeight
                             color: {
                                 if (isPreviewPlaying && previewStationUrl === station.url) {
@@ -5410,9 +5706,9 @@ PlasmoidItem {
                         width: 24
                         implicitWidth: 24
                         x: parent.width - 24 - scrollbarMargin
-                        visible: enableScrollbars && !forceHideScrollbars
+                        visible: true
                         policy: ScrollBar.AsNeeded
-                        active: enableScrollbars && !forceHideScrollbars
+                        active: true
                         background: Rectangle {
                             color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
                             radius: 10
@@ -5633,7 +5929,7 @@ PlasmoidItem {
                 
                 Button {
                     anchors.right: parent.right
-                    anchors.rightMargin: 8
+                    anchors.rightMargin: 4
                     anchors.verticalCenter: parent.verticalCenter
                     text: "✕"
                     flat: true

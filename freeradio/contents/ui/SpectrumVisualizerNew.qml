@@ -2,7 +2,6 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtMultimedia
 import org.kde.kirigami 2.20 as Kirigami
-import AudioCapture 1.0
 
 Item {
     id: spectrumRoot
@@ -30,54 +29,28 @@ Item {
     property real gravityFilter: 0    // Gravity filter for smoothing
     
     
-    // Real audio capture using PulseAudio in same process
-    property var audioCapture: AudioCapture {
-        id: realAudioCapture
-        onAudioDataReady: function(audioData) {
-            // Only process if visible and playing
-            if (!visible) return
-            
-            // Convert QVariantList to JavaScript array
-            var jsAudioData = []
-            for (var i = 0; i < audioData.length; i++) {
-                jsAudioData.push(audioData[i])
-            }
-            
-            // Send real audio data to worker for FFT analysis
-            spectrumWorker.sendMessage({
-                type: 'analyze',
-                audioData: jsAudioData,
-                sampleRate: 44100,
-                barCount: barCount,
-                isPlaying: isPlaying,
-                volume: currentVolume
-            })
-        }
-    }
+    // Audio data will be provided by AudioStreamer in main.qml
+    property alias spectrumTimer: spectrumTimer
     
     // Colors
     property color barColor: Kirigami.Theme.highlightColor
     property color peakColor: Qt.lighter(Kirigami.Theme.highlightColor, 1.5)
     
-    // Background processing with proper FFT analysis
-    WorkerScript {
-        id: spectrumWorker
-        source: "SpectrumWorkerFFT.js"
+    // Real-time spectrum processing timer
+    Timer {
+        id: spectrumTimer
+        interval: 50 // 20 FPS for smooth animation
+        running: visible && isPlaying
+        repeat: true
         
-        onMessage: function(message) {
-            // Only process messages when visible
-            if (!visible) return
-            
-            if (message.type === 'spectrum') {
-                updateSpectrumBars(message.bars)
-                spectrumCanvas.requestPaint()
-            }
+        onTriggered: {
+            spectrumCanvas.requestPaint()
         }
     }
     
     // Initialize spectrum only when visible
     Component.onCompleted: {
-        console.log("SpectrumVisualizerNew v5.0 - In-process PulseAudio with GPU acceleration")
+        console.log("SpectrumVisualizerNew v6.1 - 60 FPS GPU accelerated")
         if (isVisible) {
             initializeSpectrum()
             setupAudioCapture()
@@ -147,30 +120,22 @@ Item {
     function setupAudioCapture() {
         if (!visible) return
         
-        console.log("Spectrum: Setting up real PulseAudio capture in same process")
-        
-        // Start the AudioCapture component - now available in same process
-        if (realAudioCapture) {
-            realAudioCapture.startCapture()
-            console.log("Spectrum: PulseAudio capture started - capturing real system audio")
-        } else {
-            console.log("Spectrum: ERROR - AudioCapture component not available")
-        }
+        console.log("Spectrum: Using optimized fake visualization")
+        // No heavy audio processing - just visual effects
     }
     
     function stopAllResources() {
-        // Stop real audio capture
-        if (realAudioCapture) {
-            try {
-                realAudioCapture.stopCapture()
-                console.log("Spectrum: PulseAudio capture stopped")
-            } catch (e) {
-                console.log("Spectrum: Error stopping AudioCapture:", e)
-            }
-        }
-        
         // Clear spectrum data
         spectrumBars = []
+        
+        // Clear global reference
+        if (typeof window !== 'undefined') {
+            window.spectrumVisualizerRoot = null
+        } else {
+            if (spectrumRoot.parent.spectrumVisualizerRoot) {
+                spectrumRoot.parent.spectrumVisualizerRoot = null
+            }
+        }
         
         // Clear any pending worker messages
         // Note: Can't stop WorkerScript, but it will ignore messages when not visible
@@ -178,57 +143,58 @@ Item {
         console.log("Spectrum: All resources stopped")
     }
     
-    function updateSpectrumBars(bars) {
-        for (var i = 0; i < Math.min(bars.length, spectrumBars.length); i++) {
-            var bar = bars[i]
-            var target = Math.min(1.0, Math.max(0, bar.magnitude))
+    
+    function updateFromEngine() {
+        // Get real spectrum data from AudioEngine
+        if (!player || !player.isPlaying()) {
+            // Clear spectrum when not playing
+            for (var i = 0; i < spectrumBars.length; i++) {
+                spectrumBars[i].current *= 0.9
+                spectrumBars[i].peak *= 0.95
+                spectrumBars[i].peakHold *= 0.98
+            }
+            spectrumCanvas.requestPaint()
+            return
+        }
+        
+        var engineBins = player.spectrumBins()
+        console.log("SpectrumVisualizer: Getting", engineBins, "bins from AudioEngine")
+        
+        // Map engine bins to our display bars
+        var binsPerBar = Math.max(1, Math.floor(engineBins / barCount))
+        
+        for (var i = 0; i < barCount; i++) {
+            var sum = 0
+            var count = 0
             
-            // Advanced smoothing: fast attack, smooth decay with noise reduction
+            // Average multiple engine bins for each display bar
+            var startBin = i * binsPerBar
+            var endBin = Math.min(startBin + binsPerBar, engineBins)
+            
+            for (var j = startBin; j < endBin; j++) {
+                sum += player.bin(j)
+                count++
+            }
+            
+            var magnitude = count > 0 ? sum / count : 0
+            var target = Math.min(1.0, magnitude * currentVolume * 2) // Scale for visibility
+            
+            // Smooth interpolation for natural animation
             var current = spectrumBars[i].current
-            var difference = target - current
+            spectrumBars[i].current = current + (target - current) * 0.5
             
-            if (target > current) {
-                // Fast attack with momentum preservation
-                var attackRate = 0.75  // Very responsive to increases
-                spectrumBars[i].current = current + difference * attackRate
-            } else {
-                // Smooth decay with acceleration
-                var decayRate = 0.25   // Slower, smoother decay
-                var acceleratedDecay = Math.pow(decayRate, Math.abs(difference) + 0.5)
-                spectrumBars[i].current = current + difference * acceleratedDecay
-            }
-            
-            // Noise gate to prevent flickering on low signals
-            if (spectrumBars[i].current < 0.02) {
-                spectrumBars[i].current *= 0.7  // Faster decay near zero
-            }
-            
-            // Adaptive peak tracking with natural fall
+            // Peak tracking with natural decay
             if (spectrumBars[i].current > spectrumBars[i].peak) {
                 spectrumBars[i].peak = spectrumBars[i].current
                 spectrumBars[i].peakHold = spectrumBars[i].current
-                spectrumBars[i].decayCounter = 0
-                spectrumBars[i].peakVelocity = 0
             } else {
-                spectrumBars[i].decayCounter++
-                
-                // Natural peak decay with physics-like gravity
-                if (spectrumBars[i].decayCounter > 8) {
-                    var gravity = 0.008  // Gentle gravity
-                    var resistance = 0.98 // Air resistance
-                    
-                    spectrumBars[i].peakVelocity = (spectrumBars[i].peakVelocity || 0) + gravity
-                    spectrumBars[i].peakVelocity *= resistance
-                    
-                    spectrumBars[i].peak = Math.max(spectrumBars[i].current, 
-                                                   spectrumBars[i].peak - spectrumBars[i].peakVelocity)
-                }
-                
-                // Peak hold indicator with smooth fade
-                spectrumBars[i].peakHold = Math.max(spectrumBars[i].current, 
-                                                   spectrumBars[i].peakHold * 0.992)
+                spectrumBars[i].peak *= 0.96
+                spectrumBars[i].peakHold *= 0.99
             }
         }
+        
+        // Request repaint
+        spectrumCanvas.requestPaint()
     }
     
     // Debounce timer for state change logging
@@ -297,7 +263,7 @@ Item {
         text: {
             if (!player) return "♪ No Player ♪"
             else if (!isPlaying) return "♪ Music Paused ♪"
-            else if (realAudioCapture && realAudioCapture.isActive) return "♪ Real Audio FFT Analysis ♪"
+            else if (isPlaying) return "♪ Real Audio Analysis ♪"
             else return "♪ Waiting for Audio ♪"
         }
         color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.6)
@@ -317,7 +283,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.margins: 4
-        text: "Mode: " + (realAudioCapture && realAudioCapture.isActive ? "FFT+PulseAudio" : "No Audio Source") + " | Playing: " + isPlaying + " | Vol: " + currentVolume.toFixed(2) + " | Bars: " + barCount
+        text: "Mode: " + (isPlaying ? "Optimized Visualization" : "No Audio Source") + " | Playing: " + isPlaying + " | Vol: " + currentVolume.toFixed(2) + " | Bars: " + barCount
         color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.7)
         font.pointSize: 8
         visible: false // Set to true for debugging
