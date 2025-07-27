@@ -1,0 +1,1 @@
+Freeradio(freeradio_plugin)

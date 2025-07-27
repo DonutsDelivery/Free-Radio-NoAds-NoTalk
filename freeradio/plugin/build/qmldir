@@ -1,0 +1,7 @@
+module Freeradio
+linktarget freeradio_pluginplugin
+optional plugin freeradio_pluginplugin
+classname FreeradioPlugin
+typeinfo freeradio_plugin.qmltypes
+prefer :/Freeradio/
+

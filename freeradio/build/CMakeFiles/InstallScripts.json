@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/user/Documents/Free-Radio-NoAds-NoTalk/freeradio/build/cmake_install.cmake",
+		"/home/user/Documents/Free-Radio-NoAds-NoTalk/freeradio/build/plugin/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

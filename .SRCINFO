@@ -15,6 +15,6 @@ pkgbase = plasma6-applet-freeradio
 	conflicts = plasma-applet-freeradio
 	conflicts = plasma5-applet-freeradio
 	source = plasma6-applet-freeradio-1.5.6.tar.gz::https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/archive/v1.5.6.tar.gz
-	sha256sums = SKIP
+	sha256sums = 48f17f4f06ccdc8205535f2a3ccf8385bf1ce6b1805ca211d7b6137a92695c4a
 
 pkgname = plasma6-applet-freeradio

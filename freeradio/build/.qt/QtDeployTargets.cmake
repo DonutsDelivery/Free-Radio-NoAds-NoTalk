@@ -1,0 +1,8 @@
+set(__QT_DEPLOY_TARGET_freeradio_plugin_FILE /home/user/Documents/Free-Radio-NoAds-NoTalk/freeradio/build/plugin/libfreeradio_plugin.so)
+set(__QT_DEPLOY_TARGET_freeradio_plugin_TYPE SHARED_LIBRARY)
+set(__QT_DEPLOY_TARGET_freeradio_pluginplugin_FILE /home/user/Documents/Free-Radio-NoAds-NoTalk/freeradio/build/plugin/libfreeradio_pluginplugin.so)
+set(__QT_DEPLOY_TARGET_freeradio_pluginplugin_TYPE MODULE_LIBRARY)
+set(__QT_DEPLOY_TARGET_freeradio-app_FILE /home/user/Documents/Free-Radio-NoAds-NoTalk/freeradio/build/freeradio-app)
+set(__QT_DEPLOY_TARGET_freeradio-app_TYPE EXECUTABLE)
+set(__QT_DEPLOY_TARGET_test-audio_FILE /home/user/Documents/Free-Radio-NoAds-NoTalk/freeradio/build/test-audio)
+set(__QT_DEPLOY_TARGET_test-audio_TYPE EXECUTABLE)

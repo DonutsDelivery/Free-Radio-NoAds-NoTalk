@@ -12,7 +12,7 @@ optdepends=('qt6-websockets: Enhanced streaming features')
 provides=('plasma-applet-freeradio')
 conflicts=('plasma-applet-freeradio' 'plasma5-applet-freeradio')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('48f17f4f06ccdc8205535f2a3ccf8385bf1ce6b1805ca211d7b6137a92695c4a')
 
 prepare() {
     cd "$srcdir/Free-Radio-NoAds-NoTalk-$pkgver"

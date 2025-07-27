@@ -1,0 +1,7 @@
+--bare
+-I
+/usr/lib/qt6/qml
+--resource
+/home/user/Documents/Free-Radio-NoAds-NoTalk/freeradio/build/plugin/.qt/rcc/qmake_Freeradio.qrc
+--json
+/home/user/Documents/Free-Radio-NoAds-NoTalk/freeradio/build/freeradio_plugin_qmllint.json

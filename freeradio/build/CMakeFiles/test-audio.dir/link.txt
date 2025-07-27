@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/test-audio.dir/link.d "CMakeFiles/test-audio.dir/test-audio_autogen/mocs_compilation.cpp.o" "CMakeFiles/test-audio.dir/test_audio.cpp.o" "CMakeFiles/test-audio.dir/AudioCapture.cpp.o" -o test-audio  /usr/lib/libQt6Core.so.6.9.1 -lpulse-simple -lpulse

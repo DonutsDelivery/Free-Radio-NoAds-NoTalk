@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+  <kcfgfile name=""/>
+
+  <group name="General">
+    <entry name="favoriteStations" type="String">
+      <label>Favorite radio stations</label>
+      <default>[]</default>
+    </entry>
+    <entry name="autoMuteEnabled" type="Bool">
+      <label>Auto-mute when other audio is playing</label>
+      <default>false</default>
+    </entry>
+    <entry name="customStations" type="String">
+      <label>Custom radio stations</label>
+      <default>[]</default>
+    </entry>
+    <entry name="volumeLevel" type="Double">
+      <label>Volume level</label>
+      <default>0.5</default>
+    </entry>
+    <entry name="lastStationName" type="String">
+      <label>Last selected station name</label>
+      <default></default>
+    </entry>
+    <entry name="lastStationUrl" type="String">
+      <label>Last selected station URL</label>
+      <default></default>
+    </entry>
+    <entry name="lastStationHost" type="String">
+      <label>Last selected station host</label>
+      <default></default>
+    </entry>
+    <entry name="lastStationPath" type="String">
+      <label>Last selected station path</label>
+      <default></default>
+    </entry>
+    <entry name="customEbooks" type="String">
+      <label>Custom ebooks</label>
+      <default>[]</default>
+    </entry>
+    <entry name="ebookProgress" type="String">
+      <label>Ebook playback progress</label>
+      <default>{}</default>
+    </entry>
+
+    <!-- Remote control commands -->
+    <entry name="remoteCommand" type="String">
+      <label>Remote control command</label>
+      <default></default>
+    </entry>
+    <entry name="remoteTimestamp" type="String">
+      <label>Command timestamp</label>
+      <default></default>
+    </entry>
+    <entry name="showSpectrumVisualizer" type="Bool">
+      <label>Show spectrum visualizer</label>
+      <default>false</default>
+    </entry>
+  </group>
+
+</kcfg>
