@@ -22,8 +22,6 @@ PlasmoidItem {
     // Popup state
     property bool showPopup: false
     
-    // Spectrum visualizer state
-    property bool showSpectrumVisualizer: plasmoid.configuration.showSpectrumVisualizer
     
     // Playback state tracking
     property bool userPaused: false
@@ -88,7 +86,35 @@ PlasmoidItem {
     property real scrollbarTotalSpace: scrollbarWidth + scrollbarMargin * 2  // Total space needed for scrollbar
     property bool enableScrollbars: !isVerySmall && root.width > 200
     property bool forceHideScrollbars: isVerySmall || root.width < 180
-    
+
+    // ═══════════════════════════════════════════════════════════════════
+    // REFINED AUDIO DESIGN SYSTEM - Sophisticated music-focused aesthetic
+    // ═══════════════════════════════════════════════════════════════════
+
+    // Primary accent colors - warm amber/gold tones for audio vibes
+    property color accentPrimary: "#E67E22"      // Warm amber - primary actions
+    property color accentSecondary: "#F39C12"   // Golden yellow - highlights
+    property color accentTertiary: "#D35400"    // Deep orange - emphasis
+
+    // Semantic colors
+    property color nowPlayingColor: "#27AE60"   // Vibrant green - active/playing
+    property color favoriteColor: "#F1C40F"     // Gold - favorites
+    property color sourceColor: "#3498DB"       // Blue - sources
+    property color categoryColor: "#9B59B6"     // Purple - categories
+
+    // Surface colors (overlay on theme background)
+    property color surfaceElevated: Qt.rgba(Kirigami.Theme.backgroundColor.r * 1.1,
+                                            Kirigami.Theme.backgroundColor.g * 1.1,
+                                            Kirigami.Theme.backgroundColor.b * 1.1, 0.95)
+    property color surfaceCard: Qt.rgba(Kirigami.Theme.backgroundColor.r,
+                                        Kirigami.Theme.backgroundColor.g,
+                                        Kirigami.Theme.backgroundColor.b, 0.85)
+
+    // Gradient helpers
+    function cardGradient(baseColor, intensity) {
+        return Qt.rgba(baseColor.r, baseColor.g, baseColor.b, intensity)
+    }
+
     // Compact panel controls - dedicated interface for panel mode
     Item {
         anchors.fill: parent
@@ -990,17 +1016,6 @@ PlasmoidItem {
         onPlaybackStateChanged: {
             var stateNames = ["Stopped", "Playing", "Paused"]
             console.log("AudioStreamer: Main player state changed to:", stateNames[playbackState] || playbackState)
-            
-            // Enhanced spectrum integration - trigger more realistic patterns when playing
-            if (spectrumVisualizer) {
-                if (playbackState === MediaPlayer.PlayingState) {
-                    console.log("AudioStreamer: Starting enhanced spectrum simulation")
-                    spectrumVisualizer.setEnhancedMode(true)
-                } else {
-                    console.log("AudioStreamer: Stopping spectrum simulation") 
-                    spectrumVisualizer.setEnhancedMode(false)
-                }
-            }
             
             // Detect unexpected stops (not caused by user pause/stop)
             if (playbackState === MediaPlayer.StoppedState && 
@@ -3672,24 +3687,49 @@ PlasmoidItem {
     // Widget styling - no default background to show custom rounded edges
     Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
     
-    // Modern glassmorphism background
+    // Refined Audio - Main container with subtle gradient
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.85)
-        radius: 24
-        border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.15)
+        radius: 20
         antialiasing: true
         visible: !isCompactMode
-        
-        // Subtle shadow effect
+
+        // Subtle gradient background
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.95,
+                                                         Kirigami.Theme.backgroundColor.g * 0.95,
+                                                         Kirigami.Theme.backgroundColor.b * 0.95, 0.92) }
+            GradientStop { position: 0.5; color: Qt.rgba(Kirigami.Theme.backgroundColor.r,
+                                                         Kirigami.Theme.backgroundColor.g,
+                                                         Kirigami.Theme.backgroundColor.b, 0.88) }
+            GradientStop { position: 1.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.92,
+                                                         Kirigami.Theme.backgroundColor.g * 0.92,
+                                                         Kirigami.Theme.backgroundColor.b * 0.92, 0.90) }
+        }
+
+        // Accent glow at top
+        Rectangle {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 3
+            radius: parent.radius
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.0) }
+                GradientStop { position: 0.3; color: Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.6) }
+                GradientStop { position: 0.7; color: Qt.rgba(accentSecondary.r, accentSecondary.g, accentSecondary.b, 0.6) }
+                GradientStop { position: 1.0; color: Qt.rgba(accentSecondary.r, accentSecondary.g, accentSecondary.b, 0.0) }
+            }
+        }
+
+        // Refined border
         Rectangle {
             anchors.fill: parent
-            anchors.margins: 2
             color: "transparent"
             radius: parent.radius
             border.width: 1
-            border.color: Qt.rgba(0, 0, 0, 0.1)
+            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.08)
             antialiasing: true
         }
     }
@@ -3711,17 +3751,21 @@ PlasmoidItem {
             }
         }
 
-        // Search bar
+        // Search bar - Refined Audio style
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
-            
+
             TextField {
                 id: searchField
                 Layout.fillWidth: true
                 placeholderText: "🔍 Search radio stations..."
                 font.pointSize: baseFontSize
-                
+                leftPadding: 12
+                rightPadding: 12
+                topPadding: 8
+                bottomPadding: 8
+
                 onTextChanged: {
                     if (text.trim() === "") {
                         isSearchMode = false
@@ -3730,18 +3774,46 @@ PlasmoidItem {
                         searchStations(text)
                     }
                 }
-                
+
                 Keys.onEscapePressed: {
                     text = ""
                     focus = false
                 }
-                
+
                 background: Rectangle {
-                    color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.9)
-                    radius: 8
-                    border.width: parent.activeFocus ? 2 : 1
-                    border.color: parent.activeFocus ? Kirigami.Theme.highlightColor : Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.3)
+                    radius: 10
                     antialiasing: true
+
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.92,
+                                                                     Kirigami.Theme.backgroundColor.g * 0.92,
+                                                                     Kirigami.Theme.backgroundColor.b * 0.92, 0.95) }
+                        GradientStop { position: 1.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.88,
+                                                                     Kirigami.Theme.backgroundColor.g * 0.88,
+                                                                     Kirigami.Theme.backgroundColor.b * 0.88, 0.9) }
+                    }
+
+                    border.width: searchField.activeFocus ? 2 : 1
+                    border.color: searchField.activeFocus ? accentPrimary : Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.15)
+
+                    // Focus glow effect
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: -3
+                        radius: parent.radius + 3
+                        color: "transparent"
+                        border.width: searchField.activeFocus ? 2 : 0
+                        border.color: Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.3)
+                        z: -1
+
+                        Behavior on border.width {
+                            NumberAnimation { duration: 150 }
+                        }
+                    }
+
+                    Behavior on border.color {
+                        ColorAnimation { duration: 150 }
+                    }
                 }
             }
             
@@ -3897,70 +3969,97 @@ PlasmoidItem {
             }
         }
 
-        // Sources ListView
+        // Sources ListView - Refined Audio style
         ListView {
             visible: !inSource && !inCategory && !isSearchMode
             Layout.fillWidth: true
             Layout.fillHeight: true
             model: sourcesModel
-            spacing: Math.max(6, root.height * 0.01)  // Responsive spacing: 6px min or 1% of height
+            spacing: Math.max(8, root.height * 0.015)
             clip: true
-            rightMargin: 20  // Reserve space for medium scrollbar
-            
+            rightMargin: 20
+
             delegate: ItemDelegate {
-                width: ListView.view.width - 20  // Reserve 20px for medium scrollbar and spacing
-                height: Math.max(50, root.height * 0.12)  // Responsive height: 50px min or 12% of widget height
-                
-                // Modern card background
+                id: sourceDelegate
+                width: ListView.view.width - 20
+                height: Math.max(56, root.height * 0.13)
+
                 background: Rectangle {
-                    color: {
-                        if (parent.pressed) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.4)
-                        if (parent.hovered) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.2)
-                        return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.9)
-                    }
-                    radius: 12
-                    border.width: 1
-                    border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.15)
+                    radius: 10
                     antialiasing: true
-                    
-                    // Subtle drop shadow
-                    Rectangle {
-                        anchors.fill: parent
-                        anchors.topMargin: 2
-                        anchors.leftMargin: 1
-                        color: Qt.rgba(0, 0, 0, 0.1)
-                        radius: parent.radius
-                        z: -1
+
+                    // Gradient background
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+                        GradientStop { position: 0.0; color: {
+                            if (sourceDelegate.pressed) return Qt.rgba(sourceColor.r, sourceColor.g, sourceColor.b, 0.25)
+                            if (sourceDelegate.hovered) return Qt.rgba(sourceColor.r, sourceColor.g, sourceColor.b, 0.12)
+                            return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.7)
+                        }}
+                        GradientStop { position: 1.0; color: {
+                            if (sourceDelegate.pressed) return Qt.rgba(sourceColor.r, sourceColor.g, sourceColor.b, 0.15)
+                            if (sourceDelegate.hovered) return Qt.rgba(sourceColor.r, sourceColor.g, sourceColor.b, 0.06)
+                            return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.5)
+                        }}
                     }
-                    
-                    Behavior on color {
-                        ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+
+                    // Left accent bar
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                        anchors.margins: 4
+                        width: 4
+                        radius: 2
+                        color: sourceDelegate.hovered ? sourceColor : Qt.rgba(sourceColor.r, sourceColor.g, sourceColor.b, 0.5)
+
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
+                    }
+
+                    border.width: 1
+                    border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.08)
+
+                    Behavior on gradient {
+                        ColorAnimation { duration: 180; easing.type: Easing.OutCubic }
                     }
                 }
-                
+
                 Column {
                     anchors.left: parent.left
-                    anchors.leftMargin: 20
+                    anchors.leftMargin: 24
+                    anchors.right: parent.right
+                    anchors.rightMargin: 12
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: 4
-                    
+                    spacing: 3
+
                     Label {
                         text: model.name
-                        font.family: "SF Pro Display, Segoe UI, -apple-system, BlinkMacSystemFont, sans-serif"
-                        font.pointSize: Math.max(10, root.width * 0.04)  // Responsive: 10px min or 4% of widget width
+                        font.pointSize: Math.max(11, root.width * 0.038)
                         font.weight: Font.DemiBold
-                        color: Kirigami.Theme.textColor
+                        color: sourceDelegate.hovered ? Kirigami.Theme.textColor : Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.9)
+                        elide: Text.ElideRight
+                        width: parent.width
+
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
                     }
                     Label {
                         text: model.description
-                        font.family: "SF Pro Text, Segoe UI, -apple-system, BlinkMacSystemFont, sans-serif"
-                        font.pointSize: Math.max(8, root.width * 0.025)  // Responsive: 8px min or 2.5% of widget width
+                        font.pointSize: Math.max(8, root.width * 0.025)
                         color: Kirigami.Theme.textColor
-                        opacity: 0.65
-                        font.weight: Font.Normal
+                        opacity: sourceDelegate.hovered ? 0.75 : 0.55
+                        elide: Text.ElideRight
+                        width: parent.width
+
+                        Behavior on opacity {
+                            NumberAnimation { duration: 150 }
+                        }
                     }
                 }
-                
+
                 onClicked: loadSource(model)
             }
             
@@ -4460,28 +4559,60 @@ PlasmoidItem {
             }
         }
 
-        // Status display
+        // Status display - Refined Audio style
         Rectangle {
             Layout.fillWidth: true
-            height: Math.max(80, Math.min(100, root.height * 0.18))
-            color: Kirigami.Theme.backgroundColor
-            radius: 12
-            border.width: 1
-            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.25)
+            height: Math.max(75, Math.min(95, root.height * 0.17))
+            radius: 10
             antialiasing: true
-            
+
+            // Subtle gradient background
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.95,
+                                                             Kirigami.Theme.backgroundColor.g * 0.95,
+                                                             Kirigami.Theme.backgroundColor.b * 0.95, 0.9) }
+                GradientStop { position: 1.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.9,
+                                                             Kirigami.Theme.backgroundColor.g * 0.9,
+                                                             Kirigami.Theme.backgroundColor.b * 0.9, 0.85) }
+            }
+
+            border.width: 1
+            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.08)
+
+            // Now playing accent bar (left side)
+            Rectangle {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.margins: 4
+                width: 4
+                radius: 2
+                visible: currentStationName !== ""
+                color: player.playbackState === MediaPlayer.PlayingState ? nowPlayingColor : Qt.rgba(nowPlayingColor.r, nowPlayingColor.g, nowPlayingColor.b, 0.4)
+
+                // Pulsing animation when playing
+                SequentialAnimation on opacity {
+                    running: player.playbackState === MediaPlayer.PlayingState
+                    loops: Animation.Infinite
+                    NumberAnimation { from: 0.7; to: 1.0; duration: 800; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 1.0; to: 0.7; duration: 800; easing.type: Easing.InOutSine }
+                }
+            }
+
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 8
-                spacing: 2
-                
+                anchors.leftMargin: 16
+                anchors.rightMargin: 10
+                anchors.topMargin: 8
+                anchors.bottomMargin: 8
+                spacing: 3
+
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Layout.maximumWidth: parent.width
-                    spacing: Math.max(4, root.width * 0.01)
+                    spacing: Math.max(6, root.width * 0.015)
                     Layout.alignment: Qt.AlignVCenter
-                    
+
                     Label {
                         text: currentStationName ? "♪ " + currentStationName : "No station selected"
                         font.pointSize: Math.max(8, Math.min(12, root.width / 35))
@@ -4490,7 +4621,6 @@ PlasmoidItem {
                         maximumLineCount: 2
                         color: currentStationName ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.disabledTextColor
                         Layout.fillWidth: true
-                        Layout.maximumWidth: parent.width - 50 // Leave space for favorite button
                         Layout.alignment: Qt.AlignVCenter
                         verticalAlignment: Text.AlignVCenter
                         clip: true
@@ -4583,15 +4713,25 @@ PlasmoidItem {
         }
         
         
-        // Controls
+        // Controls - Refined Audio style
         Rectangle {
             Layout.fillWidth: true
-            height: Math.max(75, Math.min(95, root.height * 0.18))  // Extra height for enhanced button designs and glow effects
-            color: Kirigami.Theme.backgroundColor
+            height: Math.max(70, Math.min(90, root.height * 0.17))
             radius: 12
-            border.width: 1
-            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.25)
             antialiasing: true
+
+            // Gradient background for controls bar
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.9,
+                                                             Kirigami.Theme.backgroundColor.g * 0.9,
+                                                             Kirigami.Theme.backgroundColor.b * 0.9, 0.95) }
+                GradientStop { position: 1.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.85,
+                                                             Kirigami.Theme.backgroundColor.g * 0.85,
+                                                             Kirigami.Theme.backgroundColor.b * 0.85, 0.9) }
+            }
+
+            border.width: 1
+            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.1)
             
             // Vertical layout: Playback controls and timeline
             Item {
@@ -4612,86 +4752,70 @@ PlasmoidItem {
                     spacing: spacingMedium
                 
                 Button {
-                    text: currentEbookUrl ? "⏪" : "⏮"
+                    id: prevButton
                     enabled: currentStationUrl !== "" && (currentEbookUrl ? currentEbookChapterIndex > 0 : true)
                     onClicked: {
                         if (currentEbookUrl !== "") {
-                            console.log("=== PREVIOUS CHAPTER CLICKED ===")
                             previousEbookChapter()
                         } else {
-                            console.log("=== PREVIOUS STATION CLICKED ===")
-                            var result = playPreviousStation()
-                            console.log("playPreviousStation returned:", result)
+                            playPreviousStation()
                         }
                     }
-                    
-                    font.pointSize: largeFontSize
+
                     implicitWidth: buttonSize
                     implicitHeight: buttonSize
                     Layout.alignment: Qt.AlignVCenter
-                    
+
                     ToolTip.text: currentEbookUrl ? "Previous chapter" : "Previous station"
                     ToolTip.visible: hovered
-                    
-                    // Modern rounded button design
+
                     background: Rectangle {
                         radius: parent.width / 2
-                        color: {
-                            if (!parent.enabled) return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
-                            if (parent.pressed) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8)
-                            if (parent.hovered) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.6)
-                            return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.4)
+                        antialiasing: true
+
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: {
+                                if (!prevButton.enabled) return Qt.rgba(0.3, 0.3, 0.3, 0.2)
+                                if (prevButton.pressed) return Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.9)
+                                if (prevButton.hovered) return Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.5)
+                                return Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.25)
+                            }}
+                            GradientStop { position: 1.0; color: {
+                                if (!prevButton.enabled) return Qt.rgba(0.2, 0.2, 0.2, 0.15)
+                                if (prevButton.pressed) return Qt.rgba(accentTertiary.r, accentTertiary.g, accentTertiary.b, 0.85)
+                                if (prevButton.hovered) return Qt.rgba(accentTertiary.r, accentTertiary.g, accentTertiary.b, 0.4)
+                                return Qt.rgba(accentTertiary.r, accentTertiary.g, accentTertiary.b, 0.15)
+                            }}
                         }
-                        border.width: 1
-                        border.color: parent.enabled ? Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
-                        
-                        // Subtle glow effect
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: 20
-                            height: parent.height + 4
-                            radius: 10
-                            color: "transparent"
-                            border.width: parent.parent.hovered ? 2 : 0
-                            border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
-                            visible: parent.parent.enabled
-                            
-                            Behavior on border.width {
-                                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-                            }
-                        }
-                        
-                        Behavior on color {
-                            ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
-                        }
-                    }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        font.pixelSize: Math.max(18, Math.min(24, parent.height * 0.5))
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        color: {
-                            if (!parent.enabled) return Kirigami.Theme.disabledTextColor
-                            if (parent.pressed || parent.hovered) return Kirigami.Theme.highlightedTextColor
-                            return Kirigami.Theme.textColor
-                        }
-                        anchors.centerIn: parent
-                        
-                        // Enhanced scale animation
-                        scale: parent.pressed ? 0.9 : 1.0
+
+                        border.width: prevButton.hovered ? 2 : 1
+                        border.color: prevButton.enabled ? Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, prevButton.hovered ? 0.7 : 0.4) : Qt.rgba(0.5, 0.5, 0.5, 0.3)
+
+                        scale: prevButton.pressed ? 0.92 : 1.0
                         Behavior on scale {
                             NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
                         }
-                        
-                        Behavior on color {
-                            ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                    }
+
+                    contentItem: Kirigami.Icon {
+                        source: currentEbookUrl ? "media-seek-backward" : "media-skip-backward"
+                        implicitWidth: Math.max(16, Math.min(22, parent.height * 0.5))
+                        implicitHeight: implicitWidth
+                        color: {
+                            if (!prevButton.enabled) return Kirigami.Theme.disabledTextColor
+                            if (prevButton.pressed || prevButton.hovered) return Kirigami.Theme.highlightedTextColor
+                            return Kirigami.Theme.textColor
+                        }
+
+                        scale: prevButton.pressed ? 0.9 : 1.0
+                        Behavior on scale {
+                            NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
                         }
                     }
                 }
-                
+
                 Button {
-                    text: player.playbackState === MediaPlayer.PlayingState ? "⏸" : "▶"
+                    id: playPauseButton
                     enabled: currentStationUrl !== "" || currentEbookUrl !== ""
                     onClicked: {
                         if (player.playbackState === MediaPlayer.PlayingState) {
@@ -4708,7 +4832,7 @@ PlasmoidItem {
                             console.log("=== RESUMING EBOOK PLAYBACK ===")
                             console.log("Current ebook:", currentEbookTitle)
                             console.log("Current chapter index:", currentEbookChapterIndex)
-                            
+
                             if (currentEbookChapterIndex >= 0 && currentEbookChapterIndex < currentEbookChapters.length) {
                                 // Resume current chapter
                                 player.play()
@@ -4724,14 +4848,14 @@ PlasmoidItem {
                             console.log("=== RESUMING RADIO PLAYBACK ===")
                             console.log("Fetching updated song metadata")
                             debugMetadata = "Resuming, checking for new song..."
-                            
+
                             // Reset pause state when user manually plays
                             userPaused = false
                             restartAttempts = 0
-                            
+
                             // Fetch fresh metadata before playing
                             fetchStreamMetadata(currentStationUrl)
-                            
+
                             // Check if player source is still valid after idle period
                             if (player.source !== currentStationUrl) {
                                 console.log("Player source mismatch after idle, resetting...")
@@ -4739,9 +4863,9 @@ PlasmoidItem {
                                 console.log("Current:", player.source)
                                 player.source = currentStationUrl
                             }
-                            
+
                             // Force source refresh if player seems to have lost connection or is in problematic state
-                            if (player.mediaStatus === MediaPlayer.NoMedia || 
+                            if (player.mediaStatus === MediaPlayer.NoMedia ||
                                 player.mediaStatus === MediaPlayer.InvalidMedia ||
                                 player.playbackState === MediaPlayer.StoppedState) {
                                 console.log("Media lost/stopped after idle, refreshing source...")
@@ -4767,64 +4891,75 @@ PlasmoidItem {
                             }
                         }
                     }
-                    
-                    font.pointSize: Math.max(18, Math.min(22, root.width / 22))
-                    implicitWidth: Math.max(55, Math.min(65, root.width / 11))
-                    implicitHeight: Math.max(55, Math.min(65, root.height / 13))
+
+                    implicitWidth: Math.max(50, Math.min(60, root.width / 11))
+                    implicitHeight: Math.max(50, Math.min(60, root.height / 13))
                     Layout.alignment: Qt.AlignVCenter
-                    
-                    // Enhanced main play button design
+
+                    // Main play button - larger, more prominent with accent gradient
                     background: Rectangle {
                         radius: parent.width / 2
-                        color: {
-                            if (!parent.enabled) return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
-                            if (parent.pressed) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 1.0)
-                            if (parent.hovered) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8)
-                            return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.6)
+                        antialiasing: true
+
+                        // Rich gradient for play button
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: {
+                                if (!playPauseButton.enabled) return Qt.rgba(0.3, 0.3, 0.3, 0.25)
+                                if (playPauseButton.pressed) return accentPrimary
+                                if (playPauseButton.hovered) return Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.85)
+                                return Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.7)
+                            }}
+                            GradientStop { position: 1.0; color: {
+                                if (!playPauseButton.enabled) return Qt.rgba(0.2, 0.2, 0.2, 0.2)
+                                if (playPauseButton.pressed) return accentTertiary
+                                if (playPauseButton.hovered) return Qt.rgba(accentTertiary.r, accentTertiary.g, accentTertiary.b, 0.8)
+                                return Qt.rgba(accentTertiary.r, accentTertiary.g, accentTertiary.b, 0.55)
+                            }}
                         }
+
                         border.width: 2
-                        border.color: parent.enabled ? Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 1.0) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
-                        
-                        Behavior on color {
-                            ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                        border.color: playPauseButton.enabled ? Qt.rgba(accentSecondary.r, accentSecondary.g, accentSecondary.b, playPauseButton.hovered ? 0.9 : 0.6) : Qt.rgba(0.5, 0.5, 0.5, 0.3)
+
+                        // Outer glow ring
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width + 8
+                            height: parent.height + 8
+                            radius: width / 2
+                            color: "transparent"
+                            border.width: playPauseButton.hovered && playPauseButton.enabled ? 2 : 0
+                            border.color: Qt.rgba(accentSecondary.r, accentSecondary.g, accentSecondary.b, 0.4)
+                            z: -1
+
+                            Behavior on border.width {
+                                NumberAnimation { duration: 150 }
+                            }
                         }
-                        
-                        // Scale animation
-                        scale: parent.pressed ? 0.9 : 1.0
+
+                        scale: playPauseButton.pressed ? 0.9 : 1.0
                         Behavior on scale {
-                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
                         }
                     }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        font: parent.font
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
+
+                    contentItem: Kirigami.Icon {
+                        source: player.playbackState === MediaPlayer.PlayingState ? "media-playback-pause" : "media-playback-start"
+                        implicitWidth: Math.max(22, Math.min(28, playPauseButton.height * 0.5))
+                        implicitHeight: implicitWidth
                         color: {
-                            if (!parent.enabled) return Kirigami.Theme.disabledTextColor
-                            if (parent.pressed || parent.hovered) return Kirigami.Theme.highlightedTextColor
-                            return Kirigami.Theme.textColor
+                            if (!playPauseButton.enabled) return Kirigami.Theme.disabledTextColor
+                            return "#FFFFFF"
                         }
-                        anchors.centerIn: parent
-                        // Shift play symbol for visual centering
-                        anchors.horizontalCenterOffset: parent.text === "▶" ? 2 : 0
-                        anchors.verticalCenterOffset: parent.text === "▶" ? -2 : 0
-                        
-                        // Enhanced scale animation
-                        scale: parent.pressed ? 0.9 : 1.0
+
+                        scale: playPauseButton.pressed ? 0.9 : 1.0
                         Behavior on scale {
                             NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
-                        }
-                        
-                        Behavior on color {
-                            ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
                         }
                     }
                 }
                 
                 Button {
-                    text: currentEbookUrl ? "⏩" : "⏭"
+                    id: nextButton
                     enabled: currentStationUrl !== "" && (currentEbookUrl ? currentEbookChapterIndex < currentEbookChapters.length - 1 : true)
                     onClicked: {
                         if (currentEbookUrl !== "") {
@@ -4836,27 +4971,26 @@ PlasmoidItem {
                             console.log("playNextStation returned:", result)
                         }
                     }
-                    
-                    font.pointSize: largeFontSize
+
                     implicitWidth: buttonSize
                     implicitHeight: buttonSize
                     Layout.alignment: Qt.AlignVCenter
-                    
+
                     ToolTip.text: currentEbookUrl ? "Next chapter" : "Next station"
                     ToolTip.visible: hovered
-                    
+
                     // Modern rounded button design
                     background: Rectangle {
                         radius: parent.width / 2
                         color: {
-                            if (!parent.enabled) return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
-                            if (parent.pressed) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8)
-                            if (parent.hovered) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.6)
+                            if (!nextButton.enabled) return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                            if (nextButton.pressed) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8)
+                            if (nextButton.hovered) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.6)
                             return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.4)
                         }
                         border.width: 1
-                        border.color: parent.enabled ? Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
-                        
+                        border.color: nextButton.enabled ? Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
+
                         // Subtle glow effect
                         Rectangle {
                             anchors.centerIn: parent
@@ -4864,70 +4998,62 @@ PlasmoidItem {
                             height: parent.height + 4
                             radius: 10
                             color: "transparent"
-                            border.width: parent.parent.hovered ? 2 : 0
+                            border.width: nextButton.hovered ? 2 : 0
                             border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
-                            visible: parent.parent.enabled
-                            
+                            visible: nextButton.enabled
+
                             Behavior on border.width {
                                 NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
                             }
                         }
-                        
+
                         Behavior on color {
                             ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
                         }
                     }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        font.pixelSize: Math.max(18, Math.min(24, parent.height * 0.5))
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
+
+                    contentItem: Kirigami.Icon {
+                        source: currentEbookUrl ? "media-seek-forward" : "media-skip-forward"
+                        implicitWidth: Math.max(16, Math.min(22, nextButton.height * 0.5))
+                        implicitHeight: implicitWidth
                         color: {
-                            if (!parent.enabled) return Kirigami.Theme.disabledTextColor
-                            if (parent.pressed || parent.hovered) return Kirigami.Theme.highlightedTextColor
+                            if (!nextButton.enabled) return Kirigami.Theme.disabledTextColor
+                            if (nextButton.pressed || nextButton.hovered) return Kirigami.Theme.highlightedTextColor
                             return Kirigami.Theme.textColor
                         }
-                        anchors.centerIn: parent
-                        
-                        // Enhanced scale animation
-                        scale: parent.pressed ? 0.9 : 1.0
+
+                        scale: nextButton.pressed ? 0.9 : 1.0
                         Behavior on scale {
                             NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
                         }
-                        
-                        Behavior on color {
-                            ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
-                        }
                     }
                 }
-                
+
                 Item { Layout.fillWidth: true }  // Spacer
-                
+
                 Button {
-                    text: "🎲"
+                    id: randomButton
                     enabled: true  // Always enabled since it can pick from all sources
                     onClicked: playRandomStation()
-                    font.pointSize: largeFontSize
                     implicitWidth: buttonSize
                     implicitHeight: buttonSize
                     Layout.alignment: Qt.AlignVCenter
-                    
+
                     ToolTip.text: "Random station"
                     ToolTip.visible: hovered
-                    
+
                     // Modern rounded button design
                     background: Rectangle {
                         radius: parent.width / 2
                         color: {
-                            if (!parent.enabled) return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
-                            if (parent.pressed) return Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.8)
-                            if (parent.hovered) return Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.6)
+                            if (!randomButton.enabled) return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                            if (randomButton.pressed) return Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.8)
+                            if (randomButton.hovered) return Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.6)
                             return Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.3)
                         }
                         border.width: 1
-                        border.color: parent.enabled ? Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.8) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
-                        
+                        border.color: randomButton.enabled ? Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.8) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
+
                         // Subtle glow effect
                         Rectangle {
                             anchors.centerIn: parent
@@ -4935,126 +5061,46 @@ PlasmoidItem {
                             height: parent.height + 4
                             radius: 10
                             color: "transparent"
-                            border.width: parent.parent.hovered ? 2 : 0
+                            border.width: randomButton.hovered ? 2 : 0
                             border.color: Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.3)
-                            visible: parent.parent.enabled
-                            
+                            visible: randomButton.enabled
+
                             Behavior on border.width {
                                 NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
                             }
                         }
-                        
+
                         Behavior on color {
                             ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
                         }
                     }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        font: parent.font
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
+
+                    contentItem: Kirigami.Icon {
+                        source: "media-playlist-shuffle"
+                        implicitWidth: Math.max(16, Math.min(22, randomButton.height * 0.5))
+                        implicitHeight: implicitWidth
                         color: {
-                            if (!parent.enabled) return Kirigami.Theme.disabledTextColor
-                            if (parent.pressed) return Kirigami.Theme.highlightedTextColor
+                            if (!randomButton.enabled) return Kirigami.Theme.disabledTextColor
+                            if (randomButton.pressed) return Kirigami.Theme.highlightedTextColor
                             return Kirigami.Theme.textColor
                         }
-                        
+
                         // Rotation animation on click
-                        rotation: parent.pressed ? 360 : 0
+                        rotation: randomButton.pressed ? 360 : 0
                         Behavior on rotation {
                             NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
                         }
-                        
+
                         // Scale animation on press
-                        scale: parent.pressed ? 0.95 : 1.0
+                        scale: randomButton.pressed ? 0.95 : 1.0
                         Behavior on scale {
                             NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
                         }
-                        
-                        Behavior on color {
-                            ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
-                        }
                     }
                 }
-                
-                // Spectrum Visualizer Toggle Button
-                Button {
-                    text: "🎵"
-                    enabled: true
-                    onClicked: {
-                        showSpectrumVisualizer = !showSpectrumVisualizer
-                        plasmoid.configuration.showSpectrumVisualizer = showSpectrumVisualizer
-                        console.log("Spectrum visualizer toggled:", showSpectrumVisualizer)
-                    }
-                    font.pointSize: largeFontSize
-                    implicitWidth: buttonSize
-                    implicitHeight: buttonSize
-                    Layout.alignment: Qt.AlignVCenter
-                    
-                    ToolTip.text: "Toggle spectrum visualizer"
-                    ToolTip.visible: hovered
-                    
-                    // Modern rounded button design
-                    background: Rectangle {
-                        radius: parent.width / 2
-                        color: {
-                            if (!parent.enabled) return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
-                            if (parent.pressed) return Qt.rgba(Kirigami.Theme.activeTextColor.r, Kirigami.Theme.activeTextColor.g, Kirigami.Theme.activeTextColor.b, 0.8)
-                            if (parent.hovered) return Qt.rgba(Kirigami.Theme.activeTextColor.r, Kirigami.Theme.activeTextColor.g, Kirigami.Theme.activeTextColor.b, 0.6)
-                            return showSpectrumVisualizer ? 
-                                Qt.rgba(Kirigami.Theme.activeTextColor.r, Kirigami.Theme.activeTextColor.g, Kirigami.Theme.activeTextColor.b, 0.5) :
-                                Qt.rgba(Kirigami.Theme.activeTextColor.r, Kirigami.Theme.activeTextColor.g, Kirigami.Theme.activeTextColor.b, 0.3)
-                        }
-                        border.width: 1
-                        border.color: parent.enabled ? Qt.rgba(Kirigami.Theme.activeTextColor.r, Kirigami.Theme.activeTextColor.g, Kirigami.Theme.activeTextColor.b, 0.8) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
-                        
-                        // Subtle glow effect
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: 20
-                            height: parent.height + 4
-                            radius: 10
-                            color: "transparent"
-                            border.width: parent.parent.hovered ? 2 : 0
-                            border.color: Qt.rgba(Kirigami.Theme.activeTextColor.r, Kirigami.Theme.activeTextColor.g, Kirigami.Theme.activeTextColor.b, 0.3)
-                            visible: parent.parent.enabled
-                            
-                            Behavior on border.width {
-                                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-                            }
-                        }
-                        
-                        Behavior on color {
-                            ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
-                        }
-                    }
-                    
-                    contentItem: Text {
-                        text: parent.text
-                        font: parent.font
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        color: {
-                            if (!parent.enabled) return Kirigami.Theme.disabledTextColor
-                            if (parent.pressed) return Kirigami.Theme.highlightedTextColor
-                            return Kirigami.Theme.textColor
-                        }
-                        
-                        // Pulse animation when active
-                        scale: showSpectrumVisualizer ? (parent.pressed ? 0.95 : 1.1) : (parent.pressed ? 0.95 : 1.0)
-                        Behavior on scale {
-                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                        }
-                        
-                        Behavior on color {
-                            ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
-                        }
-                    }
-                }
-                
+
                 Item { Layout.fillWidth: true }  // Spacer
-                
+
                 // Volume Control - adaptive visibility
                 Slider {
                     id: compactVolumeSlider
@@ -5202,39 +5248,6 @@ PlasmoidItem {
             }
         }
         
-        // Spectrum Visualizer Container
-        Rectangle {
-            id: spectrumContainer
-            visible: showSpectrumVisualizer
-            Layout.fillWidth: true
-            Layout.preferredHeight: showSpectrumVisualizer ? 80 : 0
-            Layout.maximumHeight: showSpectrumVisualizer ? 120 : 0
-            color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.95)
-            radius: 8
-            border.width: 1
-            border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
-            
-            // Smooth height animation
-            Behavior on Layout.preferredHeight {
-                NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
-            }
-            
-            // Spectrum Visualizer Component (Fixed Version)
-            SpectrumVisualizer {
-                id: spectrumVisualizer
-                anchors.fill: parent
-                anchors.margins: 8
-                player: player
-                audioOutput: player.audioOutput
-                visible: showSpectrumVisualizer
-                
-                // Fade in/out animation
-                opacity: showSpectrumVisualizer ? 1.0 : 0.0
-                Behavior on opacity {
-                    NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
-                }
-            }
-        }
     } // ColumnLayout
     
     // Add/Edit Custom Radio Dialog (Manual Entry Only)
