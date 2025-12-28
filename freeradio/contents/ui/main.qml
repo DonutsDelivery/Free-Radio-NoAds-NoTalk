@@ -4979,36 +4979,32 @@ PlasmoidItem {
                     ToolTip.text: currentEbookUrl ? "Next chapter" : "Next station"
                     ToolTip.visible: hovered
 
-                    // Modern rounded button design
+                    // Modern rounded button design - matching previous button style
                     background: Rectangle {
                         radius: parent.width / 2
-                        color: {
-                            if (!nextButton.enabled) return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
-                            if (nextButton.pressed) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8)
-                            if (nextButton.hovered) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.6)
-                            return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.4)
-                        }
-                        border.width: 1
-                        border.color: nextButton.enabled ? Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.8) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
+                        antialiasing: true
 
-                        // Subtle glow effect
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: 20
-                            height: parent.height + 4
-                            radius: 10
-                            color: "transparent"
-                            border.width: nextButton.hovered ? 2 : 0
-                            border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.3)
-                            visible: nextButton.enabled
-
-                            Behavior on border.width {
-                                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-                            }
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: {
+                                if (!nextButton.enabled) return Qt.rgba(0.3, 0.3, 0.3, 0.2)
+                                if (nextButton.pressed) return Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.9)
+                                if (nextButton.hovered) return Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.5)
+                                return Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.25)
+                            }}
+                            GradientStop { position: 1.0; color: {
+                                if (!nextButton.enabled) return Qt.rgba(0.2, 0.2, 0.2, 0.15)
+                                if (nextButton.pressed) return Qt.rgba(accentTertiary.r, accentTertiary.g, accentTertiary.b, 0.85)
+                                if (nextButton.hovered) return Qt.rgba(accentTertiary.r, accentTertiary.g, accentTertiary.b, 0.4)
+                                return Qt.rgba(accentTertiary.r, accentTertiary.g, accentTertiary.b, 0.15)
+                            }}
                         }
 
-                        Behavior on color {
-                            ColorAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        border.width: nextButton.hovered ? 2 : 1
+                        border.color: nextButton.enabled ? Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, nextButton.hovered ? 0.7 : 0.4) : Qt.rgba(0.5, 0.5, 0.5, 0.3)
+
+                        scale: nextButton.pressed ? 0.92 : 1.0
+                        Behavior on scale {
+                            NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
                         }
                     }
 
