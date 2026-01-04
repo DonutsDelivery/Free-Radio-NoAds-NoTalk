@@ -425,6 +425,7 @@ PlasmoidItem {
     
     // Favorites system
     property var favoriteStations: []
+    property int favoritesVersion: 0  // Counter to force UI updates when favorites change
     
     // Custom stations system
     property var customStations: []
@@ -857,8 +858,9 @@ PlasmoidItem {
         }
         
         // Reassign to trigger property change signal
-        favoriteStations = favoriteStations
-        
+        favoriteStations = favoriteStations.slice()  // Create new array reference
+        favoritesVersion++  // Increment counter to force UI binding updates
+
         saveFavorites()
         
         // Force immediate model refresh
@@ -4629,15 +4631,16 @@ PlasmoidItem {
                     Button {
                         visible: currentStationName !== "" && currentEbookUrl === ""
                         text: {
+                            // Include favoritesVersion to force re-evaluation when favorites change
+                            var _v = favoritesVersion
                             if (currentStationName === "" || currentStationHost === "" || currentStationPath === "") return "☆"
-                            // Use stored station data
                             return isFavorite(currentStationName, currentStationHost, currentStationPath) ? "⭐" : "☆"
                         }
                         font.pointSize: titleFontSize
                         implicitWidth: buttonSize * 0.8
                         implicitHeight: buttonSize * 0.8
                         flat: true
-                        
+
                         // Custom content item to control star color
                         contentItem: Text {
                             text: parent.text
@@ -4645,19 +4648,20 @@ PlasmoidItem {
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                             color: {
+                                // Include favoritesVersion to force re-evaluation when favorites change
+                                var _v = favoritesVersion
                                 if (currentStationName === "" || currentStationHost === "" || currentStationPath === "") return Kirigami.Theme.textColor
-                                // Use stored station data to check if favorited - bind to favoriteStations for updates
-                                return (favoriteStations && isFavorite(currentStationName, currentStationHost, currentStationPath)) ? "#FFD700" : Kirigami.Theme.textColor
+                                return isFavorite(currentStationName, currentStationHost, currentStationPath) ? "#FFD700" : Kirigami.Theme.textColor
                             }
                         }
                         onClicked: {
                             if (currentStationName === "" || currentStationHost === "" || currentStationPath === "") return
-                            // Use stored station data instead of searching model
                             toggleFavorite(currentStationName, currentStationHost, currentStationPath)
                         }
                         ToolTip.text: {
+                            // Include favoritesVersion to force re-evaluation when favorites change
+                            var _v = favoritesVersion
                             if (currentStationName === "" || currentStationHost === "" || currentStationPath === "") return "Add to favorites"
-                            // Use stored station data
                             return isFavorite(currentStationName, currentStationHost, currentStationPath) ? "Remove from favorites" : "Add to favorites"
                         }
                         ToolTip.visible: hovered
