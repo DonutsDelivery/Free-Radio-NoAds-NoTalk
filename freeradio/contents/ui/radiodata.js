@@ -6,11 +6,15 @@ var somafmCategories = [
         "name": "🌙 Ambient",
         "stations": [
             { "name": "Groove Salad", "host": "https://somafm.com", "path": "groovesalad", "description": "A nicely chilled plate of ambient/downtempo beats and grooves." },
+            { "name": "Groove Salad Classic", "host": "https://somafm.com", "path": "gsclassic", "description": "The classic Groove Salad mix." },
             { "name": "Drone Zone", "host": "https://somafm.com", "path": "dronezone", "description": "Atmospheric textures with minimal beats." },
             { "name": "Deep Space One", "host": "https://somafm.com", "path": "deepspaceone", "description": "Deep ambient electronic and space music." },
             { "name": "Mission Control", "host": "https://somafm.com", "path": "missioncontrol", "description": "Celebrating NASA and Space Explorers everywhere." },
             { "name": "Fluid", "host": "https://somafm.com", "path": "fluid", "description": "Dj-mixed chillout, new age and ambient." },
-            { "name": "Sf 10 - 33", "host": "https://somafm.com", "path": "sf1033", "description": "Ambient music mixed with the sounds of San Francisco public safety radio traffic." }
+            { "name": "Sf 10 - 33", "host": "https://somafm.com", "path": "sf1033", "description": "Ambient music mixed with the sounds of San Francisco public safety radio traffic." },
+            { "name": "Synphaera Radio", "host": "https://somafm.com", "path": "synphaera", "description": "Ambient electronic music." },
+            { "name": "The Dark Zone", "host": "https://somafm.com", "path": "darkzone", "description": "Dark ambient and industrial." },
+            { "name": "n5MD Radio", "host": "https://somafm.com", "path": "n5md", "description": "Ambient, IDM and experimental from n5MD." }
         ]
     },
     {
@@ -23,7 +27,6 @@ var somafmCategories = [
             { "name": "Underground 80s", "host": "https://somafm.com", "path": "u80s", "description": "Early 80s UK Synthpop and a bit of New Wave." },
             { "name": "Digitalis", "host": "https://somafm.com", "path": "digitalis", "description": "Digitally influenced electronic music." },
             { "name": "Cliqhop IDM", "host": "https://somafm.com", "path": "cliqhop", "description": "Blips'n'beats and other clicks and cuts." },
-            { "name": "Earwaves", "host": "https://somafm.com", "path": "earwaves", "description": "Spanning the electronic spectrum." },
             { "name": "Dubstep Beyond", "host": "https://somafm.com", "path": "dubstep", "description": "Dubstep, future garage and the wobbles." },
             { "name": "Def Con Radio", "host": "https://somafm.com", "path": "defcon", "description": "Music for Hacking. The DEF CON Year-Round Channel." }
         ]
@@ -32,9 +35,11 @@ var somafmCategories = [
         "name": "🎸 Rock & Alternative",
         "stations": [
             { "name": "Indie Pop Rocks!", "host": "https://somafm.com", "path": "indiepop", "description": "New and classic favorite indie pop tracks." },
-            { "name": "Left Coast 70s", "host": "https://somafm.com", "path": "leftcoast70s", "description": "New and classic west coast rock and folk." },
+            { "name": "Left Coast 70s", "host": "https://somafm.com", "path": "seventies", "description": "New and classic west coast rock and folk." },
             { "name": "Metal Detector", "host": "https://somafm.com", "path": "metal", "description": "From the underground comes the loudest SomaFM channel." },
-            { "name": "Bagel Radio", "host": "https://somafm.com", "path": "bagel", "description": "What alternative rock radio should sound like." }
+            { "name": "Bagel Radio", "host": "https://somafm.com", "path": "bagel", "description": "What alternative rock radio should sound like." },
+            { "name": "Covers", "host": "https://somafm.com", "path": "covers", "description": "Just covers - songs you know by artists you don't." },
+            { "name": "Doomed", "host": "https://somafm.com", "path": "doomed", "description": "Dark industrial, EBM, and electronic music." }
         ]
     },
     {
@@ -43,7 +48,10 @@ var somafmCategories = [
             { "name": "Illinois Street Lounge", "host": "https://somafm.com", "path": "illstreet", "description": "Classic bachelor pad, playful exotica and vintage music." },
             { "name": "Secret Agent", "host": "https://somafm.com", "path": "secretagent", "description": "The soundtrack for your stylish, mysterious, dangerous life." },
             { "name": "Lush", "host": "https://somafm.com", "path": "lush", "description": "Sensuous and mellow female vocals, mostly with an electronic influence." },
-            { "name": "Seven Inch Soul", "host": "https://somafm.com", "path": "7soul", "description": "Vintage soul tracks from the original 45 RPM vinyl." }
+            { "name": "Seven Inch Soul", "host": "https://somafm.com", "path": "7soul", "description": "Vintage soul tracks from the original 45 RPM vinyl." },
+            { "name": "Tiki Time", "host": "https://somafm.com", "path": "tikitime", "description": "A mix of exotica, vintage and modern." },
+            { "name": "The In-Sound", "host": "https://somafm.com", "path": "insound", "description": "60s and 70s pop and soul." },
+            { "name": "Vaporwaves", "host": "https://somafm.com", "path": "vaporwaves", "description": "Vaporwave and future funk." }
         ]
     },
     {
@@ -52,13 +60,15 @@ var somafmCategories = [
             { "name": "Thistleradio", "host": "https://somafm.com", "path": "thistle", "description": "Exploring music from Celtic roots and branches." },
             { "name": "Folk Forward", "host": "https://somafm.com", "path": "folkfwd", "description": "Indie Folk, Alt-folk and the occasional folk classics." },
             { "name": "Suburbs of Goa", "host": "https://somafm.com", "path": "suburbsofgoa", "description": "Desi-influenced Asian world beats and beyond." },
-            { "name": "Boot Liquor", "host": "https://somafm.com", "path": "bootliquor", "description": "Americana Roots music for Cowhands, Cowpokes and Cowtippers." }
+            { "name": "Boot Liquor", "host": "https://somafm.com", "path": "bootliquor", "description": "Americana Roots music for Cowhands, Cowpokes and Cowtippers." },
+            { "name": "Heavyweight Reggae", "host": "https://somafm.com", "path": "reggae", "description": "Reggae, Roots and Culture." }
         ]
     },
     {
         "name": "🎷 Jazz & Experimental",
         "stations": [
-            { "name": "Sonic Universe", "host": "https://somafm.com", "path": "sonicuniverse", "description": "Transcending the world of jazz with eclectic, avant-garde takes on tradition." }
+            { "name": "Sonic Universe", "host": "https://somafm.com", "path": "sonicuniverse", "description": "Transcending the world of jazz with eclectic, avant-garde takes on tradition." },
+            { "name": "Bossa Beyond", "host": "https://somafm.com", "path": "bossa", "description": "Bossa Nova and beyond." }
         ]
     },
     {
@@ -80,10 +90,10 @@ var radcapCategories = [
             { "name": "Flamenco", "host": "http://79.111.14.76", "path": "flamenco" },
             { "name": "Tango", "host": "http://79.120.39.202", "path": "tango" },
             { "name": "Middle Eastern Music", "host": "http://79.111.119.111", "path": "middleeast" },
-            { "name": "Celtic", "host": "http://79.120.12.130", "path": "celticrock" },
+            { "name": "Celtic Music / Celtic Fusion", "host": "http://79.111.14.76", "path": "celtic" },
             { "name": "Native American", "host": "http://79.111.119.111", "path": "nativeamerican" },
             { "name": "Traditional Latin Music", "host": "http://79.120.39.202", "path": "salsa" },
-            { "name": "Far Eastern Music", "host": "http://79.120.12.130", "path": "freestyle" },
+            { "name": "Far Eastern Traditional Music", "host": "http://79.111.119.111", "path": "fareast" },
             { "name": "Balkan Music", "host": "http://79.120.39.202", "path": "balkan" },
             { "name": "Jewish Music / Klezmer", "host": "http://79.120.39.202", "path": "klezmer" },
             { "name": "Laiko / Greek Music", "host": "http://79.111.119.111", "path": "laika" },
@@ -92,7 +102,7 @@ var radcapCategories = [
             { "name": "Americana", "host": "http://213.141.131.10", "path": "americana" },
             { "name": "Gospel / Spirituals Music", "host": "http://79.111.14.76", "path": "gospel" },
             { "name": "Music of Siberia / Mongolia", "host": "http://79.111.119.111", "path": "siberia" },
-            { "name": "Indian Spiritual Music", "host": "http://79.111.14.76", "path": "orthodox" },
+            { "name": "Indian Spiritual Music (Mantras)", "host": "http://213.141.131.10", "path": "mantras" },
             { "name": "Medieval Folk", "host": "http://213.141.131.10", "path": "medievalfolk" },
             { "name": "European Folk", "host": "http://213.141.131.10", "path": "europeanfolk" },
             { "name": "Fado", "host": "http://213.141.131.10", "path": "fado" },
@@ -132,7 +142,7 @@ var radcapCategories = [
             { "name": "Minimalism / Postminimalism", "host": "http://213.141.131.10", "path": "minimalism" },
             { "name": "Lute / Archlute / Theorbo", "host": "http://79.120.12.130", "path": "lute" },
             { "name": "Cantatas", "host": "http://79.120.12.130", "path": "cantata" },
-            { "name": "Oratorios", "host": "http://79.120.12.130", "path": "cantata" },
+            { "name": "Oratorios", "host": "http://79.120.12.130", "path": "oratorio" },
             { "name": "Classical Flute", "host": "http://79.111.14.76", "path": "fluteclass" },
         ]
     },
@@ -159,6 +169,7 @@ var radcapCategories = [
             { "name": "Slide Guitar", "host": "http://213.141.131.10", "path": "slideguitar" },
             { "name": "West Coast Blues", "host": "http://79.120.12.130", "path": "westcoastblues" },
             { "name": "Hip - Hop Soul", "host": "http://79.120.12.130", "path": "hiphopsoul" },
+            { "name": "Early / Pre-War Blues", "host": "http://79.120.77.11", "path": "earlyblues" },
         ]
     },
     {
@@ -166,7 +177,7 @@ var radcapCategories = [
         "stations": [
             { "name": "Alternative Country", "host": "http://79.111.119.111", "path": "altcountry" },
             { "name": "Bluegrass", "host": "http://79.111.14.76", "path": "bluegrass" },
-            { "name": "Country", "host": "http://79.111.119.111", "path": "countrypop" },
+            { "name": "Country Music", "host": "http://79.120.77.11", "path": "country" },
             { "name": "Country Pop", "host": "http://79.111.119.111", "path": "countrypop" },
             { "name": "Honky - Tonk", "host": "http://213.141.131.10", "path": "honkytonk" },
             { "name": "Western Swing", "host": "http://79.120.12.130", "path": "westernswing" },
@@ -185,7 +196,7 @@ var radcapCategories = [
             { "name": "Contemporary Jazz", "host": "http://79.111.119.111", "path": "contemporaryjazz" },
             { "name": "Soul Jazz", "host": "http://79.111.14.76", "path": "souljazz" },
             { "name": "Modern Creative", "host": "http://79.120.77.11", "path": "mcreative" },
-            { "name": "Swing", "host": "http://79.120.39.202", "path": "strings" },
+            { "name": "Swing / Neo-Swing", "host": "http://79.120.39.202", "path": "swing" },
             { "name": "Vocal Jazz", "host": "http://79.120.39.202", "path": "vocaljazz" },
             { "name": "Hard Bop", "host": "http://79.111.14.76", "path": "hardbop" },
             { "name": "Bossa Nova", "host": "http://79.111.14.76", "path": "bossanova" },
@@ -253,6 +264,7 @@ var radcapCategories = [
             { "name": "Cantopop / Hk - Pop", "host": "http://79.120.12.130", "path": "cantopop" },
             { "name": "Italodance", "host": "http://79.111.14.76", "path": "italodance" },
             { "name": "Mpb (Musica Popular Brasileira)", "host": "http://79.111.14.76", "path": "mpb" },
+            { "name": "Pop Music of the USSR", "host": "http://79.120.77.11", "path": "ussr" },
         ]
     },
     {
@@ -261,14 +273,14 @@ var radcapCategories = [
             { "name": "Psychobilly", "host": "http://79.111.119.111", "path": "psychobilly" },
             { "name": "Folk Rock", "host": "http://79.111.14.76", "path": "folkrock" },
             { "name": "Rock & Roll", "host": "http://79.120.77.11", "path": "rockroll" },
-            { "name": "Hard Rock", "host": "http://79.120.39.202", "path": "artrock" },
+            { "name": "Hard / Heavy Rock", "host": "http://79.120.77.11", "path": "hardrock" },
             { "name": "Dream Pop", "host": "http://79.111.14.76", "path": "dreampop" },
             { "name": "Jazz Rock", "host": "http://79.111.119.111", "path": "jazzrock" },
             { "name": "Noise Rock", "host": "http://79.120.39.202", "path": "noiserock" },
             { "name": "Post Rock", "host": "http://79.111.14.76", "path": "postrock" },
             { "name": "Shoegazing", "host": "http://79.111.119.111", "path": "shoegazing" },
             { "name": "Space Rock", "host": "http://79.111.119.111", "path": "spacerock" },
-            { "name": "Pop Rock", "host": "http://79.111.14.76", "path": "postrock" },
+            { "name": "Pop Rock", "host": "http://79.120.77.11", "path": "poprock" },
             { "name": "Indie Rock", "host": "http://79.120.39.202", "path": "indierock" },
             { "name": "Krautrock", "host": "http://79.111.119.111", "path": "krautrock" },
             { "name": "Math Rock", "host": "http://79.120.39.202", "path": "mathrock" },
@@ -283,21 +295,21 @@ var radcapCategories = [
             { "name": "Surf Rock", "host": "http://79.111.119.111", "path": "surfrock" },
             { "name": "Punk Rock", "host": "http://79.120.77.11", "path": "punk" },
             { "name": "Grunge", "host": "http://79.120.39.202", "path": "grunge" },
-            { "name": "New Wave", "host": "http://79.120.77.11", "path": "newage" },
+            { "name": "New Wave / Cold Wave", "host": "http://79.120.39.202", "path": "newwave" },
             { "name": "Art Rock", "host": "http://79.120.39.202", "path": "artrock" },
             { "name": "Gothic Rock", "host": "http://79.111.14.76", "path": "gothicrock" },
             { "name": "Post Grunge", "host": "http://79.111.119.111", "path": "postgrunge" },
-            { "name": "Garage Rock", "host": "http://79.120.39.202", "path": "artrock" },
+            { "name": "Garage Rock / Revival", "host": "http://79.111.119.111", "path": "garagerock" },
             { "name": "Rockabilly", "host": "http://79.111.14.76", "path": "rockabilly" },
             { "name": "Stoner Rock", "host": "http://79.111.119.111", "path": "stonerrock" },
             { "name": "Blues Rock", "host": "http://79.120.39.202", "path": "bluesrock" },
-            { "name": "Post Punk", "host": "http://79.111.14.76", "path": "poppunk" },
+            { "name": "Post Punk / No Wave", "host": "http://79.120.39.202", "path": "postpunk" },
             { "name": "Pop Punk", "host": "http://79.111.14.76", "path": "poppunk" },
             { "name": "Country Rock", "host": "http://79.111.119.111", "path": "countryrock" },
             { "name": "Twist", "host": "http://79.111.119.111", "path": "twist" },
             { "name": "Acid Rock", "host": "http://213.141.131.10", "path": "acidrock" },
             { "name": "Jam Band", "host": "http://79.120.12.130", "path": "jamband" },
-            { "name": "Deathrock", "host": "http://79.120.39.202", "path": "mathrock" },
+            { "name": "Deathrock", "host": "http://79.120.12.130", "path": "deathrock" },
             { "name": "Pub Rock", "host": "http://79.120.12.130", "path": "pubrock" },
             { "name": "Britpop / Post Britpop", "host": "http://79.120.39.202", "path": "britpop" },
             { "name": "Southern Rock / Metal", "host": "http://79.111.14.76", "path": "southernrock" },
@@ -334,6 +346,8 @@ var radcapCategories = [
             { "name": "Industrial Rock", "host": "http://79.120.77.11", "path": "industrialrock" },
             { "name": "Heavy / Hard Prog", "host": "http://79.111.14.76", "path": "heavyprog" },
             { "name": "Rpi (Rock Progressivo Italiano)", "host": "http://79.111.14.76", "path": "rpi" },
+            { "name": "Heavy / Hard Psychedelic", "host": "http://79.120.39.202", "path": "heavypsych" },
+            { "name": "Proto-Prog / Early Progressive Rock", "host": "http://79.120.77.11", "path": "protoprog" },
         ]
     },
     {
@@ -366,7 +380,7 @@ var radcapCategories = [
             { "name": "Alt / Nu Metal", "host": "http://79.111.14.76", "path": "numetal" },
             { "name": "Sludge Metal", "host": "http://79.120.77.11", "path": "sludgemetal" },
             { "name": "Heavy Metal", "host": "http://79.111.14.76", "path": "heavymetal" },
-            { "name": "Stoner Metal", "host": "http://79.120.77.11", "path": "powermetal" },
+            { "name": "Stoner / Stoner Doom Metal", "host": "http://79.120.77.11", "path": "stonermetal" },
             { "name": "Pagan Metal", "host": "http://79.111.119.111", "path": "paganmetal" },
             { "name": "Viking Metal", "host": "http://79.111.14.76", "path": "vikingmetal" },
             { "name": "Nwobhm", "host": "http://79.120.12.130", "path": "nwobhm" },
@@ -426,7 +440,7 @@ var radcapCategories = [
         "stations": [
             { "name": "Deathcore / Melodic Deathcore", "host": "http://79.111.14.76", "path": "deathcore" },
             { "name": "Crust Punk / Stenchcore", "host": "http://79.120.39.202", "path": "crust" },
-            { "name": "Rapcore", "host": "http://79.111.119.111", "path": "breakcore" },
+            { "name": "Rapcore / Rap Metal", "host": "http://79.111.119.111", "path": "rapcore" },
             { "name": "Metalcore", "host": "http://79.120.39.202", "path": "metalcore" },
             { "name": "Emocore / Screamo / EMO Violence", "host": "http://79.111.119.111", "path": "screamoemo" },
             { "name": "Progressive Metalcore", "host": "http://79.111.14.76", "path": "progmetalcore" },
@@ -452,11 +466,11 @@ var radcapCategories = [
             { "name": "Chill Out", "host": "http://79.111.14.76", "path": "chillout" },
             { "name": "Chiptune", "host": "http://79.111.119.111", "path": "chiptune" },
             { "name": "Vocal Trance", "host": "http://79.120.39.202", "path": "vocaltrance" },
-            { "name": "Psybient", "host": "http://79.111.119.111", "path": "ambient" },
+            { "name": "Psybient / Psychill", "host": "http://79.111.14.76", "path": "psybient" },
             { "name": "New Age", "host": "http://79.120.77.11", "path": "newage" },
             { "name": "Lounge", "host": "http://79.111.14.76", "path": "lounge" },
             { "name": "Psytrance", "host": "http://79.111.119.111", "path": "psytrance" },
-            { "name": "Deathstep", "host": "http://79.120.39.202", "path": "dubstep" },
+            { "name": "Deathstep / Death Dubstep", "host": "http://79.111.14.76", "path": "deathstep" },
             { "name": "Space Music", "host": "http://79.111.119.111", "path": "spacemusic" },
             { "name": "Dubstep", "host": "http://79.120.39.202", "path": "dubstep" },
             { "name": "Broken Beat", "host": "http://79.120.77.11", "path": "brokenbeat" },
@@ -464,12 +478,12 @@ var radcapCategories = [
             { "name": "Tribal House", "host": "http://213.141.131.10", "path": "tribalhouse" },
             { "name": "Funky House", "host": "http://213.141.131.10", "path": "funkyhouse" },
             { "name": "Nitzhonot", "host": "http://213.141.131.10", "path": "nitzhonot" },
-            { "name": "Garage House", "host": "http://213.141.131.10", "path": "hardhouse" },
+            { "name": "Garage House", "host": "http://79.120.12.130", "path": "garagehouse" },
             { "name": "Full on", "host": "http://79.111.14.76", "path": "fullon" },
             { "name": "Goa Trance", "host": "http://79.120.39.202", "path": "goatrance" },
             { "name": "Techno", "host": "http://79.120.77.11", "path": "techno" },
             { "name": "Electro", "host": "http://79.111.119.111", "path": "electro" },
-            { "name": "Spacesynth", "host": "http://79.111.119.111", "path": "spacemusic" },
+            { "name": "Spacesynth / Synthdance", "host": "http://79.120.39.202", "path": "spacesynth" },
             { "name": "Euro House", "host": "http://79.111.119.111", "path": "eurohouse" },
             { "name": "Dub Techno", "host": "http://79.120.39.202", "path": "dubtechno" },
             { "name": "Dream Trance", "host": "http://79.120.39.202", "path": "dreamtrance" },
@@ -547,7 +561,7 @@ var radcapCategories = [
             { "name": "Industrial Techno", "host": "http://79.120.12.130", "path": "industrialtechno" },
             { "name": "Uplifting / Epic / Euphoric Trance", "host": "http://79.111.119.111", "path": "upliftingtrance" },
             { "name": "Drone Ambient", "host": "http://79.111.119.111", "path": "droneambient" },
-            { "name": "Pumping House", "host": "http://79.120.12.130", "path": "ambienthouse" },
+            { "name": "Pumping House / Hard Bass", "host": "http://79.120.77.11", "path": "pumpinghouse" },
             { "name": "Riddim Dubstep", "host": "http://79.111.119.111", "path": "riddimdubstep" },
             { "name": "Soulful House", "host": "http://79.111.119.111", "path": "soulfulhouse" },
             { "name": "Minimal Techno", "host": "http://79.120.39.202", "path": "mintechno" },
@@ -564,6 +578,7 @@ var radcapCategories = [
             { "name": "Latin House / EDM", "host": "http://79.120.12.130", "path": "latinhouse" },
             { "name": "Ghetto / Booty / G - House", "host": "http://79.111.14.76", "path": "ghouse" },
             { "name": "Power Electronics / Death Industrial", "host": "http://79.111.14.76", "path": "powerelectronics" },
+            { "name": "Progressive Psytrance / Psy-Prog", "host": "http://79.120.39.202", "path": "psyprog" },
         ]
     },
     {
@@ -598,12 +613,15 @@ var radcapCategories = [
             { "name": "Цыганская Песня", "host": "http://79.120.39.202", "path": "bardru" },
             { "name": "Русский / Городской / Жестокий / Романс", "host": "http://79.120.39.202", "path": "bardru" },
             { "name": "Авторская / Бардовская Песня", "host": "http://79.120.39.202", "path": "bardru" },
+            { "name": "Russian Post Shanson", "host": "http://79.120.77.11", "path": "postshanson" },
+            { "name": "Russian Shanson", "host": "http://79.120.77.11", "path": "shansonru" },
+            { "name": "Military Songs / Marches of Russia", "host": "http://79.111.119.111", "path": "rusmilsong" },
         ]
     },
     {
         "name": "Miscellaneous Music",
         "stations": [
-            { "name": "Oldies", "host": "http://213.141.131.10", "path": "medieval" },
+            { "name": "Oldies / Doo-Wop", "host": "http://79.120.77.11", "path": "oldies" },
             { "name": "Modern Classical", "host": "http://79.120.39.202", "path": "modernclassical" },
             { "name": "Vocal", "host": "http://79.120.77.11", "path": "vocal" },
             { "name": "Piano", "host": "http://79.120.77.11", "path": "piano" },
@@ -613,9 +631,9 @@ var radcapCategories = [
             { "name": "Neoclassical Music", "host": "http://79.120.39.202", "path": "neoclassical" },
             { "name": "Sounds of Nature", "host": "http://79.111.14.76", "path": "soundnat" },
             { "name": "Saxophone", "host": "http://79.120.77.11", "path": "saxophone" },
-            { "name": "Misc", "host": "http://79.120.77.11", "path": "disco" },
+            { "name": "Misc", "host": "http://79.120.77.11", "path": "misc" },
             { "name": "Военные Песни / Марши России", "host": "http://79.120.39.202", "path": "bardru" },
-            { "name": "Hammond Organ", "host": "http://79.120.77.11", "path": "organ" },
+            { "name": "Hammond Organ", "host": "http://79.120.39.202", "path": "hammond" },
             { "name": "Ballroom Dance", "host": "http://79.111.14.76", "path": "ballroomdance" },
             { "name": "Instrumental Music", "host": "http://79.120.77.11", "path": "instrumental" },
             { "name": "Поэзия", "host": "http://79.120.39.202", "path": "bardru" },

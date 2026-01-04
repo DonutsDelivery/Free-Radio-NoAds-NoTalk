@@ -53,8 +53,8 @@ PlasmoidItem {
     property bool isSmall: simulatedWidth < 250 || simulatedHeight < 160
     property bool isMedium: simulatedWidth < 350 || simulatedHeight < 220
     
-    // Button and control sizing
-    property real buttonSize: Math.max(28, Math.min(40, Math.min(simulatedWidth / 12, simulatedHeight / 15)))
+    // Button and control sizing - increased for better touch targets
+    property real buttonSize: Math.max(32, Math.min(44, Math.min(simulatedWidth / 11, simulatedHeight / 14)))
     
     // Panel mode sizing - scales properly with panel orientation and size
     property real panelButtonSize: {
@@ -74,10 +74,10 @@ PlasmoidItem {
     // Fallback compact button size for non-panel use
     property real compactButtonSize: Math.max(24, Math.min(36, Math.min(simulatedWidth / 5.5, simulatedHeight * 0.75)))
     
-    // Layout spacing that scales with size
-    property real spacingSmall: Math.max(2, Math.min(6, simulatedWidth / 80))
-    property real spacingMedium: Math.max(4, Math.min(10, simulatedWidth / 60))
-    property real spacingLarge: Math.max(6, Math.min(15, simulatedWidth / 40))
+    // Layout spacing that scales with size - increased for better breathing room
+    property real spacingSmall: Math.max(4, Math.min(8, simulatedWidth / 60))
+    property real spacingMedium: Math.max(6, Math.min(12, simulatedWidth / 50))
+    property real spacingLarge: Math.max(10, Math.min(18, simulatedWidth / 35))
     
     // Scrollbar management - smart sizing and visibility with proper boundaries
     // Use actual widget width for scrollbar sizing, not simulated width
@@ -1547,20 +1547,20 @@ PlasmoidItem {
         // Check if this is a SomaFM station
         if (host.includes("somafm.com")) {
             // SomaFM direct stream URL pattern: https://ice1.somafm.com/[station]-[bitrate]-[format]
+            // Note: Most SomaFM stations only have 64-aac and 128-mp3, not 256-mp3
+            // So we use 128-mp3 as default for reliability (only groovesalad/dronezone have 256)
             var bitrate, format;
             if (quality === "1") {
                 bitrate = "64";
                 format = "aac";  // Lower quality AAC
-            } else if (quality === "2") {
+            } else {
+                // Quality 2 and 3 both use 128-mp3 for SomaFM (most reliable)
                 bitrate = "128";
-                format = "mp3";  // Standard quality MP3
-            } else if (quality === "3") {
-                bitrate = "256";
-                format = "mp3";  // Higher quality MP3
+                format = "mp3";
             }
-            
+
             var streamUrl = "https://ice1.somafm.com/" + path + "-" + bitrate + "-" + format;
-            
+
             console.log("SomaFM stream URL:", streamUrl, "for quality level:", quality);
             return streamUrl;
         } else if (host.includes("dir.xiph.org")) {
@@ -3763,10 +3763,10 @@ PlasmoidItem {
                 Layout.fillWidth: true
                 placeholderText: "🔍 Search radio stations..."
                 font.pointSize: baseFontSize
-                leftPadding: 12
-                rightPadding: 12
-                topPadding: 8
-                bottomPadding: 8
+                leftPadding: 14
+                rightPadding: 14
+                topPadding: 10
+                bottomPadding: 10
 
                 onTextChanged: {
                     if (text.trim() === "") {
@@ -4378,12 +4378,12 @@ PlasmoidItem {
                 
                 delegate: ItemDelegate {
                     width: ListView.view.width - 20  // Reserve 20px for medium scrollbar and spacing
-                    height: Math.max(40, Math.min(50, root.height / 20))  // Increased height for buttons
-                    
+                    height: Math.max(44, Math.min(56, root.height / 18))  // Increased height for better spacing
+
                     RowLayout {
                         anchors.fill: parent
-                        anchors.margins: 4
-                        spacing: 4  // Reduced spacing
+                        anchors.margins: 8
+                        spacing: 8  // Increased spacing for less cramped feel
                         
                         Text {
                             text: model.name
@@ -4398,9 +4398,9 @@ PlasmoidItem {
                         Button {
                             visible: currentSource === "🔗 Custom Radio"
                             text: "✏️"
-                            implicitWidth: 24
-                            implicitHeight: 24
-                            font.pointSize: microFontSize
+                            implicitWidth: 28
+                            implicitHeight: 28
+                            font.pointSize: smallFontSize
                             
                             onClicked: {
                                 editCustomStation(index)
@@ -4419,9 +4419,9 @@ PlasmoidItem {
                         Button {
                             visible: currentSource === "🔗 Custom Radio"
                             text: "❌"
-                            implicitWidth: 24
-                            implicitHeight: 24
-                            font.pointSize: microFontSize
+                            implicitWidth: 28
+                            implicitHeight: 28
+                            font.pointSize: smallFontSize
                             
                             onClicked: {
                                 removeCustomStation(index)
@@ -4440,9 +4440,9 @@ PlasmoidItem {
                         Button {
                             visible: currentCategory === "📚 Audiobooks"
                             text: "❌"
-                            implicitWidth: 24
-                            implicitHeight: 24
-                            font.pointSize: microFontSize
+                            implicitWidth: 28
+                            implicitHeight: 28
+                            font.pointSize: smallFontSize
                             
                             onClicked: {
                                 removeCustomEbook(index)
@@ -4564,7 +4564,7 @@ PlasmoidItem {
         // Status display - Refined Audio style
         Rectangle {
             Layout.fillWidth: true
-            height: Math.max(75, Math.min(95, root.height * 0.17))
+            height: Math.max(80, Math.min(100, root.height * 0.18))
             radius: 10
             antialiasing: true
 
@@ -4604,10 +4604,10 @@ PlasmoidItem {
             ColumnLayout {
                 anchors.fill: parent
                 anchors.leftMargin: 16
-                anchors.rightMargin: 10
-                anchors.topMargin: 8
-                anchors.bottomMargin: 8
-                spacing: 3
+                anchors.rightMargin: 12
+                anchors.topMargin: 10
+                anchors.bottomMargin: 10
+                spacing: 6
 
                 RowLayout {
                     Layout.fillWidth: true
@@ -4720,7 +4720,7 @@ PlasmoidItem {
         // Controls - Refined Audio style
         Rectangle {
             Layout.fillWidth: true
-            height: Math.max(70, Math.min(90, root.height * 0.17))
+            height: Math.max(80, Math.min(100, root.height * 0.18))
             radius: 12
             antialiasing: true
 
@@ -4740,8 +4740,8 @@ PlasmoidItem {
             // Vertical layout: Playback controls and timeline
             Item {
                 anchors.centerIn: parent
-                width: parent.width - (showPopup ? 60 : 100)  // Smaller margins for popup
-                height: parent.height - (showPopup ? 20 : 40)  // Smaller margins for popup
+                width: parent.width - (showPopup ? 40 : 60)  // Reduced margins for more space
+                height: parent.height - (showPopup ? 16 : 24)  // Reduced margins for more space
                 
                 ColumnLayout {
                     anchors.centerIn: parent
