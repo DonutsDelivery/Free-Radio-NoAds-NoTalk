@@ -5,76 +5,76 @@ var somafmCategories = [
     {
         "name": "🌙 Ambient",
         "stations": [
-            { "name": "Groove Salad", "host": "https://somafm.com", "path": "groovesalad", "description": "A nicely chilled plate of ambient/downtempo beats and grooves." },
-            { "name": "Groove Salad Classic", "host": "https://somafm.com", "path": "gsclassic", "description": "The classic Groove Salad mix." },
-            { "name": "Drone Zone", "host": "https://somafm.com", "path": "dronezone", "description": "Atmospheric textures with minimal beats." },
-            { "name": "Deep Space One", "host": "https://somafm.com", "path": "deepspaceone", "description": "Deep ambient electronic and space music." },
-            { "name": "Mission Control", "host": "https://somafm.com", "path": "missioncontrol", "description": "Celebrating NASA and Space Explorers everywhere." },
-            { "name": "Fluid", "host": "https://somafm.com", "path": "fluid", "description": "Dj-mixed chillout, new age and ambient." },
-            { "name": "Sf 10 - 33", "host": "https://somafm.com", "path": "sf1033", "description": "Ambient music mixed with the sounds of San Francisco public safety radio traffic." },
-            { "name": "Synphaera Radio", "host": "https://somafm.com", "path": "synphaera", "description": "Ambient electronic music." },
-            { "name": "The Dark Zone", "host": "https://somafm.com", "path": "darkzone", "description": "Dark ambient and industrial." },
-            { "name": "n5MD Radio", "host": "https://somafm.com", "path": "n5md", "description": "Ambient, IDM and experimental from n5MD." }
+            { "name": "Groove Salad - Ambient, Downtempo, Chill", "host": "https://somafm.com", "path": "groovesalad", "description": "A nicely chilled plate of ambient/downtempo beats and grooves." },
+            { "name": "Groove Salad Classic - Ambient, Downtempo", "host": "https://somafm.com", "path": "gsclassic", "description": "The classic Groove Salad mix." },
+            { "name": "Drone Zone - Ambient, Drone, Atmospheric", "host": "https://somafm.com", "path": "dronezone", "description": "Atmospheric textures with minimal beats." },
+            { "name": "Deep Space One - Space Ambient, Electronic", "host": "https://somafm.com", "path": "deepspaceone", "description": "Deep ambient electronic and space music." },
+            { "name": "Mission Control - Space Ambient, NASA", "host": "https://somafm.com", "path": "missioncontrol", "description": "Celebrating NASA and Space Explorers everywhere." },
+            { "name": "Fluid - Instrumental Hip-Hop, Future Soul", "host": "https://somafm.com", "path": "fluid", "description": "Dj-mixed chillout, new age and ambient." },
+            { "name": "SF 10-33 - Ambient, Soundscape", "host": "https://somafm.com", "path": "sf1033", "description": "Ambient music mixed with the sounds of San Francisco public safety radio traffic." },
+            { "name": "Synphaera Radio - Space Ambient, Electronic", "host": "https://somafm.com", "path": "synphaera", "description": "Ambient electronic music." },
+            { "name": "The Dark Zone - Dark Ambient, Industrial", "host": "https://somafm.com", "path": "darkzone", "description": "Dark ambient and industrial." },
+            { "name": "n5MD Radio - Ambient, IDM, Post-Rock", "host": "https://somafm.com", "path": "n5md", "description": "Ambient, IDM and experimental from n5MD." }
         ]
     },
     {
         "name": "⚡ Electro & Beats",
         "stations": [
-            { "name": "Space Station Soma", "host": "https://somafm.com", "path": "spacestation", "description": "Tune in, turn on, space out." },
-            { "name": "Beat Blender", "host": "https://somafm.com", "path": "beatblender", "description": "A late night blend of deep-house and downtempo chill." },
-            { "name": "Poptron", "host": "https://somafm.com", "path": "poptron", "description": "Electropop and indie dance rock with sparkle and pop." },
-            { "name": "The Trip", "host": "https://somafm.com", "path": "thetrip", "description": "Progressive house / trance. Tip top tunes." },
-            { "name": "Underground 80s", "host": "https://somafm.com", "path": "u80s", "description": "Early 80s UK Synthpop and a bit of New Wave." },
-            { "name": "Digitalis", "host": "https://somafm.com", "path": "digitalis", "description": "Digitally influenced electronic music." },
-            { "name": "Cliqhop IDM", "host": "https://somafm.com", "path": "cliqhop", "description": "Blips'n'beats and other clicks and cuts." },
-            { "name": "Dubstep Beyond", "host": "https://somafm.com", "path": "dubstep", "description": "Dubstep, future garage and the wobbles." },
-            { "name": "Def Con Radio", "host": "https://somafm.com", "path": "defcon", "description": "Music for Hacking. The DEF CON Year-Round Channel." }
+            { "name": "Space Station Soma - Electronica, Space", "host": "https://somafm.com", "path": "spacestation", "description": "Tune in, turn on, space out." },
+            { "name": "Beat Blender - Deep House, Downtempo", "host": "https://somafm.com", "path": "beatblender", "description": "A late night blend of deep-house and downtempo chill." },
+            { "name": "Poptron - Electropop, Indie Dance", "host": "https://somafm.com", "path": "poptron", "description": "Electropop and indie dance rock with sparkle and pop." },
+            { "name": "The Trip - Progressive House, Trance", "host": "https://somafm.com", "path": "thetrip", "description": "Progressive house / trance. Tip top tunes." },
+            { "name": "Underground 80s - Synthpop, New Wave", "host": "https://somafm.com", "path": "u80s", "description": "Early 80s UK Synthpop and a bit of New Wave." },
+            { "name": "Digitalis - Electronic, Glitch, Analog", "host": "https://somafm.com", "path": "digitalis", "description": "Digitally influenced electronic music." },
+            { "name": "Cliqhop IDM - IDM, Glitch, Clicks & Cuts", "host": "https://somafm.com", "path": "cliqhop", "description": "Blips'n'beats and other clicks and cuts." },
+            { "name": "Dubstep Beyond - Dubstep, Future Garage", "host": "https://somafm.com", "path": "dubstep", "description": "Dubstep, future garage and the wobbles." },
+            { "name": "DEF CON Radio - Electronic, Hacker Culture", "host": "https://somafm.com", "path": "defcon", "description": "Music for Hacking. The DEF CON Year-Round Channel." }
         ]
     },
     {
         "name": "🎸 Rock & Alternative",
         "stations": [
-            { "name": "Indie Pop Rocks!", "host": "https://somafm.com", "path": "indiepop", "description": "New and classic favorite indie pop tracks." },
-            { "name": "Left Coast 70s", "host": "https://somafm.com", "path": "seventies", "description": "New and classic west coast rock and folk." },
-            { "name": "Metal Detector", "host": "https://somafm.com", "path": "metal", "description": "From the underground comes the loudest SomaFM channel." },
-            { "name": "Bagel Radio", "host": "https://somafm.com", "path": "bagel", "description": "What alternative rock radio should sound like." },
-            { "name": "Covers", "host": "https://somafm.com", "path": "covers", "description": "Just covers - songs you know by artists you don't." },
-            { "name": "Doomed", "host": "https://somafm.com", "path": "doomed", "description": "Dark industrial, EBM, and electronic music." }
+            { "name": "Indie Pop Rocks! - Indie Pop, Alternative", "host": "https://somafm.com", "path": "indiepop", "description": "New and classic favorite indie pop tracks." },
+            { "name": "Left Coast 70s - 70s Rock, Folk Rock", "host": "https://somafm.com", "path": "seventies", "description": "New and classic west coast rock and folk." },
+            { "name": "Metal Detector - Metal, Doom, Thrash", "host": "https://somafm.com", "path": "metal", "description": "From the underground comes the loudest SomaFM channel." },
+            { "name": "Bagel Radio - Alternative Rock, Indie", "host": "https://somafm.com", "path": "bagel", "description": "What alternative rock radio should sound like." },
+            { "name": "Covers - Cover Songs, Various Genres", "host": "https://somafm.com", "path": "covers", "description": "Just covers - songs you know by artists you don't." },
+            { "name": "Doomed - Dark Industrial, EBM, Goth", "host": "https://somafm.com", "path": "doomed", "description": "Dark industrial, EBM, and electronic music." }
         ]
     },
     {
         "name": "🍸 Lounge & Chill",
         "stations": [
-            { "name": "Illinois Street Lounge", "host": "https://somafm.com", "path": "illstreet", "description": "Classic bachelor pad, playful exotica and vintage music." },
-            { "name": "Secret Agent", "host": "https://somafm.com", "path": "secretagent", "description": "The soundtrack for your stylish, mysterious, dangerous life." },
-            { "name": "Lush", "host": "https://somafm.com", "path": "lush", "description": "Sensuous and mellow female vocals, mostly with an electronic influence." },
-            { "name": "Seven Inch Soul", "host": "https://somafm.com", "path": "7soul", "description": "Vintage soul tracks from the original 45 RPM vinyl." },
-            { "name": "Tiki Time", "host": "https://somafm.com", "path": "tikitime", "description": "A mix of exotica, vintage and modern." },
-            { "name": "The In-Sound", "host": "https://somafm.com", "path": "insound", "description": "60s and 70s pop and soul." },
-            { "name": "Vaporwaves", "host": "https://somafm.com", "path": "vaporwaves", "description": "Vaporwave and future funk." }
+            { "name": "Illinois Street Lounge - Exotica, Lounge, Vintage", "host": "https://somafm.com", "path": "illstreet", "description": "Classic bachelor pad, playful exotica and vintage music." },
+            { "name": "Secret Agent - Spy Lounge, Cinematic", "host": "https://somafm.com", "path": "secretagent", "description": "The soundtrack for your stylish, mysterious, dangerous life." },
+            { "name": "Lush - Female Vocals, Electronic, Mellow", "host": "https://somafm.com", "path": "lush", "description": "Sensuous and mellow female vocals, mostly with an electronic influence." },
+            { "name": "Seven Inch Soul - Vintage Soul, R&B, 45rpm", "host": "https://somafm.com", "path": "7soul", "description": "Vintage soul tracks from the original 45 RPM vinyl." },
+            { "name": "Tiki Time - Exotica, Tiki, Vintage Island", "host": "https://somafm.com", "path": "tikitime", "description": "A mix of exotica, vintage and modern." },
+            { "name": "The In-Sound - 60s/70s Pop, Soul, Hipster", "host": "https://somafm.com", "path": "insound", "description": "60s and 70s pop and soul." },
+            { "name": "Vaporwaves - Vaporwave, Future Funk", "host": "https://somafm.com", "path": "vaporwaves", "description": "Vaporwave and future funk." }
         ]
     },
     {
         "name": "🌍 Folk & World",
         "stations": [
-            { "name": "Thistleradio", "host": "https://somafm.com", "path": "thistle", "description": "Exploring music from Celtic roots and branches." },
-            { "name": "Folk Forward", "host": "https://somafm.com", "path": "folkfwd", "description": "Indie Folk, Alt-folk and the occasional folk classics." },
-            { "name": "Suburbs of Goa", "host": "https://somafm.com", "path": "suburbsofgoa", "description": "Desi-influenced Asian world beats and beyond." },
-            { "name": "Boot Liquor", "host": "https://somafm.com", "path": "bootliquor", "description": "Americana Roots music for Cowhands, Cowpokes and Cowtippers." },
-            { "name": "Heavyweight Reggae", "host": "https://somafm.com", "path": "reggae", "description": "Reggae, Roots and Culture." }
+            { "name": "Thistleradio - Celtic, Scottish, Irish Folk", "host": "https://somafm.com", "path": "thistle", "description": "Exploring music from Celtic roots and branches." },
+            { "name": "Folk Forward - Indie Folk, Alt-Folk", "host": "https://somafm.com", "path": "folkfwd", "description": "Indie Folk, Alt-folk and the occasional folk classics." },
+            { "name": "Suburbs of Goa - Asian Beats, Desi Fusion", "host": "https://somafm.com", "path": "suburbsofgoa", "description": "Desi-influenced Asian world beats and beyond." },
+            { "name": "Boot Liquor - Americana, Country, Western", "host": "https://somafm.com", "path": "bootliquor", "description": "Americana Roots music for Cowhands, Cowpokes and Cowtippers." },
+            { "name": "Heavyweight Reggae - Reggae, Roots, Dub", "host": "https://somafm.com", "path": "reggae", "description": "Reggae, Roots and Culture." }
         ]
     },
     {
         "name": "🎷 Jazz & Experimental",
         "stations": [
-            { "name": "Sonic Universe", "host": "https://somafm.com", "path": "sonicuniverse", "description": "Transcending the world of jazz with eclectic, avant-garde takes on tradition." },
-            { "name": "Bossa Beyond", "host": "https://somafm.com", "path": "bossa", "description": "Bossa Nova and beyond." }
+            { "name": "Sonic Universe - Jazz, Avant-Garde, World Fusion", "host": "https://somafm.com", "path": "sonicuniverse", "description": "Transcending the world of jazz with eclectic, avant-garde takes on tradition." },
+            { "name": "Bossa Beyond - Bossa Nova, Brazilian Jazz", "host": "https://somafm.com", "path": "bossa", "description": "Bossa Nova and beyond." }
         ]
     },
     {
         "name": "🔥 Specials",
         "stations": [
-            { "name": "Black Rock FM", "host": "https://somafm.com", "path": "brfm", "description": "From the Playa to the world, for the annual Burning Man festival." }
+            { "name": "Black Rock FM - Eclectic, Burning Man, Playa", "host": "https://somafm.com", "path": "brfm", "description": "From the Playa to the world, for the annual Burning Man festival." }
         ]
     }
 ]
