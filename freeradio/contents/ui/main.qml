@@ -1547,14 +1547,21 @@ PlasmoidItem {
         // Check if this is a SomaFM station
         if (host.includes("somafm.com")) {
             // SomaFM direct stream URL pattern: https://ice1.somafm.com/[station]-[bitrate]-[format]
-            // Note: Most SomaFM stations only have 64-aac and 128-mp3, not 256-mp3
-            // So we use 128-mp3 as default for reliability (only groovesalad/dronezone have 256)
+            // Some stations have 256kbps MP3, others only have 128kbps
+            var stations256 = ["groovesalad", "dronezone", "darkzone", "dubstep", "defcon",
+                               "sonicuniverse", "u80s", "digitalis", "cliqhop", "doomed",
+                               "synphaera", "tikitime", "insound", "reggae", "bossa"];
+
             var bitrate, format;
             if (quality === "1") {
                 bitrate = "64";
                 format = "aac";  // Lower quality AAC
+            } else if (quality === "3" && stations256.indexOf(path) !== -1) {
+                // High quality: use 256kbps for stations that support it
+                bitrate = "256";
+                format = "mp3";
             } else {
-                // Quality 2 and 3 both use 128-mp3 for SomaFM (most reliable)
+                // Medium quality or stations without 256kbps: use 128kbps
                 bitrate = "128";
                 format = "mp3";
             }
