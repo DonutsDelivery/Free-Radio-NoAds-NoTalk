@@ -5109,13 +5109,11 @@ PlasmoidItem {
                 Item { Layout.fillWidth: true }  // Spacer
 
                 // Volume Control - adaptive visibility
-                Slider {
-                    id: compactVolumeSlider
-                    from: 0
-                    to: 1
-                    value: 0.5
+                // Wrapped in Item to prevent window drag when adjusting slider
+                Item {
+                    id: volumeSliderContainer
                     Layout.fillWidth: false
-                    
+
                     property real scaledWidth: {
                         if (showPopup) {
                             // Popup mode - larger size for better usability
@@ -5128,22 +5126,36 @@ PlasmoidItem {
                     Layout.preferredWidth: scaledWidth
                     Layout.minimumWidth: showPopup ? 100 : 80
                     Layout.maximumWidth: showPopup ? root.width / 3 : root.width / 4
-                    
-                    onScaledWidthChanged: {
-                        console.log("Volume slider width changed to:", scaledWidth)
-                    }
+                    Layout.preferredHeight: compactVolumeSlider.implicitHeight
                     Layout.alignment: Qt.AlignVCenter
-                    visible: true
-                    opacity: isSmall ? 0.7 : 1.0
-                    
-                    // Save volume level when changed
-                    onValueChanged: {
-                        saveVolumeLevel(value)
+
+                    // MouseArea to prevent parent from stealing drag events
+                    MouseArea {
+                        anchors.fill: parent
+                        preventStealing: true
+                        propagateComposedEvents: true
+                        onPressed: function(mouse) { mouse.accepted = false }
+                        onReleased: function(mouse) { mouse.accepted = false }
                     }
-                    
-                    ToolTip.text: Math.round(value * 100) + "%"
-                    ToolTip.visible: hovered || pressed
-                    ToolTip.delay: 500
+
+                    Slider {
+                        id: compactVolumeSlider
+                        anchors.fill: parent
+                        from: 0
+                        to: 1
+                        value: 0.5
+                        visible: true
+                        opacity: isSmall ? 0.7 : 1.0
+
+                        // Save volume level when changed
+                        onValueChanged: {
+                            saveVolumeLevel(value)
+                        }
+
+                        ToolTip.text: Math.round(value * 100) + "%"
+                        ToolTip.visible: hovered || pressed
+                        ToolTip.delay: 500
+                    }
                 }
                 } // End of top RowLayout
                 
