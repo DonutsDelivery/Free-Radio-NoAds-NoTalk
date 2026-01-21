@@ -84,6 +84,7 @@ include(GNUInstallDirs)
 
 install(TARGETS freeradio
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    BUNDLE DESTINATION .
 )
 
 install(FILES freeradio.desktop
