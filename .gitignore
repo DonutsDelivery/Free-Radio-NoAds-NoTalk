@@ -1,0 +1,19 @@
+# Build artifacts
+*.plasmoid
+build/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+ecm_uninstall.cmake
+Makefile
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

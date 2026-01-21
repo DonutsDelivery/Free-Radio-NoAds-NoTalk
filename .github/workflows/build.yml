@@ -1,0 +1,243 @@
+name: Build Free Radio
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  QT_VERSION: '6.7.0'
+  KF_VERSION: '6.0.0'
+
+jobs:
+  build-plasmoid:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Plasmoid
+        run: |
+          cd freeradio
+          # Create plasmoid package (ZIP archive with .plasmoid extension)
+          # Use stable name without version to prevent link breakage
+          zip -r ../freeradio.plasmoid \
+            metadata.json \
+            contents/ \
+            icons/ \
+            -x "*.o" -x "*.so" -x "build/*"
+
+      - name: Upload Plasmoid artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FreeRadio-Plasmoid
+          path: freeradio.plasmoid
+
+  build-linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            extra-cmake-modules \
+            qt6-base-dev \
+            qt6-declarative-dev \
+            qt6-multimedia-dev \
+            qt6-quickcontrols2-dev \
+            libkf6kirigami-dev \
+            libpulse-dev \
+            libgl1-mesa-dev
+
+      - name: Configure
+        run: |
+          cmake -B build -S freeradio \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Package
+        run: |
+          DESTDIR=$PWD/AppDir cmake --install build
+          mkdir -p AppDir/usr/share/icons/hicolor/scalable/apps
+          cp freeradio/icons/freeradio.svg AppDir/usr/share/icons/hicolor/scalable/apps/
+
+      - name: Create AppImage
+        run: |
+          wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy*.AppImage
+
+          export QMAKE=/usr/bin/qmake6
+          export QML_SOURCES_PATHS=$PWD/freeradio/contents/ui
+
+          ./linuxdeploy-x86_64.AppImage \
+            --appdir AppDir \
+            --desktop-file freeradio/freeradio.desktop \
+            --icon-file freeradio/icons/freeradio.svg \
+            --plugin qt \
+            --output appimage
+
+          mv Free_Radio*.AppImage FreeRadio-Linux-x86_64.AppImage
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FreeRadio-Linux
+          path: FreeRadio-Linux-x86_64.AppImage
+
+  build-macos:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.QT_VERSION }}
+          modules: 'qtmultimedia'
+          cache: true
+
+      - name: Install KDE dependencies
+        run: |
+          brew tap kde-mac/kde
+          brew install kde-mac/kde/kf6-kirigami
+          brew install extra-cmake-modules ninja
+
+      - name: Configure
+        run: |
+          cmake -B build -S freeradio \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix)/opt/kf6-kirigami;$Qt6_DIR"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Create App Bundle
+        run: |
+          cd build
+          mkdir -p "Free Radio.app/Contents/MacOS"
+          mkdir -p "Free Radio.app/Contents/Resources"
+
+          cp freeradio "Free Radio.app/Contents/MacOS/"
+          cp ../packaging/macos/Info.plist "Free Radio.app/Contents/"
+
+          # Deploy Qt frameworks
+          macdeployqt "Free Radio.app" \
+            -qmldir=../freeradio/contents/ui \
+            -verbose=1
+
+          # Create DMG
+          hdiutil create -volname "Free Radio" \
+            -srcfolder "Free Radio.app" \
+            -ov -format UDZO \
+            FreeRadio-macOS.dmg
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FreeRadio-macOS
+          path: build/FreeRadio-macOS.dmg
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.QT_VERSION }}
+          modules: 'qtmultimedia'
+          cache: true
+          arch: win64_msvc2019_64
+
+      - name: Install dependencies
+        run: |
+          choco install ninja cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+
+          # Install extra-cmake-modules
+          git clone --depth 1 --branch v${{ env.KF_VERSION }} https://invent.kde.org/frameworks/extra-cmake-modules.git
+          cmake -B ecm-build -S extra-cmake-modules -G Ninja -DCMAKE_INSTALL_PREFIX=C:/kde
+          cmake --build ecm-build
+          cmake --install ecm-build
+
+          # Install Kirigami
+          git clone --depth 1 --branch v${{ env.KF_VERSION }} https://invent.kde.org/frameworks/kirigami.git
+          cmake -B kirigami-build -S kirigami -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_PREFIX_PATH="$env:Qt6_DIR;C:/kde" `
+            -DCMAKE_INSTALL_PREFIX=C:/kde `
+            -DBUILD_TESTING=OFF
+          cmake --build kirigami-build --parallel
+          cmake --install kirigami-build
+
+      - name: Configure
+        run: |
+          cmake -B build -S freeradio -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_PREFIX_PATH="$env:Qt6_DIR;C:/kde"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Package
+        shell: pwsh
+        run: |
+          mkdir dist
+          cp build/freeradio.exe dist/
+
+          # Deploy Qt
+          windeployqt dist/freeradio.exe `
+            --qmldir freeradio/contents/ui `
+            --no-translations
+
+          # Copy Kirigami
+          Copy-Item -Recurse C:/kde/bin/*.dll dist/ -ErrorAction SilentlyContinue
+          Copy-Item -Recurse C:/kde/lib/qml/* dist/ -ErrorAction SilentlyContinue
+
+          # Create zip
+          Compress-Archive -Path dist/* -DestinationPath FreeRadio-Windows-x64.zip
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FreeRadio-Windows
+          path: FreeRadio-Windows-x64.zip
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-plasmoid, build-linux, build-macos, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/FreeRadio-Plasmoid/*
+            artifacts/FreeRadio-Linux/*
+            artifacts/FreeRadio-macOS/*
+            artifacts/FreeRadio-Windows/*
+          draft: true
+          generate_release_notes: true
