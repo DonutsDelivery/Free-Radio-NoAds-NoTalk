@@ -165,10 +165,11 @@ jobs:
       - name: Create App Bundle
         run: |
           cd build
-          mkdir -p "Free Radio.app/Contents/MacOS"
-          mkdir -p "Free Radio.app/Contents/Resources"
 
-          cp freeradio "Free Radio.app/Contents/MacOS/"
+          # CMake creates freeradio.app bundle, rename it
+          mv freeradio.app "Free Radio.app"
+
+          # Add Info.plist
           cp ../packaging/macos/Info.plist "Free Radio.app/Contents/"
 
           # Create macOS icon from PNG
