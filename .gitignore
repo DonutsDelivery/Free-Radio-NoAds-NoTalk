@@ -1,11 +1,15 @@
 # Build artifacts
 *.plasmoid
 build/
+**/build/
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 ecm_uninstall.cmake
 Makefile
+*.o
+*.so
+*.a
 
 # IDE
 .vscode/

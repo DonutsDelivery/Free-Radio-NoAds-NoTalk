@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="ui/main.qml">contents/ui/main.qml</file>
+        <file alias="ui/MainContent.qml">contents/ui/MainContent.qml</file>
+        <file alias="ui/radiodata.js">contents/ui/radiodata.js</file>
+        <file alias="ui/radiodata_radcap.js">contents/ui/radiodata_radcap.js</file>
+        <file alias="ui/fft.js">contents/ui/fft.js</file>
+        <file alias="ui/MinimalPlayer.qml">contents/ui/MinimalPlayer.qml</file>
+        <file alias="ui/RemoteControl.qml">contents/ui/RemoteControl.qml</file>
+        <file alias="ui/SystemAudioCapture.qml">contents/ui/SystemAudioCapture.qml</file>
+        <file alias="ui/AudioStreamer.qml">contents/ui/AudioStreamer.qml</file>
+    </qresource>
+</RCC>

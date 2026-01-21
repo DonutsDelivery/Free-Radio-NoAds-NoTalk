@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/">
-    <file alias="/Freeradio">/home/user/Documents/Free-Radio-NoAds-NoTalk/freeradio/build/plugin</file>
-
-  </qresource>
-</RCC>

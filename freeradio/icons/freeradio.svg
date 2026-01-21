@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="24" cy="24" r="22" fill="#E67E22"/>
+
+  <!-- Radio waves -->
+  <path d="M24 8 Q32 16 32 24 Q32 32 24 40" stroke="#FFF" stroke-width="2" fill="none" opacity="0.7"/>
+  <path d="M24 12 Q28 18 28 24 Q28 30 24 36" stroke="#FFF" stroke-width="2" fill="none" opacity="0.5"/>
+  <path d="M24 16 Q26 20 26 24 Q26 28 24 32" stroke="#FFF" stroke-width="2" fill="none" opacity="0.3"/>
+
+  <!-- Radio tower/antenna -->
+  <rect x="22" y="14" width="4" height="20" rx="2" fill="#FFF"/>
+  <circle cx="24" cy="14" r="3" fill="#FFF"/>
+
+  <!-- Base -->
+  <rect x="18" y="32" width="12" height="4" rx="2" fill="#FFF"/>
+</svg>

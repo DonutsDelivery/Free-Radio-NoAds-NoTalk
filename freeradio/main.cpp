@@ -1,73 +1,63 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQuickStyle>
 #include <QQuickWindow>
-#include <QSGRendererInterface>
+#include <QIcon>
 #include <QDir>
 #include "AudioCapture.h"
 
 int main(int argc, char *argv[])
 {
-    // Set up environment for Qt
-    qputenv("QT_QPA_PLATFORM", "xcb");
-    qputenv("QT_QUICK_BACKEND", "software");  // Use software rendering first
-    
+    // Enable GPU acceleration where available
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+
     QApplication app(argc, argv);
-    
-    app.setApplicationName("FreeRadio");
-    app.setApplicationVersion("1.4.0");
+
+    app.setApplicationName("Free Radio");
+    app.setApplicationVersion("2.0.0");
     app.setOrganizationName("FreeRadio");
-    
+    app.setOrganizationDomain("freeradio.app");
+    app.setWindowIcon(QIcon::fromTheme("radio"));
+
+    // Use Kirigami's desktop style for native look
+    QQuickStyle::setStyle("org.kde.desktop");
+
     // Register the AudioCapture type with QML
     qmlRegisterType<AudioCapture>("AudioCapture", 1, 0, "AudioCapture");
-    
+
     QQmlApplicationEngine engine;
-    
-    // Load QML from filesystem for standalone app
-    QString qmlFile = QDir::currentPath() + "/contents/ui/main.qml";
-    if (!QFile::exists(qmlFile)) {
-        qDebug() << "QML file not found:" << qmlFile;
-        qDebug() << "Current directory:" << QDir::currentPath();
-        
-        // Try alternative paths
-        QStringList paths = {
-            "./contents/ui/main.qml",
-            "contents/ui/main.qml",
-            "ui/main.qml",
-            "main.qml"
+
+    // Try to load from Qt resources first (bundled app)
+    QUrl qmlUrl = QUrl("qrc:/ui/main.qml");
+
+    // If not bundled, try local filesystem paths for development
+    if (!QFile::exists(":/ui/main.qml")) {
+        QStringList searchPaths = {
+            QDir::currentPath() + "/contents/ui/main.qml",
+            QCoreApplication::applicationDirPath() + "/contents/ui/main.qml",
+            QCoreApplication::applicationDirPath() + "/../share/freeradio/ui/main.qml"
         };
-        
-        for (const QString& path : paths) {
+
+        for (const QString& path : searchPaths) {
             if (QFile::exists(path)) {
-                qmlFile = path;
-                qDebug() << "Found QML at:" << qmlFile;
+                qmlUrl = QUrl::fromLocalFile(path);
+                qDebug() << "Loading QML from filesystem:" << path;
                 break;
             }
         }
-        
-        if (!QFile::exists(qmlFile)) {
-            qDebug() << "Could not find main.qml in any location";
-            return -1;
-        }
+    } else {
+        qDebug() << "Loading QML from resources";
     }
-    
-    qDebug() << "Loading QML from:" << qmlFile;
-    qDebug() << "GPU Acceleration: OpenGL enabled";
-    
-    engine.load(QUrl::fromLocalFile(qmlFile));
-    
+
+    engine.load(qmlUrl);
+
     if (engine.rootObjects().isEmpty()) {
-        qDebug() << "Failed to load QML file";
+        qWarning() << "Failed to load QML. Tried:" << qmlUrl;
         return -1;
     }
-    
-    // Enable GPU acceleration for all windows
-    for (auto obj : engine.rootObjects()) {
-        if (auto window = qobject_cast<QQuickWindow*>(obj)) {
-            window->setColor(QColor(32, 32, 32)); // Dark background
-            qDebug() << "Window graphics API:" << window->rendererInterface()->graphicsApi();
-        }
-    }
-    
+
+    qDebug() << "Free Radio started successfully";
+
     return app.exec();
 }

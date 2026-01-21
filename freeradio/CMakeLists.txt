@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(FreeRadioApp VERSION 1.0.0)
+project(FreeRadioApp VERSION 2.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,68 +11,76 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 # Find required Qt components
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Qml Quick Multimedia)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Qml Quick QuickControls2 Multimedia)
 
-# Find PulseAudio
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(PULSEAUDIO REQUIRED libpulse libpulse-simple)
+# Find KDE Frameworks 6 Kirigami
+find_package(KF6Kirigami REQUIRED)
+
+# Find PulseAudio (Linux only - optional for cross-platform)
+find_package(PkgConfig)
+if(PkgConfig_FOUND)
+    pkg_check_modules(PULSEAUDIO libpulse libpulse-simple)
+endif()
 
 # Add executables
-add_executable(freeradio-app
+add_executable(freeradio
     main.cpp
     AudioCapture.cpp
     AudioCapture.h
+    resources.qrc
 )
 
-add_executable(test-audio
-    test_audio.cpp
-    AudioCapture.cpp
-    AudioCapture.h
-)
+# Optional test executable
+if(PULSEAUDIO_FOUND)
+    add_executable(test-audio
+        test_audio.cpp
+        AudioCapture.cpp
+        AudioCapture.h
+    )
+endif()
 
-# Link Qt libraries
-target_link_libraries(freeradio-app
+# Link Qt and Kirigami libraries
+target_link_libraries(freeradio PRIVATE
     Qt6::Core
     Qt6::Widgets
     Qt6::Qml
     Qt6::Quick
+    Qt6::QuickControls2
     Qt6::Multimedia
-    ${PULSEAUDIO_LIBRARIES}
+    KF6::Kirigami
 )
 
-target_link_libraries(test-audio
-    Qt6::Core
-    ${PULSEAUDIO_LIBRARIES}
-)
+# Optional PulseAudio support
+if(PULSEAUDIO_FOUND)
+    target_link_libraries(freeradio PRIVATE ${PULSEAUDIO_LIBRARIES})
+    target_include_directories(freeradio PRIVATE ${PULSEAUDIO_INCLUDE_DIRS})
+    target_compile_definitions(freeradio PRIVATE ${PULSEAUDIO_CFLAGS_OTHER} HAVE_PULSEAUDIO)
 
-# Include directories
-target_include_directories(freeradio-app PRIVATE
-    ${PULSEAUDIO_INCLUDE_DIRS}
-)
-target_include_directories(test-audio PRIVATE
-    ${PULSEAUDIO_INCLUDE_DIRS}
-)
+    target_link_libraries(test-audio PRIVATE
+        Qt6::Core
+        Qt6::Multimedia
+        ${PULSEAUDIO_LIBRARIES}
+    )
+    target_include_directories(test-audio PRIVATE ${PULSEAUDIO_INCLUDE_DIRS})
+    target_compile_definitions(test-audio PRIVATE ${PULSEAUDIO_CFLAGS_OTHER})
+endif()
 
-# Compile definitions for PulseAudio
-target_compile_definitions(freeradio-app PRIVATE
-    ${PULSEAUDIO_CFLAGS_OTHER}
-)
-target_compile_definitions(test-audio PRIVATE
-    ${PULSEAUDIO_CFLAGS_OTHER}
-)
-
-# Enable GPU acceleration
-set_target_properties(freeradio-app PROPERTIES
+# Set output directory for QML modules
+set_target_properties(freeradio PROPERTIES
     QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml
 )
 
-# Copy QML files to build directory
-file(COPY contents/ DESTINATION ${CMAKE_BINARY_DIR}/contents/)
+# Installation rules
+include(GNUInstallDirs)
 
-# Set QML import path
-target_compile_definitions(freeradio-app PRIVATE 
-    QML_IMPORT_PATH="${CMAKE_BINARY_DIR}"
+install(TARGETS freeradio
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-# Add the audio engine plugin
-add_subdirectory(plugin)
+install(FILES freeradio.desktop
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
+)
+
+install(FILES icons/freeradio.svg
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
+)

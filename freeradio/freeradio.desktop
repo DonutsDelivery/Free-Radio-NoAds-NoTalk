@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Free Radio
+GenericName=Internet Radio Player
+Comment=Stream ad-free internet radio stations
+Exec=freeradio
+Icon=freeradio
+Terminal=false
+Categories=Audio;Music;Player;Qt;
+Keywords=radio;stream;music;audio;internet;
+StartupNotify=true
+MimeType=audio/x-mpegurl;audio/x-scpls;
