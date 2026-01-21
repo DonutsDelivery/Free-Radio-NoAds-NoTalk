@@ -75,6 +75,8 @@ endif()
 # Set output directory for QML modules
 set_target_properties(freeradio PROPERTIES
     QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
 )
 
 # Installation rules
