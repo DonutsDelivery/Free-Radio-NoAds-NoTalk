@@ -20,8 +20,14 @@ int main(int argc, char *argv[])
     app.setOrganizationDomain("freeradio.app");
     app.setWindowIcon(QIcon::fromTheme("radio"));
 
-    // Use Kirigami's desktop style for native look
+    // Use appropriate style per platform
+#ifdef Q_OS_LINUX
+    // Use KDE style on Linux if available
     QQuickStyle::setStyle("org.kde.desktop");
+#else
+    // Use Fusion style on Windows/macOS for consistent look
+    QQuickStyle::setStyle("Fusion");
+#endif
 
     // Register the AudioCapture type with QML
     qmlRegisterType<AudioCapture>("AudioCapture", 1, 0, "AudioCapture");
