@@ -138,7 +138,7 @@ jobs:
 
       - name: Install build tools
         run: |
-          brew install ninja extra-cmake-modules
+          brew install ninja extra-cmake-modules imagemagick
 
       - name: Build Kirigami from source
         run: |
@@ -172,19 +172,18 @@ jobs:
           # Add Info.plist
           cp ../packaging/macos/Info.plist "Free Radio.app/Contents/"
 
-          # Create macOS icon from PNG (convert to 8-bit first for iconutil compatibility)
+          # Create macOS icon from PNG using ImageMagick (more reliable than sips)
           mkdir -p freeradio.iconset
-          sips -s format png --setProperty formatOptions 8 ../freeradio/icons/freeradio.png --out icon_8bit.png
-          sips -z 16 16     icon_8bit.png --out freeradio.iconset/icon_16x16.png
-          sips -z 32 32     icon_8bit.png --out freeradio.iconset/icon_16x16@2x.png
-          sips -z 32 32     icon_8bit.png --out freeradio.iconset/icon_32x32.png
-          sips -z 64 64     icon_8bit.png --out freeradio.iconset/icon_32x32@2x.png
-          sips -z 128 128   icon_8bit.png --out freeradio.iconset/icon_128x128.png
-          sips -z 256 256   icon_8bit.png --out freeradio.iconset/icon_128x128@2x.png
-          sips -z 256 256   icon_8bit.png --out freeradio.iconset/icon_256x256.png
-          sips -z 512 512   icon_8bit.png --out freeradio.iconset/icon_256x256@2x.png
-          sips -z 512 512   icon_8bit.png --out freeradio.iconset/icon_512x512.png
-          sips -z 1024 1024 icon_8bit.png --out freeradio.iconset/icon_512x512@2x.png
+          magick ../freeradio/icons/freeradio.png -resize 16x16   -depth 8 freeradio.iconset/icon_16x16.png
+          magick ../freeradio/icons/freeradio.png -resize 32x32   -depth 8 freeradio.iconset/icon_16x16@2x.png
+          magick ../freeradio/icons/freeradio.png -resize 32x32   -depth 8 freeradio.iconset/icon_32x32.png
+          magick ../freeradio/icons/freeradio.png -resize 64x64   -depth 8 freeradio.iconset/icon_32x32@2x.png
+          magick ../freeradio/icons/freeradio.png -resize 128x128 -depth 8 freeradio.iconset/icon_128x128.png
+          magick ../freeradio/icons/freeradio.png -resize 256x256 -depth 8 freeradio.iconset/icon_128x128@2x.png
+          magick ../freeradio/icons/freeradio.png -resize 256x256 -depth 8 freeradio.iconset/icon_256x256.png
+          magick ../freeradio/icons/freeradio.png -resize 512x512 -depth 8 freeradio.iconset/icon_256x256@2x.png
+          magick ../freeradio/icons/freeradio.png -resize 512x512 -depth 8 freeradio.iconset/icon_512x512.png
+          magick ../freeradio/icons/freeradio.png -resize 1024x1024 -depth 8 freeradio.iconset/icon_512x512@2x.png
           iconutil -c icns freeradio.iconset -o "Free Radio.app/Contents/Resources/freeradio.icns"
 
           # Deploy Qt frameworks
