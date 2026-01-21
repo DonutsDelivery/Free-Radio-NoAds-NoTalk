@@ -99,7 +99,7 @@ jobs:
           wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
           chmod +x linuxdeploy*.AppImage
 
-          export QMAKE=/usr/bin/qmake6
+          export QMAKE=$QT_ROOT_DIR/bin/qmake
           export QML_SOURCES_PATHS=$PWD/freeradio/contents/ui
           export EXTRA_QT_PLUGINS="multimedia"
 
@@ -108,24 +108,15 @@ jobs:
             --desktop-file freeradio/freeradio.desktop \
             --icon-file freeradio/icons/freeradio.svg \
             --plugin qt \
-            --output appimage || true
+            --output appimage
 
-          # Rename if created
-          if ls Free_Radio*.AppImage 1> /dev/null 2>&1; then
-            mv Free_Radio*.AppImage FreeRadio-Linux-x86_64.AppImage
-          else
-            # Create a placeholder if AppImage creation failed
-            echo "AppImage creation needs more setup" > FreeRadio-Linux-x86_64.AppImage.txt
-          fi
+          mv Free_Radio*.AppImage FreeRadio-Linux-x86_64.AppImage
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: FreeRadio-Linux
-          path: |
-            FreeRadio-Linux-x86_64.AppImage
-            FreeRadio-Linux-x86_64.AppImage.txt
-          if-no-files-found: ignore
+          path: FreeRadio-Linux-x86_64.AppImage
 
   build-macos:
     runs-on: macos-14
@@ -294,5 +285,5 @@ jobs:
             artifacts/FreeRadio-Linux/*
             artifacts/FreeRadio-macOS/*
             artifacts/FreeRadio-Windows/*
-          draft: true
+          draft: false
           generate_release_notes: true
