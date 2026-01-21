@@ -16,7 +16,7 @@ A cross-platform internet radio player with curated ad-free stations. Available 
 | Platform | Download |
 |----------|----------|
 | **Windows** | [Portable (ZIP)](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/FreeRadio-Windows-x64.zip) |
-| **Linux** | [AppImage](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/FreeRadio-Linux-x86_64.AppImage) \| [Plasma Widget](#plasma-widget) |
+| **Linux** | [Plasma Widget](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/freeradio.plasmoid) |
 | **macOS** | [DMG](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/FreeRadio-macOS.dmg) |
 
 > Download links will be available after the first release is published.
