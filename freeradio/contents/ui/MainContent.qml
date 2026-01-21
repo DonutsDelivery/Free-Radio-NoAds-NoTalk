@@ -5052,39 +5052,24 @@ Item {
                     Layout.fillWidth: true
                 }
                 
-                RowLayout {
+                Text {
                     visible: (currentSongTitle || currentArtist) && currentEbookUrl === ""
                     Layout.fillWidth: true
-                    
-                    ScrollView {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: isVerySmall ? Math.max(20, simulatedHeight / 20) : Math.max(30, Math.min(50, simulatedHeight / 15))
-                        clip: true
-                        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                        ScrollBar.vertical.policy: ScrollBar.AlwaysOff
-                        
-                        TextEdit {
-                            text: {
-                                if (currentArtist && currentSongTitle) {
-                                    return currentArtist + " - " + currentSongTitle
-                                } else if (currentSongTitle) {
-                                    return currentSongTitle
-                                } else {
-                                    return ""
-                                }
-                            }
-                            font.pointSize: smallFontSize
-                            color: Kirigami.Theme.textColor
-                            width: parent.width
-                            readOnly: true
-                            selectByMouse: true
-                            wrapMode: Text.Wrap
-                            leftPadding: spacingSmall
-                            rightPadding: spacingSmall + (enableScrollbars ? scrollbarTotalSpace : 0)
-                            topPadding: 4
-                            bottomPadding: 4
+                    text: {
+                        if (currentArtist && currentSongTitle) {
+                            return currentArtist + " - " + currentSongTitle
+                        } else if (currentSongTitle) {
+                            return currentSongTitle
+                        } else {
+                            return ""
                         }
                     }
+                    font.pointSize: smallFontSize
+                    color: Kirigami.Theme.textColor
+                    elide: Text.ElideRight
+                    maximumLineCount: 1
+                    leftPadding: spacingSmall
+                    rightPadding: spacingSmall + (enableScrollbars ? scrollbarTotalSpace : 0)
                 }
             }
         }
