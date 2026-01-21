@@ -4937,9 +4937,10 @@ Item {
         // Status display - Refined Audio style
         Rectangle {
             Layout.fillWidth: true
-            height: Math.max(80, Math.min(100, root.height * 0.18))
+            height: Math.max(110, Math.min(130, root.height * 0.25))
             radius: 10
             antialiasing: true
+            clip: true
 
             // Subtle gradient background
             gradient: Gradient {
@@ -5052,7 +5053,7 @@ Item {
                     Layout.fillWidth: true
                 }
                 
-                Text {
+                TextEdit {
                     visible: (currentSongTitle || currentArtist) && currentEbookUrl === ""
                     Layout.fillWidth: true
                     text: {
@@ -5066,8 +5067,9 @@ Item {
                     }
                     font.pointSize: smallFontSize
                     color: Kirigami.Theme.textColor
-                    elide: Text.ElideRight
-                    maximumLineCount: 1
+                    readOnly: true
+                    selectByMouse: true
+                    wrapMode: Text.NoWrap
                     leftPadding: spacingSmall
                     rightPadding: spacingSmall + (enableScrollbars ? scrollbarTotalSpace : 0)
                 }
