@@ -23,12 +23,19 @@ if(PkgConfig_FOUND)
 endif()
 
 # Add executables
-add_executable(freeradio
+set(FREERADIO_SOURCES
     main.cpp
     AudioCapture.cpp
     AudioCapture.h
     resources.qrc
 )
+
+# Add Windows icon resource
+if(WIN32)
+    list(APPEND FREERADIO_SOURCES freeradio.rc)
+endif()
+
+add_executable(freeradio ${FREERADIO_SOURCES})
 
 # Optional test executable
 if(PULSEAUDIO_FOUND)
