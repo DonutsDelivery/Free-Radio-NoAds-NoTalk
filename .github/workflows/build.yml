@@ -252,8 +252,8 @@ jobs:
           mkdir dist
           cp build/freeradio.exe dist/
 
-          # Deploy Qt
-          & "$env:Qt6_DIR/bin/windeployqt.exe" dist/freeradio.exe `
+          # Deploy Qt (QT_ROOT_DIR is set by install-qt-action)
+          & "$env:QT_ROOT_DIR/bin/windeployqt.exe" dist/freeradio.exe `
             --qmldir freeradio/contents/ui `
             --no-translations
 
