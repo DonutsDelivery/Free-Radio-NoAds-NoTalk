@@ -21,3 +21,7 @@ Makefile
 # OS
 .DS_Store
 Thumbs.db
+
+# Research/reference directories (contain Windows-incompatible filenames)
+radcap channels/
+radcap-radio-widget/
