@@ -717,6 +717,18 @@ var miscCategories = [
         ]
     },
     {
+        "name": "🎧 ASMR",
+        "stations": [
+            { "name": "Radio ASMR", "host": "https://live.lofiradio.ru", "path": "asmr_mp3_320", "description": "24/7 ASMR streaming - 320kbps" },
+            { "name": "ASMR Station", "host": "https://playerservices.streamtheworld.com", "path": "api/livestream-redirect/ACIR49_S01.mp3", "description": "Curated ASMR tracks and guided meditations" },
+            { "name": "Chris TDL Radio ASMR", "host": "https://stream.zeno.fm", "path": "mwpb4ea6qs8uv", "description": "ASMR radio channel - 128kbps" },
+            { "name": "Radio Whisper ASMR", "host": "https://stream.zeno.fm", "path": "309e0b84p48uv", "description": "Whispered ASMR content - 128kbps" },
+            { "name": "Positively ASMR Crackling Fire", "host": "https://drive.uber.radio", "path": "uber/asmrmix/icecast.audio", "description": "No DJs, no interruptions - crackling fire sounds" },
+            { "name": "Positively ASMR Mouth Sounds", "host": "https://drive.uber.radio", "path": "uber/asmrmouthsounds/icecast.audio", "description": "No DJs, no interruptions - mouth sounds ASMR" },
+            { "name": "Positively ASMR Sleep", "host": "https://drive.uber.radio", "path": "uber/asmrsleep/icecast.audio", "description": "No DJs, no interruptions - sleep ASMR triggers" }
+        ]
+    },
+    {
         "name": "🎛️ Lo-Fi / IDM / Experimental",
         "stations": [
             { "name": "NTS Radio - Global Underground", "host": "https://stream-relay-geo.ntslive.net", "path": "stream", "description": "24/7 underground music from 50+ cities - DJ curated shows" },

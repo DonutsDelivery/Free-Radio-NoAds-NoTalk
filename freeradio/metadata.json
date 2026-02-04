@@ -1,24 +1,19 @@
 {
-  "KPlugin": {
-    "Id": "freeradio",
-    "Name": "Free Radio",
-    "Description": "Stream radio stations from various sources without ads or talk",
-    "Version": "1.6.2",
-    "Website": "",
-    "Authors": [
-      {
-        "Name": "Unknown",
-        "Email": ""
-      }
-    ],
-    "Category": "Multimedia",
-    "License": "GPL-2.0+",
-    "EnabledByDefault": true
-  },
-  "KPackage": {
-    "Type": "Plasma/Applet"
-  },
-  "X-Plasma-API": "declarativeappletscript",
-  "X-Plasma-MainScript": "ui/main.qml",
-  "X-Plasma-API-Minimum-Version": "6.0"
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Id": "freeradio",
+        "Name": "Free Radio",
+        "Description": "Stream radio stations from various sources without ads or talk",
+        "Version": "1.7.0",
+        "Category": "Multimedia",
+        "License": "GPL-2.0+",
+        "EnabledByDefault": true,
+        "Authors": [
+            {
+                "Name": "Unknown",
+                "Email": ""
+            }
+        ]
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
 }
