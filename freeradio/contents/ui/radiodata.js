@@ -695,32 +695,23 @@ var fipCategories = [
     }
 ]
 
-// Misc Categories - Independent non-commercial radio stations
+// Misc Categories - Curated internet radio stations (mix of independent and commercial)
 var miscCategories = [
     {
-        "name": "🍄 Psytrance",
-        "stations": [
-            { "name": "Psyndora Psytrance - Goa, Full-On, Progressive", "host": "https://cast.magicstreams.gr:9111", "path": "stream/1/", "description": "Greek psytrance station - Goa, full-on, and progressive psy 24/7" },
-            { "name": "PsyStream - Hi-Fi Psytrance", "host": "https://radio.psymusic.co.uk", "path": "listen/psystream/hifi.mp3", "description": "UK psytrance station - High quality 320kbps stream" },
-            { "name": "PsyRadio.fm Progressive", "host": "http://komplex2.psyradio.org:8010", "path": "stream/1/", "description": "Progressive psytrance and psychedelic electronic music" },
-            { "name": "Psychedelic Freaks Radio", "host": "https://radio.psyfreaks.com", "path": "listen/psyfreaks/radio.mp3", "description": "Community-driven psytrance radio" },
-            { "name": "DMT-FM - All Psy Genres", "host": "https://dc1.serverse.com", "path": "proxy/ywycfrxn/stream", "description": "Psytrance, Goa, Full-On, Dark, Forest, Hi-Tech, Chillout and more" }
-        ]
-    },
-    {
-        "name": "🌙 Ambient / Chill",
+        "name": "🌙 Ambient / Drone",
         "stations": [
             { "name": "Ambient Sleeping Pill - Deep Ambient", "host": "https://radio.stereoscenic.com", "path": "asp-h", "description": "Beat-free ambient for sleep and relaxation - 256kbps" },
             { "name": "Echoes of Bluemars - Cryosleep", "host": "http://streams.echoesofbluemars.org:8000", "path": "cryosleep", "description": "Zero-beat space ambient for the space traveler" },
             { "name": "Echoes of Bluemars - Bluemars", "host": "http://streams.echoesofbluemars.org:8000", "path": "bluemars", "description": "Atmospheric ambient electronic music" },
-            { "name": "Nightwave Plaza - Vaporwave", "host": "https://radio.plaza.one", "path": "mp3", "description": "24/7 vaporwave and future funk radio" }
+            { "name": "Planet Ambi HD", "host": "http://philae.shoutca.st:9019", "path": "stream", "description": "High-definition ambient and drone music - 320kbps" },
+            { "name": "Drone Radio (MRG.fm)", "host": "http://listen.mrg.fm:8070", "path": "stream", "description": "Drone and deep ambient - experimental electronic - 128kbps" },
+            { "name": "Intergalactic FM - Dream Machine", "host": "http://radio.intergalactic.fm", "path": "3", "description": "Ambient, soundtracks, exotica - 256kbps" }
         ]
     },
     {
         "name": "🎧 ASMR",
         "stations": [
             { "name": "Radio ASMR", "host": "https://live.lofiradio.ru", "path": "asmr_mp3_320", "description": "24/7 ASMR streaming - 320kbps" },
-            { "name": "ASMR Station", "host": "https://playerservices.streamtheworld.com", "path": "api/livestream-redirect/ACIR49_S01.mp3", "description": "Curated ASMR tracks and guided meditations" },
             { "name": "Chris TDL Radio ASMR", "host": "https://stream.zeno.fm", "path": "mwpb4ea6qs8uv", "description": "ASMR radio channel - 128kbps" },
             { "name": "Radio Whisper ASMR", "host": "https://stream.zeno.fm", "path": "309e0b84p48uv", "description": "Whispered ASMR content - 128kbps" },
             { "name": "Positively ASMR Crackling Fire", "host": "https://drive.uber.radio", "path": "uber/asmrmix/icecast.audio", "description": "No DJs, no interruptions - crackling fire sounds" },
@@ -729,12 +720,160 @@ var miscCategories = [
         ]
     },
     {
-        "name": "🎛️ Lo-Fi / IDM / Experimental",
+        "name": "🎹 Synthwave / Retrowave",
         "stations": [
-            { "name": "NTS Radio - Global Underground", "host": "https://stream-relay-geo.ntslive.net", "path": "stream", "description": "24/7 underground music from 50+ cities - DJ curated shows" },
+            { "name": "Nightride FM - Synthwave", "host": "https://stream.nightride.fm", "path": "nightride.mp3", "description": "24/7 synthwave and retrowave - 320kbps" },
+            { "name": "Nightride FM - Chillsynth", "host": "https://stream.nightride.fm", "path": "chillsynth.mp3", "description": "Chillsynth and chillwave instrumental - 320kbps" },
+            { "name": "Nightride FM - Darksynth", "host": "https://stream.nightride.fm", "path": "darksynth.mp3", "description": "Dark cyberpunk synthwave - 320kbps" },
+            { "name": "Nightride FM - Spacesynth", "host": "https://stream.nightride.fm", "path": "spacesynth.mp3", "description": "Spacesynth, space-disco, vocoder music - 320kbps" },
+            { "name": "Retrowave.One Radio", "host": "http://77.108.192.88:8000", "path": "stream", "description": "80s, chillsynth, cyberpunk, darksynth, outrun - 192kbps" }
+        ]
+    },
+    {
+        "name": "🌊 Vaporwave / Future Funk",
+        "stations": [
+            { "name": "Nightwave Plaza - Vaporwave", "host": "https://radio.plaza.one", "path": "mp3", "description": "24/7 vaporwave and future funk radio" },
+            { "name": "Yumi Co. Radio", "host": "https://yumicoradio.net", "path": "stream", "description": "Future funk, city pop, nu disco, vaporwave - 256kbps" }
+        ]
+    },
+    {
+        "name": "🔊 Techno / House",
+        "stations": [
+            { "name": "Techno.FM - Pure Techno", "host": "http://stream.techno.fm", "path": "radio1-320k.mp3", "description": "Pure techno radio - 320kbps" },
+            { "name": "Technolovers - Deep House", "host": "https://stream.technolovers.fm", "path": "deep-house", "description": "Underground deep house from Germany - 192kbps" },
+            { "name": "1.FM - Deep House Radio", "host": "http://strm112.1.fm", "path": "deephouse_mobile_mp3", "description": "Curated deep house from Switzerland - 192kbps" },
+            { "name": "Party Vibe Radio - House", "host": "http://www.partyviberadio.com:8046", "path": "stream/2/", "description": "UK community house music radio - 320kbps" },
+            { "name": "Technolocos - Deep Web Radio", "host": "https://technolocos.net", "path": "listen/technolocos/radio.mp3", "description": "Underground techno, tech house, minimal - 320kbps" },
+            { "name": "Radio Schizoid - Dub Techno", "host": "http://94.130.113.214:8000", "path": "dubtechno", "description": "24/7 dub techno from Mumbai - 128kbps" },
+            { "name": "Anima Amoris - Dub Techno", "host": "http://amoris.sknt.ru", "path": "dubtechno", "description": "Dub techno from Saint-Petersburg since 2002 - 256kbps AAC" },
+            { "name": "Rautemusik - Techno", "host": "https://streams.rautemusik.fm", "path": "techno/mp3-192/", "description": "German techno network with dub and minimal - 192kbps" },
+            { "name": "Party Vibe Radio - Techno", "host": "http://www.partyviberadio.com:8046", "path": "stream/1/", "description": "UK community techno radio - 320kbps" },
+            { "name": "CYBERStacja - Electronic", "host": "https://sc.cyberstacja.pl", "path": "listen/cyberstacja/radio.mp3", "description": "Polish electronic, house, techno - 192kbps" },
+            { "name": "Intergalactic FM - Electro", "host": "http://radio.intergalactic.fm", "path": "1", "description": "Cult techno and electro from The Hague" },
+            { "name": "Intergalactic FM - Disco Fetish", "host": "http://radio.intergalactic.fm", "path": "2", "description": "Disco, Italo disco, nu-disco" },
+            { "name": "Deep Radio", "host": "http://stream.deep.radio", "path": "hd", "description": "Deep house, progressive house, tech house - 320kbps" },
+            { "name": "ISEKOI Radio", "host": "https://public.isekoi-radio.com", "path": "listen/chill/radio.mp3", "description": "Electronic - house, liquid funk, phonk" },
+            { "name": "Cashmere Radio - Berlin Underground", "host": "https://cashmereradio.out.airtime.pro", "path": "cashmereradio_a", "description": "Berlin community radio - underground electronic" }
+        ]
+    },
+    {
+        "name": "🌀 Trance / Hard Dance",
+        "stations": [
+            { "name": "Party Vibe Radio - Trance", "host": "http://www.partyviberadio.com:8046", "path": "stream/3/", "description": "Classic and progressive trance - 320kbps" },
+            { "name": "Rautemusik - Trance", "host": "https://trance-high.rautemusik.fm", "path": "", "description": "German trance radio - progressive, vocal, psy - 192kbps" },
+            { "name": "Trance-Energy Radio", "host": "http://radio.trance-energy.org:8000", "path": "trance192", "description": "Dedicated trance station - 192kbps" },
+            { "name": "Intense Radio - Hard Dance", "host": "https://intenseradio.live-streams.nl:18000", "path": "live", "description": "Amsterdam hard dance, trance, progressive - 192kbps" }
+        ]
+    },
+    {
+        "name": "🍄 Psytrance / Goa",
+        "stations": [
+            { "name": "Psyndora Psytrance - Goa, Full-On, Progressive", "host": "https://cast.magicstreams.gr:9111", "path": "stream/1/", "description": "Greek psytrance station - Goa, full-on, and progressive psy 24/7" },
+            { "name": "PsyStream - Hi-Fi Psytrance", "host": "https://radio.psymusic.co.uk", "path": "listen/psystream/hifi.mp3", "description": "UK psytrance station - High quality 320kbps stream" },
+            { "name": "PsyRadio.fm Progressive", "host": "http://komplex2.psyradio.org:8010", "path": "stream/1/", "description": "Progressive psytrance and psychedelic electronic music" },
+            { "name": "Psychedelic Freaks Radio", "host": "https://radio.psyfreaks.com", "path": "listen/psyfreaks/radio.mp3", "description": "Community-driven psytrance radio" },
+            { "name": "DMT-FM - All Psy Genres", "host": "https://dc1.serverse.com", "path": "proxy/ywycfrxn/stream", "description": "Psytrance, Goa, Full-On, Dark, Forest, Hi-Tech, Chillout and more" },
+            { "name": "DiceRadio - Goa/Psytrance", "host": "https://s2.radio.co", "path": "s4648f1c61/listen", "description": "Full-on Goa psytrance DJ sets from Greece - 128kbps" },
+            { "name": "RadiOzora Chill", "host": "http://chill.out.airtime.pro:8000", "path": "chill_a", "description": "Psychill from the Ozora Festival community - 192kbps" },
+            { "name": "1.FM - Psychill", "host": "http://strm112.1.fm", "path": "ambientpsy_mobile_mp3", "description": "Psychedelic chillout and slow trance - 320kbps" },
+            { "name": "Psyndora - Psychill", "host": "http://cast.magicstreams.gr:9125", "path": "stream", "description": "Psychill, psybient, ethnic from Greece - 128kbps" }
+        ]
+    },
+    {
+        "name": "🥁 Drum & Bass / UK Bass",
+        "stations": [
+            { "name": "Bassdrive - Drum & Bass", "host": "http://ice.bassdrive.net", "path": "stream", "description": "Worldwide drum and bass since 2001 - 192kbps" },
+            { "name": "DNBRadio", "host": "http://ildnb1.dnbradio.com:8000", "path": "dnbradio_main.mp3", "description": "24/7 drum & bass since 2003 - neurofunk, jungle, liquid - 320kbps" },
+            { "name": "Brokenbeats", "host": "https://stream.brokenbeats.net", "path": "tune", "description": "Atmospheric DnB, liquid funk, acid jazz, jungle - 320kbps AAC" },
+            { "name": "Energy 1058", "host": "http://tachyon.shoutca.st:8590", "path": "stream", "description": "DnB, oldskool, jungle - ex-pirate radio - 320kbps" },
+            { "name": "Partyvibe DnB", "host": "https://www.partyviberadio.com:8061", "path": ";", "description": "Commercial-free drum and bass, jungle - 320kbps" },
+            { "name": "Breaking Bass Air", "host": "https://aircast.breaking-bass.ru:8443", "path": "air", "description": "Underground DnB - liquid, neurofunk, darkstep - 320kbps" },
+            { "name": "Jungle Planet Radio", "host": "https://phoebe.streamerr.co:3650", "path": ";", "description": "Jungle, drum & bass, bass music - 320kbps" },
+            { "name": "Chunt FM", "host": "https://fm.chunt.org", "path": "stream", "description": "DnB, house, jungle, soul, techno, UK garage - 320kbps" },
+            { "name": "Kniteforce Radio", "host": "https://kniteforce.out.airtime.pro", "path": "kniteforce_a", "description": "From Kniteforce Records - DnB, hardcore, jungle - 192kbps" },
+            { "name": "Sub FM", "host": "https://fmsub.radioca.st", "path": "stream?type=http&nocache=140", "description": "Bass music - dubstep, garage, grime, juke - 192kbps" },
+            { "name": "UK Bass Radio", "host": "https://www.ukbassradio.com", "path": "stream", "description": "Full UK bass spectrum - DnB, garage, dubstep - 192kbps" },
+            { "name": "Kool FM", "host": "https://admin.stream.rinse.fm", "path": "proxy/kool/stream", "description": "Legendary London pirate - DnB, jungle, ragga - 128kbps" },
+            { "name": "Algorythme UK Garage", "host": "https://ukg.algorythmeradio.com", "path": "stream", "description": "Dedicated UK garage and garage house - 128kbps" },
             { "name": "Rinse FM - UK Garage & Bass", "host": "https://admin.stream.rinse.fm", "path": "proxy/rinse_uk/stream", "description": "London community radio - UK garage, grime, bass music" },
-            { "name": "Resonance FM - Arts Radio", "host": "https://stream.resonance.fm", "path": "resonance", "description": "London arts radio - experimental, electronic, avant-garde" },
-            { "name": "Cashmere Radio - Berlin Experimental", "host": "https://cashmereradio.out.airtime.pro", "path": "cashmereradio_a", "description": "Berlin community radio - underground electronic, experimental" }
+            { "name": "I Like It Oldskool", "host": "https://ilikeitoldskool.radioca.st", "path": "stream", "description": "Oldskool dance - hardcore, house, jungle - 320kbps" }
+        ]
+    },
+    {
+        "name": "🎸 Rock / Alternative",
+        "stations": [
+            { "name": "KEXP Seattle", "host": "https://kexp.streamguys1.com", "path": "kexp160.aac", "description": "Indie rock with live sessions - 160kbps" },
+            { "name": "181.FM The Buzz - Alternative", "host": "http://listen.181fm.com", "path": "181-buzz_128k.mp3?noPreRoll=true", "description": "Alternative rock hits 90s to today" },
+            { "name": "WFMU - Freeform Radio", "host": "http://stream0.wfmu.org", "path": "freeform-128k", "description": "America's longest-running freeform station" },
+            { "name": "NTS Radio", "host": "https://stream-relay-geo.ntslive.net", "path": "stream", "description": "Freeform radio from 50+ cities - eclectic underground" },
+            { "name": "Resonance FM", "host": "https://stream.resonance.fm", "path": "resonance", "description": "London arts radio - experimental, avant-garde" },
+            { "name": "Rockabilly Radio", "host": "http://lin3.ash.fast-serv.com:6026", "path": "stream_96", "description": "Classic 50s rockabilly and rock'n'roll 24/7 - 128kbps" },
+            { "name": "Surf Rock Radio", "host": "http://139.162.89.191:8020", "path": "radio.mp3", "description": "World's No.1 surf music station - 128kbps" },
+            { "name": "XRaydio 3", "host": "https://xraydio.ddns.net", "path": "xraydio3", "description": "Garage rock, psychobilly, surf, glam, sludge - 160kbps" },
+            { "name": "Mixabilly Radio", "host": "http://mars.streamerr.co:8142", "path": "stream", "description": "Rockabilly, psychobilly, punkabilly, garage punk - 192kbps" }
+        ]
+    },
+    {
+        "name": "🎵 Pop / Indie / Shoegaze",
+        "stations": [
+            { "name": "The Current MPR - Minnesota Indie", "host": "http://current.stream.publicradio.org", "path": "kcmp.mp3", "description": "Minnesota Public Radio indie rock/pop" },
+            { "name": "BAGeL Radio - Alternative", "host": "http://ais-sa3.cdnstream1.com", "path": "2606_128.mp3", "description": "Underground alternative since 2003" },
+            { "name": "Birch Street Radio - Adult Alt", "host": "https://jenny.torontocast.com:8172", "path": "stream", "description": "Adult album alternative and indie" },
+            { "name": "dublab LA - Progressive", "host": "https://dublab.out.airtime.pro", "path": "dublab_a", "description": "LA non-profit progressive music collective" },
+            { "name": "IndieXL Amsterdam", "host": "http://server-23.stream-server.nl:8438", "path": "stream/1/", "description": "24/7 indie music - 320kbps" },
+            { "name": "The Zone Dublin - New Music", "host": "https://uk1.internet-radio.com", "path": "proxy/thezone?mp=/stream", "description": "Dublin's new music alternative" },
+            { "name": "DKFM Classic - Shoegaze", "host": "https://radio.streemlion.com:4245", "path": "stream", "description": "MBV, Slowdive, Cocteau Twins - first wave shoegaze - 128kbps" },
+            { "name": "Laut.FM Shoegaze", "host": "https://shoegaze.stream.laut.fm", "path": "shoegaze", "description": "Shoegaze, dream pop, ambient, post-punk - 128kbps" },
+            { "name": "6forty Radio", "host": "http://radio.6forty.com:8000", "path": "6forty", "description": "Deep indie, post-rock, post-metal, shoegaze - 192kbps" },
+            { "name": "XRaydio 1", "host": "https://xraydio.ddns.net", "path": "live", "description": "Dream pop, shoegaze, psychedelic, post punk - 160kbps" },
+            { "name": "Bristol Sound Webradio", "host": "https://thebristolsoundwebradio.stream.laut.fm", "path": "thebristolsoundwebradio", "description": "Trip-hop - Massive Attack, Portishead vibes - 128kbps" }
+        ]
+    },
+    {
+        "name": "✊ Punk / Hardcore",
+        "stations": [
+            { "name": "Anarchy Factory", "host": "http://cheetah.streemlion.com:2820", "path": "stream", "description": "24hr punk/hardcore/ska/crust/sludge/grunge - 320kbps" },
+            { "name": "Punkrockers Radio", "host": "http://stream.punkrockers-radio.de:8000", "path": "mp3", "description": "Germany's DIY punk radio since 2002 - 192kbps" },
+            { "name": "PunkRockRadio.ca", "host": "https://stream.radio.co", "path": "s904013bb1/listen", "description": "Canadian punk and post-punk from Quebec - 192kbps" },
+            { "name": "Punk Irratia", "host": "https://punkirratia.net:8443", "path": "punk", "description": "Basque Country punk and hardcore - 192kbps" },
+            { "name": "Real Punk Radio", "host": "http://149.56.155.73:8080", "path": "stream", "description": "Brooklyn punk rock'n'roll, garage, surf - 128kbps" },
+            { "name": "Rock Antenne Punkrock", "host": "https://s3-webradio.rockantenne.de", "path": "punkrock/stream/mp3", "description": "Dedicated punk rock channel - 128kbps" },
+            { "name": "Athens Noise Rocks", "host": "https://radio.athensnoise.rocks", "path": "listen/athensnoise.rocks/radio.mp3", "description": "Crust, hardcore, post-hardcore, punk, ska punk - 128kbps" }
+        ]
+    },
+    {
+        "name": "🤘 Metal / Hard Rock",
+        "stations": [
+            { "name": "Rock Antenne Heavy Metal", "host": "https://stream.rockantenne.de", "path": "heavy-metal/stream/mp3", "description": "German 24/7 heavy metal radio" },
+            { "name": "La Grosse Radio Metal", "host": "http://hd.lagrosseradio.info:8000", "path": "lagrosseradio-metal-192.mp3", "description": "French metal - death, black, thrash - 192kbps" },
+            { "name": "Violent Forces Radio - Thrash", "host": "http://www.tuneintoradio1.com:8000", "path": "128kbps.mp3", "description": "Dedicated thrash metal specialists" },
+            { "name": "Tangra Mega Rock - Bulgarian Metal", "host": "http://restreamer.radiotangra.com:80", "path": "Tangra-high", "description": "Bulgaria's first rock/metal station" },
+            { "name": "Port Rock Radio - High Quality", "host": "http://65.109.84.248:8100", "path": "portrock-320.mp3", "description": "Hard rock and metal - 320kbps" },
+            { "name": "Metal Devastation Radio", "host": "http://c13.radioboss.fm:8099", "path": "autodj", "description": "Underground death, black, thrash, doom" },
+            { "name": "TotalRock UK", "host": "http://s3.citrus3.com:8056", "path": "stream", "description": "UK rock and metal since 1997" },
+            { "name": "Megarock Radio", "host": "http://stream6.megarockradio.net:8000", "path": "stream", "description": "24/7 rock and metal" },
+            { "name": "The Voice of Doom", "host": "https://streaming.galaxywebsolutions.com:9046", "path": "stream", "description": "Pure doom metal - studio quality - 320kbps AAC" },
+            { "name": "Gritty Rock Radio", "host": "https://listen.radioking.com", "path": "radio/10713/stream/224413", "description": "Curated stoner/desert/garage rock - 192kbps" },
+            { "name": "Heavy Music Atmospheric", "host": "http://stream.heavy-music.net:8176", "path": "stream", "description": "Atmospheric doom, gothic, post-rock since 2004 - 320kbps" },
+            { "name": "Exclusive Radio - Black Sabbath", "host": "https://streaming.exclusive.radio", "path": "er/blacksabbath/icecast.audio", "description": "24/7 Black Sabbath - the godfathers of doom" }
+        ]
+    },
+    {
+        "name": "🦇 Goth / Darkwave / Industrial",
+        "stations": [
+            { "name": "Radio Arcane", "host": "https://quincy.torontocast.com:1100", "path": "stream", "description": "Goth, darkwave, post-punk, coldwave, deathrock - 320kbps" },
+            { "name": "Bloodlit Radio", "host": "https://usa5.fastcast4u.com", "path": "proxy/wwwblood?mp=/1", "description": "Very dark alternative - industrial, goth, darkwave - 320kbps" },
+            { "name": "Nightride FM - EBSM", "host": "https://stream.nightride.fm", "path": "ebsm.mp3", "description": "EBM, industrial, synthwave, darksynth - 320kbps" },
+            { "name": "SoundWorks Radio", "host": "https://soundworks.live:8000", "path": "radio.mp3", "description": "Industrial, EBM, witch house, dark ambient, neofolk - 320kbps" },
+            { "name": "Cabaret del Diavolo", "host": "https://stream.zeno.fm", "path": "qrbdvnz0qa0uv", "description": "EBM, industrial, dark electro, aggrotech - est. 2005 - 320kbps" },
+            { "name": "HEXX 9 Radio", "host": "http://46.105.124.120:8604", "path": "stream", "description": "Ambient, electronic, experimental, goth, witchhouse - 256kbps" },
+            { "name": "Detroit Industrial Underground", "host": "http://138.197.0.4:8000", "path": "stream", "description": "Industrial, EBM, synthpop from Detroit - 256kbps" },
+            { "name": "Iceradio Germany", "host": "https://www.iceradio.net", "path": "listen", "description": "Dark scene - darkwave, EBM, industrial, futurepop - 192kbps" },
+            { "name": "Witch House on WaveRadio", "host": "https://station.waveradio.org", "path": "witch", "description": "Dedicated witch house / experimental - 192kbps AAC" },
+            { "name": "Esoterica Radio - Dark Electro", "host": "https://esoterica.servemp3.com:444", "path": "listen/darkclubbing_darkelectro/radio.mp3", "description": "Dark clubbing, dark electro channel - 192kbps" },
+            { "name": "GothVille Radio", "host": "https://streams.radio.co", "path": "s62583474c/listen", "description": "24/7 gothic, new wave, EBM, dark folk - 128kbps" },
+            { "name": "Dark Asylum Radio", "host": "https://443-1.autopo.st", "path": "196", "description": "Synthpop, futurepop, goth, industrial - since 2000 - 128kbps" },
+            { "name": "Dark Wave Radomir Radio", "host": "https://dwrstream.eu", "path": "", "description": "Darkwave, post-punk, experimental, noise, avant-garde - 192kbps" }
         ]
     },
     {
@@ -747,7 +886,91 @@ var miscCategories = [
             { "name": "WWOZ New Orleans - Jazz & Heritage", "host": "http://wwoz-sc.streamguys.com", "path": "wwoz-hi.mp3", "description": "New Orleans jazz, funk, soul, brass band, zydeco" },
             { "name": "Funky Radio Italy - Classic Funk", "host": "http://funkyradio.streamingmedia.it:8001", "path": "play.mp3", "description": "Classic funk 1963-1982 vinyl rarities - 320kbps" },
             { "name": "Soul Radio Classics - Vintage Soul", "host": "http://listen.soulradioclassics.com:8200", "path": "play", "description": "Motown, Chicago, Philadelphia soul - 192kbps" },
-            { "name": "The Disco Palace - Disco & Funk", "host": "http://54.36.165.156:8410", "path": "stream/1/", "description": "Complete disco collection with rare promos - 320kbps" }
+            { "name": "The Disco Palace - Disco & Funk", "host": "http://54.36.165.156:8410", "path": "stream/1/", "description": "Complete disco collection with rare promos - 320kbps" },
+            { "name": "The BocX", "host": "https://radio.streemlion.com:4820", "path": "stream", "description": "Jazzy, funky, soulful chill-out - blues, funk, neo-soul - 256kbps" },
+            { "name": "Funky Corner Radio", "host": "https://ais-sa2.cdnstream1.com", "path": "2447_192.mp3", "description": "Funk, soul, R&B, disco from 70s and 80s - 192kbps" },
+            { "name": "SOUL RADIO Classics", "host": "https://listen.soulradio.uk", "path": "uk", "description": "Golden era classic soul 50s/60s/70s - 192kbps" },
+            { "name": "NPO Soul & Jazz", "host": "http://icecast.omroep.nl", "path": "radio6-bb-mp3", "description": "Dutch public radio - soul, jazz, R&B, neo-soul - 192kbps" },
+            { "name": "1.FM - Slow Jamz Radio", "host": "http://strm112.1.fm", "path": "slowjamz_mobile_mp3", "description": "R&B slow jams, neo-soul, smooth grooves - 192kbps" }
+        ]
+    },
+    {
+        "name": "🎷 Jazz",
+        "stations": [
+            { "name": "Jazz24 KNKX - World-Class Jazz", "host": "https://knkx-live-a.edge.audiocdn.com", "path": "6285_256k", "description": "Pacific Northwest jazz radio - 256kbps" },
+            { "name": "WBGO Jazz 88.3 - America's Jazz", "host": "https://ais-sa8.cdnstream1.com", "path": "3629_128.mp3", "description": "New York/Newark premier jazz since 1979" },
+            { "name": "TSF Jazz Paris", "host": "https://tsfjazz.ice.infomaniak.ch", "path": "tsfjazz-high.mp3", "description": "100% jazz 24 hours from Paris" },
+            { "name": "Naim Jazz - Audiophile", "host": "https://mscp3.live-streams.nl:8342", "path": "jazz-high.aac", "description": "British audiophile jazz - 320kbps" },
+            { "name": "Concertzender Jazz", "host": "https://streams.greenhost.nl:8006", "path": "jazz", "description": "Dutch public radio jazz - 256kbps" }
+        ]
+    },
+    {
+        "name": "🎤 Hip-Hop / Rap",
+        "stations": [
+            { "name": "181.FM Old School Hip-Hop", "host": "http://listen.181fm.com", "path": "181-oldschool_128k.mp3?noPreRoll=true", "description": "Classic 90s hip-hop and R&B" },
+            { "name": "Party Vibe Radio Hip-Hop", "host": "http://www.partyviberadio.com:8016", "path": "stream/2/", "description": "Hip-hop, trap, urban - 320kbps" },
+            { "name": "Memphis Rap Radio", "host": "http://142.4.216.144:8089", "path": "stream/1/", "description": "Memphis rap and Southern hip-hop" },
+            { "name": "Urban Radio Italy", "host": "http://nr3.newradio.it:8100", "path": "stream", "description": "Urban, hip-hop, R&B - 192kbps" },
+            { "name": "FunkaGroove - Funk & Hip-Hop", "host": "http://94.23.57.5:9063", "path": "stream/1/", "description": "Funk and hip-hop fusion - 192kbps" },
+            { "name": "REYFM Lo-Fi Hip Hop", "host": "https://listen.reyfm.de", "path": "lofi_320kbps.mp3", "description": "Lo-fi hip hop beats - 320kbps" },
+            { "name": "I Love Chillhop", "host": "https://ilm.stream35.radiohost.de", "path": "ilm_ilovechillhop_mp3-192", "description": "Lo-fi hip hop and chillhop for study - 192kbps" },
+            { "name": "b3cks-radio - Chillhop", "host": "https://radio.b3ck.com", "path": "listen/b3cks-radio/radio.mp3", "description": "Lo-fi hip hop beats from Minnesota - 192kbps" },
+            { "name": "0nlineradio Lo-Fi Hip Hop", "host": "https://stream.0nlineradio.com", "path": "lo-fi", "description": "Lo-fi hip hop beats - 192kbps" }
+        ]
+    },
+    {
+        "name": "🌴 Reggae / Ska / Dub",
+        "stations": [
+            { "name": "La Grosse Radio Reggae", "host": "http://hd.lagrosseradio.info:8000", "path": "lagrosseradio-reggae-192.mp3", "description": "French reggae station since 2009 - 192kbps" },
+            { "name": "181.FM Reggae Roots", "host": "http://relay.181.fm:8096", "path": "?noPreRoll=true", "description": "Roots reggae and classic Jamaican sounds" },
+            { "name": "Party Vibe Radio Reggae", "host": "http://www.partyvibe.com:8000", "path": "pvr-reggae-mp3", "description": "Dancehall, dub, roots - 320kbps" },
+            { "name": "Roots Legacy Radio - Dub", "host": "https://l.rootslegacy.fr", "path": "", "description": "French dub and reggae specialist - 224kbps" },
+            { "name": "Bob's Ska Radio", "host": "http://51.255.235.165:5528", "path": "stream", "description": "Ska, punk, reggae, rocksteady from Tacoma WA - 128kbps" },
+            { "name": "Jah Music Mansion - Roots & World", "host": "http://94.23.67.172:9209", "path": "stream/1/", "description": "Reggae, dub, world roots - 320kbps" }
+        ]
+    },
+    {
+        "name": "🌍 African Music",
+        "stations": [
+            { "name": "Afropulse FM - African Pop", "host": "https://cp12.serverse.com", "path": "proxy/densma/stream", "description": "Contemporary African music and afrobeats from Atlanta" },
+            { "name": "Radio Thiossane - West African", "host": "http://listen.senemultimedia.net:8110", "path": "stream/1/", "description": "Senegalese and West African music - 192kbps" },
+            { "name": "Technolovers - Afro House", "host": "https://stream.technolovers.fm", "path": "afro-house", "description": "24/7 Afro house, soulful house, Afro vocal - 192kbps" },
+            { "name": "WDR COSMO Afrobeats", "host": "https://wdr-cosmo-afrobeat.icecastssl.wdr.de", "path": "wdr/cosmo/afrobeat/mp3/128/stream.mp3", "description": "German public radio Afrobeats channel - 128kbps" },
+            { "name": "Africa N.1 Rumba", "host": "https://webradio1.ice.infomaniak.ch", "path": "webradio4-128.mp3", "description": "Rumba Congolaise, soukous, ndombolo - 128kbps" },
+            { "name": "Dakar Musique", "host": "http://listen.senemultimedia.net:8090", "path": "stream", "description": "Mbalax, zouk, reggae from Dakar, Senegal - 128kbps" }
+        ]
+    },
+    {
+        "name": "🕌 Middle Eastern / Arabic",
+        "stations": [
+            { "name": "RauteMusik Oriental", "host": "https://oriental-high.rautemusik.fm", "path": "", "description": "Arabic hits, Oriental, Middle Eastern variety - 192kbps" },
+            { "name": "Djam Radio Paris", "host": "https://stream9.xdevel.com", "path": "audio1s976748-1515/stream/icecast.audio", "description": "Paris world music - Oriental, Afrobeat, funk, soul - 192kbps AAC" },
+            { "name": "Epic Lounge - Shisha Lounge", "host": "https://stream.epic-lounge.com", "path": "shisha-lounge", "description": "Oriental lounge, Middle Eastern chill, Arabic downtempo - 192kbps" },
+            { "name": "lbi Radio - Lebanese", "host": "http://andromeda.shoutca.st:8192", "path": ";stream.mp3", "description": "Arabic, Middle Eastern, Lebanese music - 128kbps" },
+            { "name": "SumerFm Iraq", "host": "https://l3.itworkscdn.net", "path": "itwaudio/9012/stream", "description": "Iraqi Arabic music from Baghdad - 128kbps" }
+        ]
+    },
+    {
+        "name": "🏮 Asian Pop / City Pop",
+        "stations": [
+            { "name": "BOX: Japan City Pop", "host": "https://play.streamafrica.net", "path": "japancitypop", "description": "Japanese City Pop classics 70s/80s/90s" },
+            { "name": "Jazz Sakura - Asia DREAM Radio", "host": "http://kathy.torontocast.com:3330", "path": "stream/1/", "description": "Japanese jazz and J-jazz fusion - 128kbps" },
+            { "name": "LISTEN.moe K-Pop", "host": "https://listen.moe", "path": "kpop/stream", "description": "Community K-Pop radio - 256kbps OGG" },
+            { "name": "Big B Radio - KPOP", "host": "https://antares.dribbcast.com", "path": "proxy/kpop?mp=/s", "description": "Curated K-Pop since 2004 - 192kbps" },
+            { "name": "Big B Radio - JPOP", "host": "https://antares.dribbcast.com", "path": "proxy/jpop?mp=/s", "description": "Japanese pop and J-Pop hits - 192kbps" },
+            { "name": "Ronin Radio", "host": "https://s3.radio.co", "path": "sff133d65b/listen", "description": "Anime music, city pop, eurobeat, J-Rock - 128kbps" }
+        ]
+    },
+    {
+        "name": "💃 Latin / Bossa / World",
+        "stations": [
+            { "name": "Concertzender World Music", "host": "https://streams.greenhost.nl:8006", "path": "wereldmuziek", "description": "Dutch public radio world music - 160kbps" },
+            { "name": "liveIreland - Celtic Traditional", "host": "http://192.111.140.11:8058", "path": "stream/1/", "description": "24/7 Celtic music from Ireland, Scotland, Wales" },
+            { "name": "Hawaiian Radio - Pacific Sounds", "host": "http://198.178.123.17:10108", "path": "stream/1/", "description": "Traditional and contemporary Hawaiian - 192kbps" },
+            { "name": "Ella Radio - Bossa", "host": "https://stream.ella-radio.de", "path": "ella-bossa/mp3-192/", "description": "24/7 Bossa Nova and jazz from Berlin - 192kbps" },
+            { "name": "Ella Radio - Latin Jazz", "host": "https://stream.ella-radio.de", "path": "ella-latin-jazz/mp3-192/", "description": "Afro-Cuban rhythms and tropical jazz - 192kbps" },
+            { "name": "Radio Chalaca Callao", "host": "https://conectperu.com", "path": "8084/stream", "description": "Pure salsa and merengue from Peru - 320kbps" },
+            { "name": "Tropicalisima Salsa", "host": "http://23.237.150.178:8020", "path": "stream/1/", "description": "Classic salsa and tropical rhythms 24/7 - 128kbps" }
         ]
     },
     {
@@ -759,129 +982,35 @@ var miscCategories = [
             { "name": "Concertzender Classical", "host": "https://streams.greenhost.nl:8006", "path": "klassiek", "description": "Dutch public radio classical - 256kbps HiFi" },
             { "name": "Concertzender Early Music", "host": "https://streams.greenhost.nl:8006", "path": "oudemuziek", "description": "Medieval and Renaissance music" },
             { "name": "Concertzender Baroque", "host": "https://streams.greenhost.nl:8006", "path": "barok", "description": "Bach, Handel, Vivaldi and baroque masters" },
-            { "name": "France Musique", "host": "https://icecast.radiofrance.fr", "path": "francemusique-midfi.mp3", "description": "French public radio classical" },
-            { "name": "France Musique Baroque", "host": "https://icecast.radiofrance.fr", "path": "francemusiquebaroque-hifi.aac", "description": "Dedicated baroque music - 192kbps HiFi" },
-            { "name": "Ancient FM - Medieval & Renaissance", "host": "http://stream.ancientfm.com:8058", "path": "stream", "description": "Medieval and Renaissance music 24/7" },
-            { "name": "ABC Classic Australia", "host": "http://live-radio01.mediahubaustralia.com", "path": "2FMW/mp3/", "description": "Australian Broadcasting Corporation classical" }
+            { "name": "Ancient FM - Medieval & Renaissance", "host": "http://stream.ancientfm.com:8058", "path": "stream", "description": "Medieval and Renaissance music 24/7" }
         ]
     },
     {
         "name": "🤠 Country / Americana",
         "stations": [
-            { "name": "SomaFM Boot Liquor - Americana", "host": "https://ice5.somafm.com", "path": "bootliquor-320-mp3", "description": "Americana roots music - 320kbps" },
-            { "name": "SomaFM Folk Forward - Indie Folk", "host": "https://ice4.somafm.com", "path": "folkfwd-128-aac", "description": "Indie folk, alt-folk and folk classics" },
-            { "name": "Bluegrass Country WAMU", "host": "http://ice24.securenetsystems.net", "path": "WAMU", "description": "Longest-running bluegrass station in the US" },
-            { "name": "Ritter Farms Radio - Bluegrass Gospel", "host": "http://184.95.62.170:9242", "path": "", "description": "24/7 bluegrass gospel from East Tennessee" },
             { "name": "Southern Branch Bluegrass", "host": "http://s7.voscast.com:10664", "path": "stream/1/", "description": "Bluegrass, Americana, Gospel from Tennessee" }
-        ]
-    },
-    {
-        "name": "🎧 Electronic / EDM",
-        "stations": [
-            { "name": "Techno.FM - Pure Techno", "host": "http://stream.techno.fm", "path": "radio1-320k.mp3", "description": "Pure techno radio - 320kbps" },
-            { "name": "Bassdrive - Drum & Bass", "host": "http://ice.bassdrive.net", "path": "stream", "description": "Worldwide drum and bass since 2001 - 192kbps" },
-            { "name": "Intense Radio - Hard Dance", "host": "https://intenseradio.live-streams.nl:18000", "path": "live", "description": "Amsterdam hard dance, trance, progressive - 192kbps" },
-            { "name": "Intergalactic FM - Electro", "host": "http://radio.intergalactic.fm", "path": "1", "description": "Cult techno and electro from The Hague" },
-            { "name": "Intergalactic FM - Disco Fetish", "host": "http://radio.intergalactic.fm", "path": "2", "description": "Disco, Italo disco, nu-disco" },
-            { "name": "Intergalactic FM - Dream Machine", "host": "http://radio.intergalactic.fm", "path": "3", "description": "Ambient and electronic - 256kbps" },
-            { "name": "CYBERStacja - Electronic", "host": "https://sc.cyberstacja.pl", "path": "listen/cyberstacja/radio.mp3", "description": "Polish electronic, house, techno - 192kbps" }
-        ]
-    },
-    {
-        "name": "🌍 Folk / World",
-        "stations": [
-            { "name": "FIP World - Global Sounds", "host": "http://icecast.radiofrance.fr", "path": "fipworld-hifi.aac", "description": "World music from Radio France - 192kbps" },
-            { "name": "Concertzender World Music", "host": "https://streams.greenhost.nl:8006", "path": "wereldmuziek", "description": "Dutch public radio world music - 160kbps" },
-            { "name": "liveIreland - Celtic Traditional", "host": "http://192.111.140.11:8058", "path": "stream/1/", "description": "24/7 Celtic music from Ireland, Scotland, Wales" },
-            { "name": "Afropulse FM - African Pop", "host": "https://cp12.serverse.com", "path": "proxy/densma/stream", "description": "Contemporary African music and afrobeats from Atlanta" },
-            { "name": "Radio Thiossane - West African", "host": "http://listen.senemultimedia.net:8110", "path": "stream/1/", "description": "Senegalese and West African music - 192kbps" },
-            { "name": "Jah Music Mansion - Roots & World", "host": "http://94.23.67.172:9209", "path": "stream/1/", "description": "Reggae, dub, world roots - 320kbps" },
-            { "name": "Hawaiian Radio - Pacific Sounds", "host": "http://198.178.123.17:10108", "path": "stream/1/", "description": "Traditional and contemporary Hawaiian - 192kbps" }
-        ]
-    },
-    {
-        "name": "🎤 Hip-Hop / Rap",
-        "stations": [
-            { "name": "SomaFM Fluid - Instrumental Hip-Hop", "host": "https://ice1.somafm.com", "path": "fluid-128-mp3", "description": "Instrumental hip-hop, future soul, liquid trap" },
-            { "name": "181.FM Old School Hip-Hop", "host": "http://listen.181fm.com", "path": "181-oldschool_128k.mp3", "description": "Classic 90s hip-hop and R&B" },
-            { "name": "Party Vibe Radio Hip-Hop", "host": "http://www.partyviberadio.com:8016", "path": "stream/2/", "description": "Hip-hop, trap, urban - 320kbps" },
-            { "name": "Memphis Rap Radio", "host": "http://142.4.216.144:8089", "path": "stream/1/", "description": "Memphis rap and Southern hip-hop" },
-            { "name": "Urban Radio Italy", "host": "http://nr3.newradio.it:8100", "path": "stream", "description": "Urban, hip-hop, R&B - 192kbps" },
-            { "name": "FunkaGroove - Funk & Hip-Hop", "host": "http://94.23.57.5:9063", "path": "stream/1/", "description": "Funk and hip-hop fusion - 192kbps" }
-        ]
-    },
-    {
-        "name": "🎷 Jazz",
-        "stations": [
-            { "name": "Jazz24 KNKX - World-Class Jazz", "host": "https://knkx-live-a.edge.audiocdn.com", "path": "6285_256k", "description": "Pacific Northwest jazz radio - 256kbps" },
-            { "name": "SomaFM Sonic Universe - Modern Jazz", "host": "https://ice.somafm.com", "path": "sonicuniverse", "description": "Avant-garde and eclectic jazz" },
-            { "name": "WBGO Jazz 88.3 - America's Jazz", "host": "https://ais-sa8.cdnstream1.com", "path": "3629_128.mp3", "description": "New York/Newark premier jazz since 1979" },
-            { "name": "TSF Jazz Paris", "host": "https://tsfjazz.ice.infomaniak.ch", "path": "tsfjazz-high.mp3", "description": "100% jazz 24 hours from Paris" },
-            { "name": "FIP Jazz - Eclectic Jazz", "host": "https://icecast.radiofrance.fr", "path": "fipjazz-hifi.aac", "description": "French public radio jazz - 192kbps" },
-            { "name": "Naim Jazz - Audiophile", "host": "https://mscp3.live-streams.nl:8342", "path": "jazz-high.aac", "description": "British audiophile jazz - 320kbps" },
-            { "name": "Concertzender Jazz", "host": "https://streams.greenhost.nl:8006", "path": "jazz", "description": "Dutch public radio jazz - 256kbps" },
-            { "name": "KCSM Jazz 91 - Bay Area", "host": "http://ice5.securenetsystems.net", "path": "KCSM", "description": "San Francisco Bay Area jazz" }
-        ]
-    },
-    {
-        "name": "🤘 Metal / Hard Rock",
-        "stations": [
-            { "name": "SomaFM Metal Detector", "host": "https://ice5.somafm.com", "path": "metal-128-mp3", "description": "Black, doom, prog, sludge, thrash, stoner metal" },
-            { "name": "Rock Antenne Heavy Metal", "host": "https://stream.rockantenne.de", "path": "heavy-metal/stream/mp3", "description": "German 24/7 heavy metal radio" },
-            { "name": "La Grosse Radio Metal", "host": "http://hd.lagrosseradio.info:8000", "path": "lagrosseradio-metal-192.mp3", "description": "French metal - death, black, thrash - 192kbps" },
-            { "name": "Violent Forces Radio - Thrash", "host": "http://www.tuneintoradio1.com:8000", "path": "128kbps.mp3", "description": "Dedicated thrash metal specialists" },
-            { "name": "Tangra Mega Rock - Bulgarian Metal", "host": "http://restreamer.radiotangra.com:80", "path": "Tangra-high", "description": "Bulgaria's first rock/metal station" },
-            { "name": "Port Rock Radio - High Quality", "host": "http://65.109.84.248:8100", "path": "portrock-320.mp3", "description": "Hard rock and metal - 320kbps" },
-            { "name": "Metal Devastation Radio", "host": "http://c13.radioboss.fm:8099", "path": "autodj", "description": "Underground death, black, thrash, doom" },
-            { "name": "TotalRock UK", "host": "http://s3.citrus3.com:8056", "path": "stream", "description": "UK rock and metal since 1997" },
-            { "name": "Megarock Radio", "host": "http://stream6.megarockradio.net:8000", "path": "stream", "description": "24/7 rock and metal" }
-        ]
-    },
-    {
-        "name": "🎸 Pop / Indie",
-        "stations": [
-            { "name": "KEXP Seattle - Indie Legend", "host": "https://kexp-mp3-128.streamguys1.com", "path": "kexp128.mp3", "description": "Legendary indie station with live sessions" },
-            { "name": "The Current MPR - Minnesota Indie", "host": "http://current.stream.publicradio.org", "path": "kcmp.mp3", "description": "Minnesota Public Radio indie rock/pop" },
-            { "name": "BAGeL Radio - Alternative", "host": "http://ais-sa3.cdnstream1.com", "path": "2606_128.mp3", "description": "Underground alternative since 2003" },
-            { "name": "Birch Street Radio - Adult Alt", "host": "https://jenny.torontocast.com:8172", "path": "stream", "description": "Adult album alternative and indie" },
-            { "name": "dublab LA - Progressive", "host": "https://dublab.out.airtime.pro", "path": "dublab_a", "description": "LA non-profit progressive music collective" },
-            { "name": "IndieXL Amsterdam", "host": "http://server-23.stream-server.nl:8438", "path": "stream/1/", "description": "24/7 indie music - 320kbps" },
-            { "name": "The Zone Dublin - New Music", "host": "https://uk1.internet-radio.com", "path": "proxy/thezone?mp=/stream", "description": "Dublin's new music alternative" }
-        ]
-    },
-    {
-        "name": "🌴 Reggae / Ska / Dub",
-        "stations": [
-            { "name": "SomaFM Heavyweight Reggae", "host": "https://ice5.somafm.com", "path": "reggae-256-mp3", "description": "Roots reggae, ska, rocksteady - 256kbps" },
-            { "name": "La Grosse Radio Reggae", "host": "http://hd.lagrosseradio.info:8000", "path": "lagrosseradio-reggae-192.mp3", "description": "French reggae station since 2009 - 192kbps" },
-            { "name": "181.FM Reggae Roots", "host": "http://relay.181.fm:8096", "path": "", "description": "Roots reggae and classic Jamaican sounds" },
-            { "name": "Party Vibe Radio Reggae", "host": "http://www.partyvibe.com:8000", "path": "pvr-reggae-mp3", "description": "Dancehall, dub, roots - 320kbps" },
-            { "name": "Roots Legacy Radio - Dub", "host": "https://l.rootslegacy.fr", "path": "", "description": "French dub and reggae specialist - 224kbps" }
-        ]
-    },
-    {
-        "name": "🎸 Rock / Alternative",
-        "stations": [
-            { "name": "Radio Paradise Rock Mix", "host": "http://stream.radioparadise.com", "path": "rock-320", "description": "Curated rock - 320kbps with FLAC available" },
-            { "name": "KEXP Seattle", "host": "https://kexp.streamguys1.com", "path": "kexp160.aac", "description": "Indie rock with live sessions - 160kbps" },
-            { "name": "SomaFM Left Coast 70s", "host": "https://ice5.somafm.com", "path": "seventies-320-mp3", "description": "Mellow 70s album rock - 320kbps" },
-            { "name": "SomaFM Digitalis", "host": "https://ice5.somafm.com", "path": "digitalis-256-mp3", "description": "Electronic-influenced alternative - 256kbps" },
-            { "name": "SomaFM Underground 80s", "host": "https://ice5.somafm.com", "path": "u80s-128-mp3", "description": "80s UK synthpop and new wave" },
-            { "name": "181.FM The Buzz - Alternative", "host": "http://listen.181fm.com", "path": "181-buzz_128k.mp3?noPreRoll=true", "description": "Alternative rock hits 90s to today" },
-            { "name": "WFMU - Freeform Radio", "host": "http://stream0.wfmu.org", "path": "freeform-128k", "description": "America's longest-running freeform station" }
         ]
     },
     {
         "name": "📻 Talk Radio (English)",
         "stations": [
             { "name": "BBC World Service", "host": "http://stream.live.vc.bbcmedia.co.uk", "path": "bbc_world_service", "description": "Global news and current affairs 24/7" },
-            { "name": "RNZ National - New Zealand", "host": "http://radionz-ice.streamguys.com", "path": "national.mp3", "description": "New Zealand public radio news and culture" },
-            { "name": "KQED San Francisco - NPR", "host": "https://streams.kqed.org", "path": "kqedradio.mp3", "description": "Most-listened-to US public radio station" },
-            { "name": "Vermont Public Radio", "host": "https://vpr.streamguys1.com", "path": "vpr96.mp3", "description": "Vermont NPR programming and local news" },
-            { "name": "Wisconsin Public Radio Ideas", "host": "https://wpr-ice.streamguys1.com", "path": "wpr-ideas-mp3-64", "description": "Talk, discussion, public affairs" },
-            { "name": "SomaFM Mission Control - NASA", "host": "https://ice5.somafm.com", "path": "missioncontrol-128-aac", "description": "Space exploration history with NASA audio" }
+            { "name": "RNZ National - New Zealand", "host": "https://stream-ice.radionz.co.nz", "path": "National_aac128", "description": "New Zealand public radio news and culture - 128kbps AAC" },
+            { "name": "Vermont Public Radio", "host": "https://vpr.streamguys1.com", "path": "vpr96.mp3", "description": "Vermont NPR programming and local news" }
         ]
     }
+]
+
+// Genre groups for Misc Stations - provides intermediate navigation level
+var miscGenreGroups = [
+    { "name": "🌙 Ambient & ASMR", "categories": ["🌙 Ambient / Drone", "🎧 ASMR"] },
+    { "name": "🎧 Electronic & Dance", "categories": ["🎹 Synthwave / Retrowave", "🌊 Vaporwave / Future Funk", "🔊 Techno / House", "🌀 Trance / Hard Dance", "🍄 Psytrance / Goa", "🥁 Drum & Bass / UK Bass"] },
+    { "name": "🎸 Rock & Alternative", "categories": ["🎸 Rock / Alternative", "🎵 Pop / Indie / Shoegaze", "✊ Punk / Hardcore"] },
+    { "name": "🤘 Heavy & Dark", "categories": ["🤘 Metal / Hard Rock", "🦇 Goth / Darkwave / Industrial"] },
+    { "name": "🎺 Soul, Jazz & Blues", "categories": ["🎺 Blues / Funk / Soul", "🎷 Jazz", "🎤 Hip-Hop / Rap"] },
+    { "name": "🌴 Roots & Reggae", "categories": ["🌴 Reggae / Ska / Dub", "🤠 Country / Americana"] },
+    { "name": "🌍 World Music", "categories": ["🌍 African Music", "🕌 Middle Eastern / Arabic", "🏮 Asian Pop / City Pop", "💃 Latin / Bossa / World"] },
+    { "name": "🎻 Classical & Talk", "categories": ["🎻 Classical", "📻 Talk Radio (English)"] }
 ]
 
 // No longer exporting combined categories - use somafmCategories, radcapCategories, radioParadiseCategories, fipCategories, and miscCategories separately

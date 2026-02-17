@@ -158,6 +158,8 @@ Item {
 
     property bool inSource: false
     property bool inCategory: false
+    property bool inMiscGenre: false  // True when viewing subcategories within a misc genre group
+    property string currentMiscGenre: ""  // Name of the current misc genre group
     property string currentSource: ""
     property string currentCategory: ""
     property bool showCustomDialog: false
@@ -811,6 +813,26 @@ Item {
                 play()
             }
         }
+
+        // Read ICY metadata from streams (fallback for stations without API)
+        onMetaDataChanged: {
+            // Only use ICY metadata if we don't have data from a dedicated API
+            if (currentSongTitle === "" || currentArtist === "") {
+                var title = metaData.value(MediaMetaData.Title)
+                if (title && title !== "") {
+                    console.log("ICY metadata received:", title)
+                    // ICY metadata is often "Artist - Title" format
+                    if (title.indexOf(" - ") !== -1) {
+                        var parts = title.split(" - ")
+                        if (currentArtist === "") currentArtist = parts[0].trim()
+                        if (currentSongTitle === "") currentSongTitle = parts.slice(1).join(" - ").trim()
+                    } else {
+                        if (currentSongTitle === "") currentSongTitle = title
+                    }
+                    lastMetadataUpdate = Date.now()
+                }
+            }
+        }
         
         // Start playing as soon as media is loaded (not fully buffered)
         onMediaStatusChanged: {
@@ -1081,10 +1103,10 @@ Item {
             "categories": RadioData.fipCategories
         })
 
-        // Add Misc (Independent non-commercial stations)
+        // Add Misc stations (curated internet radio - mix of independent and commercial)
         sourcesModel.append({
             "name": "🌐 Misc Stations",
-            "description": "Independent non-commercial radio",
+            "description": "Curated internet radio across genres",
             "categories": RadioData.miscCategories
         })
 
@@ -1131,10 +1153,12 @@ Item {
         console.log("Loading categories, total:", sourceCategories.length)
         categoriesModel.clear()
         for (var i = 0; i < sourceCategories.length; ++i) {
-            console.log("Adding category:", sourceCategories[i].name, "with", sourceCategories[i].stations.length, "stations")
+            var itemCount = sourceCategories[i].stations ? sourceCategories[i].stations.length :
+                           (sourceCategories[i].categories ? sourceCategories[i].categories.length : 0)
+            console.log("Adding category:", sourceCategories[i].name, "with", itemCount, "items")
             categoriesModel.append({
                 "name": sourceCategories[i].name,
-                "stations": sourceCategories[i].stations
+                "stations": sourceCategories[i].stations || []
             })
         }
         console.log("Categories model count:", categoriesModel.count)
@@ -1245,7 +1269,8 @@ Item {
         } else if (source.name === "🎵 SomaFM") {
             sourceCategories = RadioData.somafmCategories
         } else if (source.name === "🌐 Misc Stations") {
-            sourceCategories = RadioData.miscCategories
+            // Load genre groups as the first level for misc stations
+            sourceCategories = RadioData.miscGenreGroups
         }
 
         console.log("Loading categories for source:", source.name, "Count:", sourceCategories.length)
@@ -1608,6 +1633,13 @@ Item {
             return
         }
 
+        // Check if this is a Zeno.fm station
+        if (streamUrl.includes("zeno.fm")) {
+            console.log("Zeno.fm station detected, using Zeno.fm API")
+            fetchZenoFMMetadata(currentStationPath)
+            return
+        }
+
         // Extract station path from stream URL for RadCap stations
         var urlParts = streamUrl.split("/")
         var stationPath = urlParts[urlParts.length - 1] // Get the last part (station name)
@@ -1698,6 +1730,53 @@ Item {
         }
 
         xhr.open("GET", apiUrl)
+        xhr.send()
+    }
+
+    // Zeno.fm API - SSE endpoint for metadata
+    function fetchZenoFMMetadata(mountId) {
+        // Extract mount ID from path if it contains slashes
+        var mount = mountId.split("/").pop()
+        var apiUrl = "https://api.zeno.fm/mounts/metadata/subscribe/" + mount
+        console.log("Zeno.fm API URL:", apiUrl)
+
+        var xhr = new XMLHttpRequest()
+        xhr.onreadystatechange = function() {
+            // SSE streams data progressively, check when we have some data
+            if (xhr.readyState >= XMLHttpRequest.LOADING && xhr.responseText) {
+                try {
+                    // Parse SSE format - look for data: lines
+                    var lines = xhr.responseText.split("\n")
+                    for (var i = 0; i < lines.length; i++) {
+                        if (lines[i].startsWith("data:")) {
+                            var jsonStr = lines[i].substring(5) // Remove "data:" prefix
+                            var data = JSON.parse(jsonStr)
+                            if (data.streamTitle) {
+                                var title = data.streamTitle
+                                // Format is often "Station Name - Track Title"
+                                if (title.indexOf(" - ") !== -1) {
+                                    var parts = title.split(" - ")
+                                    currentArtist = parts[0].trim()
+                                    currentSongTitle = parts.slice(1).join(" - ").trim()
+                                } else {
+                                    currentSongTitle = title
+                                    currentArtist = ""
+                                }
+                                debugMetadata = "Zeno.fm: " + currentArtist + " - " + currentSongTitle
+                                console.log("Zeno.fm metadata - Artist:", currentArtist, "Title:", currentSongTitle)
+                                xhr.abort() // Got what we need, stop the SSE stream
+                                return
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.log("Error parsing Zeno.fm response:", e)
+                }
+            }
+        }
+
+        xhr.open("GET", apiUrl)
+        xhr.setRequestHeader("Accept", "text/event-stream")
         xhr.send()
     }
 
@@ -2801,6 +2880,35 @@ Item {
                     }
                 }
             } else if (currentSource === "🌐 Misc Stations") {
+                // Check if this is a genre group click (has subcategories, not stations)
+                if (!inMiscGenre) {
+                    // First level: genre group was clicked - load its subcategories
+                    for (var g = 0; g < RadioData.miscGenreGroups.length; g++) {
+                        if (RadioData.miscGenreGroups[g].name === cat.name) {
+                            var genreGroup = RadioData.miscGenreGroups[g]
+                            console.log("Loading misc genre group:", genreGroup.name, "with", genreGroup.categories.length, "subcategories")
+                            currentMiscGenre = genreGroup.name
+                            inMiscGenre = true
+                            // Load subcategories into the categories grid
+                            categoriesModel.clear()
+                            for (var sc = 0; sc < genreGroup.categories.length; sc++) {
+                                var subcatName = genreGroup.categories[sc]
+                                // Find the actual category to get station count
+                                for (var mc = 0; mc < RadioData.miscCategories.length; mc++) {
+                                    if (RadioData.miscCategories[mc].name === subcatName) {
+                                        categoriesModel.append({
+                                            "name": subcatName,
+                                            "stations": RadioData.miscCategories[mc].stations
+                                        })
+                                        break
+                                    }
+                                }
+                            }
+                            return  // Don't proceed to station loading
+                        }
+                    }
+                }
+                // Second level: subcategory was clicked - load its stations
                 for (var misc = 0; misc < RadioData.miscCategories.length; misc++) {
                     if (RadioData.miscCategories[misc].name === cat.name) {
                         categoryData = RadioData.miscCategories[misc]
@@ -4461,17 +4569,27 @@ Item {
                     text: "⬅ Back"
                     font.pointSize: Math.max(8, Math.min(11, root.width / 40))
                     onClicked: {
-                        inSource = false
-                        categoriesModel.clear()
-                        currentSource = ""
-                        console.log("Navigated back to sources")
+                        if (inMiscGenre) {
+                            // Go back from subcategories to genre groups
+                            inMiscGenre = false
+                            currentMiscGenre = ""
+                            loadCategories(RadioData.miscGenreGroups)
+                            console.log("Navigated back to misc genre groups")
+                        } else {
+                            inSource = false
+                            inMiscGenre = false
+                            currentMiscGenre = ""
+                            categoriesModel.clear()
+                            currentSource = ""
+                            console.log("Navigated back to sources")
+                        }
                     }
                     implicitWidth: Math.max(50, Math.min(80, root.width / 8))
                     implicitHeight: Math.max(25, Math.min(35, root.height / 25))
                 }
-                
+
                 Label {
-                    text: currentSource
+                    text: inMiscGenre ? currentSource + " > " + currentMiscGenre : currentSource
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
                     font.pointSize: Math.max(8, Math.min(12, root.width / 35))
@@ -4571,6 +4689,8 @@ Item {
                             if (currentSource === "⭐ Favorites" || currentSource === "🔗 Custom Radio") {
                                 inCategory = false
                                 inSource = false
+                                inMiscGenre = false
+                                currentMiscGenre = ""
                                 stationsModel.clear()
                                 currentCategory = ""
                                 currentSource = ""
@@ -4584,6 +4704,8 @@ Item {
                         } else if (inSource) {
                             // Go back from categories to sources
                             inSource = false
+                            inMiscGenre = false
+                            currentMiscGenre = ""
                             categoriesModel.clear()
                             currentSource = ""
                         }
