@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/">
-        <file alias="ui/main.qml">contents/ui/main.qml</file>
+        <file alias="ui/main.qml">contents/ui/main_standalone.qml</file>
         <file alias="ui/MainContent.qml">contents/ui/MainContent.qml</file>
         <file alias="ui/radiodata.js">contents/ui/radiodata.js</file>
         <file alias="ui/radiodata_radcap.js">contents/ui/radiodata_radcap.js</file>

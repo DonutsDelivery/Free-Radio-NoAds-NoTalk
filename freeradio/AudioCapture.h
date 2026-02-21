@@ -2,13 +2,11 @@
 #define AUDIOCAPTURE_H
 
 #include <QObject>
-#include <QTimer>
+#include <QThread>
 #include <QVariantList>
-#include <QAudioInput>
-#include <QIODevice>
+#include <atomic>
 
 #ifdef HAVE_PULSEAUDIO
-// Forward declare PulseAudio types
 typedef struct pa_simple pa_simple;
 #endif
 
@@ -21,7 +19,7 @@ public:
     explicit AudioCapture(QObject *parent = nullptr);
     ~AudioCapture();
 
-    bool isActive() const { return captureTimer && captureTimer->isActive(); }
+    bool isActive() const { return m_active; }
 
     Q_INVOKABLE void startCapture();
     Q_INVOKABLE void stopCapture();
@@ -30,18 +28,16 @@ signals:
     void audioDataReady(QVariantList audioData);
     void isActiveChanged();
 
-private slots:
-    void captureAudioData();
-
 private:
-    void initializePulseAudio();
+    void captureLoop();
 
-    QTimer *captureTimer = nullptr;
-    QAudioInput *audioInput = nullptr;
-    QIODevice *audioDevice = nullptr;
 #ifdef HAVE_PULSEAUDIO
-    pa_simple *pulseAudioConnection = nullptr;
+    pa_simple *createPulseConnection();
 #endif
+
+    QThread *m_captureThread = nullptr;
+    std::atomic<bool> m_running{false};
+    bool m_active = false;
 };
 
 #endif // AUDIOCAPTURE_H

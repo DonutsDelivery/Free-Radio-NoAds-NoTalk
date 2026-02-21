@@ -1,9 +1,9 @@
-// Free Radio - Standalone Kirigami Application
-// This is the main entry point for the cross-platform standalone app
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import Qt.labs.settings 1.0
-import org.kde.kirigami 2.20 as Kirigami
+// Free Radio - Standalone Application (no Plasma dependencies)
+import QtQuick
+import QtQuick.Controls
+import Qt.labs.settings
+import org.kde.kirigami as Kirigami
+import SessionMonitor 1.0
 
 Kirigami.ApplicationWindow {
     id: window
@@ -28,10 +28,19 @@ Kirigami.ApplicationWindow {
         property string lastStationPath: ""
     }
 
+    // Screen lock detection — restart stream on unlock as safety net.
+    // QT_AUDIO_BACKEND=pulseaudio uses pipewire-pulse ring buffer to survive
+    // DPMS graph reconfiguration. Restart-on-unlock is a fallback if it still breaks.
+    SessionMonitor {
+        id: sessionMonitor
+        onScreenUnlocked: mainContent.restartCurrentStream()
+    }
+
     // Main content - the shared UI component
     MainContent {
         id: mainContent
         anchors.fill: parent
+        sessionMonitor: sessionMonitor
 
         // Standalone mode - no panel integration
         isCompactMode: false
@@ -39,18 +48,24 @@ Kirigami.ApplicationWindow {
         isVerticalPanel: false
         showPopup: false
 
-        // Bind settings bidirectionally
         Component.onCompleted: {
-            // Load settings into MainContent
-            settings.favoriteStations = Qt.binding(function() { return persistentSettings.favoriteStations })
-            settings.customStations = Qt.binding(function() { return persistentSettings.customStations })
-            settings.customEbooks = Qt.binding(function() { return persistentSettings.customEbooks })
-            settings.ebookProgress = Qt.binding(function() { return persistentSettings.ebookProgress })
-            settings.volumeLevel = Qt.binding(function() { return persistentSettings.volumeLevel })
-            settings.lastStationName = Qt.binding(function() { return persistentSettings.lastStationName })
-            settings.lastStationUrl = Qt.binding(function() { return persistentSettings.lastStationUrl })
-            settings.lastStationHost = Qt.binding(function() { return persistentSettings.lastStationHost })
-            settings.lastStationPath = Qt.binding(function() { return persistentSettings.lastStationPath })
+            settings.favoriteStations = persistentSettings.favoriteStations
+            settings.customStations = persistentSettings.customStations
+            settings.customEbooks = persistentSettings.customEbooks
+            settings.ebookProgress = persistentSettings.ebookProgress
+            settings.volumeLevel = persistentSettings.volumeLevel
+            settings.lastStationName = persistentSettings.lastStationName
+            settings.lastStationUrl = persistentSettings.lastStationUrl
+            settings.lastStationHost = persistentSettings.lastStationHost
+            settings.lastStationPath = persistentSettings.lastStationPath
+
+            loadFavorites()
+            loadCustomStations()
+            loadCustomEbooks()
+            loadEbookProgress()
+            loadVolumeLevel()
+            loadLastStation()
+            loadSources()
         }
 
         // Save changes back to persistent settings

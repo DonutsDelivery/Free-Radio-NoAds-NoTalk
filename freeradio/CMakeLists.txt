@@ -11,7 +11,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 # Find required Qt components
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Qml Quick QuickControls2 Multimedia)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Qml Quick QuickControls2 Multimedia DBus)
 
 # Find KDE Frameworks 6 Kirigami
 find_package(KF6Kirigami REQUIRED)
@@ -27,6 +27,8 @@ set(FREERADIO_SOURCES
     main.cpp
     AudioCapture.cpp
     AudioCapture.h
+    SessionMonitor.cpp
+    SessionMonitor.h
     resources.qrc
 )
 
@@ -54,6 +56,7 @@ target_link_libraries(freeradio PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
     Qt6::Multimedia
+    Qt6::DBus
     KF6::Kirigami
 )
 

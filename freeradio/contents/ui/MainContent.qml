@@ -761,6 +761,22 @@ Item {
         }
     }
 
+    // Session monitor (set by standalone wrapper; null in widget context)
+    property var sessionMonitor: null
+
+    // Restart current stream — called by wrapper on screen unlock as safety net
+    function restartCurrentStream() {
+        if (currentStationUrl !== "" && !userPaused &&
+            player.playbackState !== MediaPlayer.PlayingState) {
+            console.log("restartCurrentStream: restarting after disruption")
+            player.source = ""
+            Qt.callLater(function() {
+                player.source = currentStationUrl
+                Qt.callLater(function() { player.play() })
+            })
+        }
+    }
+
     // Main audio player with enhanced spectrum integration
     MediaPlayer {
         id: player
@@ -801,10 +817,16 @@ Item {
                 }
             }
             
-            // Reset restart counter on successful playback
+            // Reset restart counter on successful playback and inhibit idle
             if (playbackState === MediaPlayer.PlayingState) {
                 restartAttempts = 0
                 silentPlaybackDetector.start()
+                if (sessionMonitor) sessionMonitor.inhibitIdle("Playing: " + (currentStationName || "audio stream"))
+            }
+
+            // Release inhibitor when not playing
+            if (playbackState === MediaPlayer.StoppedState && userPaused) {
+                if (sessionMonitor) sessionMonitor.uninhibitIdle()
             }
         }
         
