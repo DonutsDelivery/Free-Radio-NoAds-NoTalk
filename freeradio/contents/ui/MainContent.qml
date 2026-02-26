@@ -644,7 +644,15 @@ Item {
                 groups[key] = { category: key, stations: [] }
                 order.push(key)
             }
-            groups[key].stations.push(fav)
+            // Use 'title' field to avoid QML 'name' property shadowing issue
+            groups[key].stations.push({
+                title:    fav.name || fav.title || "",
+                name:     fav.name || fav.title || "",
+                host:     fav.host,
+                path:     fav.path,
+                source:   fav.source   || "",
+                category: fav.category || ""
+            })
         }
         var result = []
         for (var j = 0; j < order.length; j++) result.push(groups[order[j]])
@@ -5201,6 +5209,7 @@ Item {
                                         width: groupColumn.width
                                         height: Math.max(36, root.height / 22)
                                         hoverEnabled: true
+                                        padding: 0
 
                                         background: Rectangle {
                                             radius: 5
@@ -5209,7 +5218,10 @@ Item {
                                                 : "transparent"
                                         }
 
-                                        contentItem: RowLayout {
+                                        RowLayout {
+                                            anchors.fill: parent
+                                            anchors.leftMargin: 4
+                                            anchors.rightMargin: 4
                                             spacing: 6
                                             Text {
                                                 text: "▶"
@@ -5217,16 +5229,16 @@ Item {
                                                 color: currentStationHost === modelData.host && currentStationPath === modelData.path
                                                     ? nowPlayingColor
                                                     : Qt.rgba(themeText.r, themeText.g, themeText.b, 0.35)
-                                                Layout.alignment: Qt.AlignVCenter
+                                                verticalAlignment: Text.AlignVCenter
                                             }
                                             Text {
-                                                text: modelData.name
+                                                text: modelData.title
                                                 font.pixelSize: baseFontSize
                                                 color: currentStationHost === modelData.host && currentStationPath === modelData.path
                                                     ? nowPlayingColor : themeText
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true
-                                                Layout.alignment: Qt.AlignVCenter
+                                                verticalAlignment: Text.AlignVCenter
                                             }
                                         }
 
