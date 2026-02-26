@@ -634,12 +634,35 @@ Item {
         return false
     }
 
+    function lookupStationCategory(host, path) {
+        var allCategoryLists = [
+            RadioData.radcapCategories,
+            RadioData.somafmCategories,
+            RadioData.radioParadiseCategories,
+            RadioData.fipCategories,
+            RadioData.miscCategories
+        ]
+        for (var s = 0; s < allCategoryLists.length; s++) {
+            var cats = allCategoryLists[s]
+            if (!cats) continue
+            for (var c = 0; c < cats.length; c++) {
+                var stations = cats[c].stations || []
+                for (var i = 0; i < stations.length; i++) {
+                    if (stations[i].host === host && stations[i].path === path) {
+                        return cats[c].name
+                    }
+                }
+            }
+        }
+        return "Other"
+    }
+
     function buildGroupedFavorites() {
         var groups = {}
         var order = []
         for (var i = 0; i < favoriteStations.length; i++) {
             var fav = favoriteStations[i]
-            var key = fav.category || "Other"
+            var key = fav.category || lookupStationCategory(fav.host, fav.path)
             if (!groups[key]) {
                 groups[key] = { category: key, stations: [] }
                 order.push(key)
