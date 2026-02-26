@@ -4761,13 +4761,13 @@ Item {
                         color: {
                             if (parent.pressed) return themeHL
                             if (parent.hovered) return themeHover
-                            return Qt.rgba(themeBg.r, themeBg.g, themeBg.b, 0.3)
+                            return surfaceCard
                         }
                         radius: 8
                         border.width: 1
                         border.color: Qt.rgba(themeText.r, themeText.g, themeText.b, 0.25)
                         antialiasing: true
-                        
+
                         Behavior on color {
                             ColorAnimation { duration: 150 }
                         }
@@ -5162,25 +5162,19 @@ Item {
                         })
                     }
 
-                    Rectangle {
-                        anchors.fill: parent
-                        color: parent.hovered ? themeHover : "transparent"
+                    background: Rectangle {
+                        color: {
+                            if (parent.pressed || parent.hovered) return themeHover
+                            if (currentStationName === model.name) return Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.2)
+                            return "transparent"
+                        }
                         radius: 8
-                        z: -1
                         border.width: 1
-                        border.color: Qt.rgba(themeText.r, themeText.g, themeText.b, 0.1)
+                        border.color: currentStationName === model.name
+                            ? Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.5)
+                            : Qt.rgba(themeText.r, themeText.g, themeText.b, 0.08)
                         antialiasing: true
-                    }
-                    
-                    Rectangle {
-                        anchors.fill: parent
-                        color: currentStationName === model.name ? themeHL : "transparent"
-                        radius: 8
-                        opacity: 0.3
-                        z: -2
-                        border.width: currentStationName === model.name ? 1 : 0
-                        border.color: Qt.rgba(themeHL.r, themeHL.g, themeHL.b, 0.5)
-                        antialiasing: true
+                        Behavior on color { ColorAnimation { duration: 100 } }
                     }
                 }
                 
