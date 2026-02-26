@@ -14,6 +14,12 @@ Kirigami.ApplicationWindow {
     minimumHeight: 400
     visible: true
 
+    // Let dark theme control the window background
+    background: Rectangle {
+        color: mainContent.themeBg
+        Behavior on color { ColorAnimation { duration: 200 } }
+    }
+
     // Persistent settings using QSettings
     Settings {
         id: persistentSettings
@@ -26,6 +32,8 @@ Kirigami.ApplicationWindow {
         property string lastStationUrl: ""
         property string lastStationHost: ""
         property string lastStationPath: ""
+        property string colorTheme: "amber"
+        property string displayMode: "light"
     }
 
     // Screen lock detection — restart stream on unlock as safety net.
@@ -58,6 +66,8 @@ Kirigami.ApplicationWindow {
             settings.lastStationUrl = persistentSettings.lastStationUrl
             settings.lastStationHost = persistentSettings.lastStationHost
             settings.lastStationPath = persistentSettings.lastStationPath
+            settings.colorTheme = persistentSettings.colorTheme || "amber"
+            settings.displayMode = persistentSettings.displayMode || "light"
 
             loadFavorites()
             loadCustomStations()
@@ -80,6 +90,8 @@ Kirigami.ApplicationWindow {
             function onLastStationUrlChanged() { persistentSettings.lastStationUrl = mainContent.settings.lastStationUrl }
             function onLastStationHostChanged() { persistentSettings.lastStationHost = mainContent.settings.lastStationHost }
             function onLastStationPathChanged() { persistentSettings.lastStationPath = mainContent.settings.lastStationPath }
+            function onColorThemeChanged() { persistentSettings.colorTheme = mainContent.settings.colorTheme }
+            function onDisplayModeChanged() { persistentSettings.displayMode = mainContent.settings.displayMode }
         }
     }
 }

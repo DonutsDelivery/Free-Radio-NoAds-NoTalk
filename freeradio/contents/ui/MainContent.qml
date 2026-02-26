@@ -25,6 +25,8 @@ Item {
         property string lastStationUrl: ""
         property string lastStationHost: ""
         property string lastStationPath: ""
+        property string colorTheme: "amber"
+        property string displayMode: "light"
     }
 
     // Expose settings for external binding by wrappers
@@ -107,24 +109,61 @@ Item {
     // REFINED AUDIO DESIGN SYSTEM - Sophisticated music-focused aesthetic
     // ═══════════════════════════════════════════════════════════════════
 
-    // Primary accent colors - warm amber/gold tones for audio vibes
-    property color accentPrimary: "#E67E22"      // Warm amber - primary actions
-    property color accentSecondary: "#F39C12"   // Golden yellow - highlights
-    property color accentTertiary: "#D35400"    // Deep orange - emphasis
+    // ── Accent color themes (independent of light/dark mode) ─────────────
+    property var accentThemes: ({
+        "amber":  { p: "#E67E22", s: "#F39C12", t: "#D35400", n: "#27AE60", f: "#F1C40F", src: "#3498DB", cat: "#9B59B6" },
+        "ocean":  { p: "#2980B9", s: "#3498DB", t: "#1A5276", n: "#2ECC71", f: "#F1C40F", src: "#E67E22", cat: "#9B59B6" },
+        "forest": { p: "#27AE60", s: "#2ECC71", t: "#1E8449", n: "#3498DB", f: "#F1C40F", src: "#E67E22", cat: "#9B59B6" },
+        "grape":  { p: "#8E44AD", s: "#9B59B6", t: "#6C3483", n: "#27AE60", f: "#F1C40F", src: "#3498DB", cat: "#E67E22" },
+        "ruby":   { p: "#C0392B", s: "#E74C3C", t: "#922B21", n: "#27AE60", f: "#F1C40F", src: "#3498DB", cat: "#9B59B6" },
+        "rose":   { p: "#D81B60", s: "#E91E63", t: "#AD1457", n: "#27AE60", f: "#F1C40F", src: "#3498DB", cat: "#9B59B6" },
+        "slate":  { p: "#546E7A", s: "#78909C", t: "#37474F", n: "#27AE60", f: "#F1C40F", src: "#3498DB", cat: "#9B59B6" }
+    })
 
-    // Semantic colors
-    property color nowPlayingColor: "#27AE60"   // Vibrant green - active/playing
-    property color favoriteColor: "#F1C40F"     // Gold - favorites
-    property color sourceColor: "#3498DB"       // Blue - sources
-    property color categoryColor: "#9B59B6"     // Purple - categories
+    // ── Display modes (light/dark background palettes) ────────────────────
+    property var displayModes: ({
+        "light": { bg: "#f5f5f5", card: "#eaeaea", elevated: "#dedede", text: "#1a1a1a", textDim: "#666666", border: "#cccccc" },
+        "dark":  { bg: "#1e1e1e", card: "#252525", elevated: "#2d2d2d", text: "#e8e8e8", textDim: "#888888", border: "#3d3d3d" }
+    })
 
-    // Surface colors (overlay on theme background)
-    property color surfaceElevated: Qt.rgba(Kirigami.Theme.backgroundColor.r * 1.1,
-                                            Kirigami.Theme.backgroundColor.g * 1.1,
-                                            Kirigami.Theme.backgroundColor.b * 1.1, 0.95)
-    property color surfaceCard: Qt.rgba(Kirigami.Theme.backgroundColor.r,
-                                        Kirigami.Theme.backgroundColor.g,
-                                        Kirigami.Theme.backgroundColor.b, 0.85)
+    property var activeAccent: accentThemes[appSettings.colorTheme] || accentThemes["amber"]
+    property var activeMode:   displayModes[appSettings.displayMode] || displayModes["light"]
+
+    // Accent colors — from selected accent theme
+    property color accentPrimary:   activeAccent.p
+    property color accentSecondary: activeAccent.s
+    property color accentTertiary:  activeAccent.t
+
+    // Semantic colors — from selected accent theme
+    property color nowPlayingColor: activeAccent.n
+    property color favoriteColor:   activeAccent.f
+    property color sourceColor:     activeAccent.src
+    property color categoryColor:   activeAccent.cat
+
+    // ── Resolved UI colors ──────────────────────────────────────────────
+    property color themeBg:       activeMode.bg
+    property color themeText:     activeMode.text
+    property color themeDisabled: activeMode.textDim
+    property color themeBorder:   activeMode.border
+    property color themeHLText:   "#ffffff"
+    property color themeHL:       accentPrimary
+    property color themeHover:    Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.15)
+    property color themePositive: nowPlayingColor
+
+    // Accent swatch colors for the picker
+    property var themeSwatch: ({
+        "amber":  "#E67E22",
+        "ocean":  "#2980B9",
+        "forest": "#27AE60",
+        "grape":  "#8E44AD",
+        "ruby":   "#C0392B",
+        "rose":   "#D81B60",
+        "slate":  "#546E7A"
+    })
+
+    // Surface colors — from active display mode
+    property color surfaceElevated: activeMode.elevated
+    property color surfaceCard:     activeMode.card
 
     // Gradient helpers
     function cardGradient(baseColor, intensity) {
@@ -4187,15 +4226,15 @@ Item {
 
         // Subtle gradient background
         gradient: Gradient {
-            GradientStop { position: 0.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.95,
-                                                         Kirigami.Theme.backgroundColor.g * 0.95,
-                                                         Kirigami.Theme.backgroundColor.b * 0.95, 0.92) }
-            GradientStop { position: 0.5; color: Qt.rgba(Kirigami.Theme.backgroundColor.r,
-                                                         Kirigami.Theme.backgroundColor.g,
-                                                         Kirigami.Theme.backgroundColor.b, 0.88) }
-            GradientStop { position: 1.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.92,
-                                                         Kirigami.Theme.backgroundColor.g * 0.92,
-                                                         Kirigami.Theme.backgroundColor.b * 0.92, 0.90) }
+            GradientStop { position: 0.0; color: Qt.rgba(themeBg.r * 0.95,
+                                                         themeBg.g * 0.95,
+                                                         themeBg.b * 0.95, 0.92) }
+            GradientStop { position: 0.5; color: Qt.rgba(themeBg.r,
+                                                         themeBg.g,
+                                                         themeBg.b, 0.88) }
+            GradientStop { position: 1.0; color: Qt.rgba(themeBg.r * 0.92,
+                                                         themeBg.g * 0.92,
+                                                         themeBg.b * 0.92, 0.90) }
         }
 
         // Accent glow at top
@@ -4220,7 +4259,7 @@ Item {
             color: "transparent"
             radius: parent.radius
             border.width: 1
-            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.08)
+            border.color: Qt.rgba(themeText.r, themeText.g, themeText.b, 0.08)
             antialiasing: true
         }
     }
@@ -4270,16 +4309,16 @@ Item {
                     antialiasing: true
 
                     gradient: Gradient {
-                        GradientStop { position: 0.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.92,
-                                                                     Kirigami.Theme.backgroundColor.g * 0.92,
-                                                                     Kirigami.Theme.backgroundColor.b * 0.92, 0.95) }
-                        GradientStop { position: 1.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.88,
-                                                                     Kirigami.Theme.backgroundColor.g * 0.88,
-                                                                     Kirigami.Theme.backgroundColor.b * 0.88, 0.9) }
+                        GradientStop { position: 0.0; color: Qt.rgba(themeBg.r * 0.92,
+                                                                     themeBg.g * 0.92,
+                                                                     themeBg.b * 0.92, 0.95) }
+                        GradientStop { position: 1.0; color: Qt.rgba(themeBg.r * 0.88,
+                                                                     themeBg.g * 0.88,
+                                                                     themeBg.b * 0.88, 0.9) }
                     }
 
                     border.width: searchField.activeFocus ? 2 : 1
-                    border.color: searchField.activeFocus ? accentPrimary : Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.15)
+                    border.color: searchField.activeFocus ? accentPrimary : Qt.rgba(themeText.r, themeText.g, themeText.b, 0.15)
 
                     // Focus glow effect
                     Rectangle {
@@ -4338,13 +4377,13 @@ Item {
                 // Modern card background
                 background: Rectangle {
                     color: {
-                        if (parent.pressed) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.4)
-                        if (parent.hovered) return Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.2)
-                        return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.9)
+                        if (parent.pressed) return Qt.rgba(themeHL.r, themeHL.g, themeHL.b, 0.4)
+                        if (parent.hovered) return Qt.rgba(themeHL.r, themeHL.g, themeHL.b, 0.2)
+                        return Qt.rgba(themeBg.r, themeBg.g, themeBg.b, 0.9)
                     }
                     radius: 8
                     border.width: 1
-                    border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.15)
+                    border.color: Qt.rgba(themeText.r, themeText.g, themeText.b, 0.15)
                     antialiasing: true
                     
                     Behavior on color {
@@ -4365,7 +4404,7 @@ Item {
                         text: model.name
                         font.pointSize: Math.max(8, Math.min(11, root.width / 40))
                         font.weight: Font.Medium
-                        color: Kirigami.Theme.textColor
+                        color: themeText
                         elide: Text.ElideRight
                         width: parent.width
                         wrapMode: Text.NoWrap
@@ -4374,7 +4413,7 @@ Item {
                     Label {
                         text: model.category + " • " + model.source
                         font.pointSize: Math.max(7, Math.min(9, root.width / 50))
-                        color: Kirigami.Theme.textColor
+                        color: themeText
                         opacity: 0.65
                         elide: Text.ElideRight
                         width: parent.width
@@ -4435,13 +4474,13 @@ Item {
                 visible: true
                 policy: ScrollBar.AsNeeded
                 background: Rectangle {
-                    color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                    color: Qt.rgba(themeBg.r, themeBg.g, themeBg.b, 0.3)
                     radius: width / 2
                 }
                 contentItem: Rectangle {
                     implicitWidth: scrollbarWidth
                     radius: width / 2
-                    color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.7)
+                    color: Qt.rgba(themeHL.r, themeHL.g, themeHL.b, 0.7)
                 }
             }
             
@@ -4458,7 +4497,7 @@ Item {
                           "No stations found for '" + searchQuery + "'"
                     font.pointSize: Math.max(8, Math.min(10, root.width / 40))
                     font.italic: true
-                    color: Kirigami.Theme.textColor
+                    color: themeText
                     opacity: 0.7
                 }
             }
@@ -4489,12 +4528,12 @@ Item {
                         GradientStop { position: 0.0; color: {
                             if (sourceDelegate.pressed) return Qt.rgba(sourceColor.r, sourceColor.g, sourceColor.b, 0.25)
                             if (sourceDelegate.hovered) return Qt.rgba(sourceColor.r, sourceColor.g, sourceColor.b, 0.12)
-                            return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.7)
+                            return Qt.rgba(themeBg.r, themeBg.g, themeBg.b, 0.7)
                         }}
                         GradientStop { position: 1.0; color: {
                             if (sourceDelegate.pressed) return Qt.rgba(sourceColor.r, sourceColor.g, sourceColor.b, 0.15)
                             if (sourceDelegate.hovered) return Qt.rgba(sourceColor.r, sourceColor.g, sourceColor.b, 0.06)
-                            return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.5)
+                            return Qt.rgba(themeBg.r, themeBg.g, themeBg.b, 0.5)
                         }}
                     }
 
@@ -4514,7 +4553,7 @@ Item {
                     }
 
                     border.width: 1
-                    border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.08)
+                    border.color: Qt.rgba(themeText.r, themeText.g, themeText.b, 0.08)
 
                     Behavior on gradient {
                         ColorAnimation { duration: 180; easing.type: Easing.OutCubic }
@@ -4533,7 +4572,7 @@ Item {
                         text: model.name
                         font.pointSize: Math.max(11, root.width * 0.038)
                         font.weight: Font.DemiBold
-                        color: sourceDelegate.hovered ? Kirigami.Theme.textColor : Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.9)
+                        color: sourceDelegate.hovered ? themeText : Qt.rgba(themeText.r, themeText.g, themeText.b, 0.9)
                         elide: Text.ElideRight
                         width: parent.width
 
@@ -4544,7 +4583,7 @@ Item {
                     Label {
                         text: model.description
                         font.pointSize: Math.max(8, root.width * 0.025)
-                        color: Kirigami.Theme.textColor
+                        color: themeText
                         opacity: sourceDelegate.hovered ? 0.75 : 0.55
                         elide: Text.ElideRight
                         width: parent.width
@@ -4565,13 +4604,13 @@ Item {
                 visible: true
                 policy: ScrollBar.AsNeeded
                 background: Rectangle {
-                    color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                    color: Qt.rgba(themeBg.r, themeBg.g, themeBg.b, 0.3)
                     radius: width / 2
                 }
                 contentItem: Rectangle {
                     implicitWidth: scrollbarWidth
                     radius: width / 2
-                    color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.7)
+                    color: Qt.rgba(themeHL.r, themeHL.g, themeHL.b, 0.7)
                 }
             }
         }
@@ -4616,7 +4655,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     font.pointSize: Math.max(8, Math.min(12, root.width / 35))
                     font.weight: Font.Bold
-                    color: Kirigami.Theme.highlightColor
+                    color: themeHL
                 }
             }
             
@@ -4641,7 +4680,7 @@ Item {
                     contentItem: Text {
                         text: model.name
                         font.pointSize: Math.max(8, Math.min(11, root.width / 45))
-                        color: Kirigami.Theme.textColor
+                        color: themeText
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                         elide: Text.ElideRight
@@ -4651,13 +4690,13 @@ Item {
                     
                     background: Rectangle {
                         color: {
-                            if (parent.pressed) return Kirigami.Theme.highlightColor
-                            if (parent.hovered) return Kirigami.Theme.hoverColor
-                            return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                            if (parent.pressed) return themeHL
+                            if (parent.hovered) return themeHover
+                            return Qt.rgba(themeBg.r, themeBg.g, themeBg.b, 0.3)
                         }
                         radius: 8
                         border.width: 1
-                        border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.25)
+                        border.color: Qt.rgba(themeText.r, themeText.g, themeText.b, 0.25)
                         antialiasing: true
                         
                         Behavior on color {
@@ -4673,13 +4712,13 @@ Item {
                     visible: true
                     policy: ScrollBar.AsNeeded
                     background: Rectangle {
-                        color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                        color: Qt.rgba(themeBg.r, themeBg.g, themeBg.b, 0.3)
                         radius: width / 2
                     }
                     contentItem: Rectangle {
                         implicitWidth: scrollbarWidth
                         radius: width / 2
-                        color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.7)
+                        color: Qt.rgba(themeHL.r, themeHL.g, themeHL.b, 0.7)
                     }
                 }
             }
@@ -4773,7 +4812,7 @@ Item {
                         font: parent.font
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        color: Kirigami.Theme.textColor
+                        color: themeText
                     }
                     
                     background: Rectangle {
@@ -4800,7 +4839,7 @@ Item {
                         font: parent.font
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        color: Kirigami.Theme.textColor
+                        color: themeText
                     }
                     
                     background: Rectangle {
@@ -4834,7 +4873,7 @@ Item {
                         font: parent.font
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        color: Kirigami.Theme.textColor
+                        color: themeText
                     }
                     
                     background: Rectangle {
@@ -4861,7 +4900,7 @@ Item {
                         font: parent.font
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        color: Kirigami.Theme.textColor
+                        color: themeText
                     }
                     
                     background: Rectangle {
@@ -4896,7 +4935,7 @@ Item {
                             text: model.name
                             font.pixelSize: 13
                             font.bold: true
-                            color: Kirigami.Theme.textColor
+                            color: themeText
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                         }
@@ -5039,22 +5078,22 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        color: parent.hovered ? Kirigami.Theme.hoverColor : "transparent"
+                        color: parent.hovered ? themeHover : "transparent"
                         radius: 8
                         z: -1
                         border.width: 1
-                        border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.1)
+                        border.color: Qt.rgba(themeText.r, themeText.g, themeText.b, 0.1)
                         antialiasing: true
                     }
                     
                     Rectangle {
                         anchors.fill: parent
-                        color: currentStationName === model.name ? Kirigami.Theme.highlightColor : "transparent"
+                        color: currentStationName === model.name ? themeHL : "transparent"
                         radius: 8
                         opacity: 0.3
                         z: -2
                         border.width: currentStationName === model.name ? 1 : 0
-                        border.color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.5)
+                        border.color: Qt.rgba(themeHL.r, themeHL.g, themeHL.b, 0.5)
                         antialiasing: true
                     }
                 }
@@ -5066,13 +5105,13 @@ Item {
                     visible: true
                     policy: ScrollBar.AsNeeded
                     background: Rectangle {
-                        color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                        color: Qt.rgba(themeBg.r, themeBg.g, themeBg.b, 0.3)
                         radius: width / 2
                     }
                     contentItem: Rectangle {
                         implicitWidth: scrollbarWidth
                         radius: width / 2
-                        color: Qt.rgba(Kirigami.Theme.highlightColor.r, Kirigami.Theme.highlightColor.g, Kirigami.Theme.highlightColor.b, 0.7)
+                        color: Qt.rgba(themeHL.r, themeHL.g, themeHL.b, 0.7)
                     }
                 }
             }
@@ -5088,16 +5127,16 @@ Item {
 
             // Subtle gradient background
             gradient: Gradient {
-                GradientStop { position: 0.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.95,
-                                                             Kirigami.Theme.backgroundColor.g * 0.95,
-                                                             Kirigami.Theme.backgroundColor.b * 0.95, 0.9) }
-                GradientStop { position: 1.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.9,
-                                                             Kirigami.Theme.backgroundColor.g * 0.9,
-                                                             Kirigami.Theme.backgroundColor.b * 0.9, 0.85) }
+                GradientStop { position: 0.0; color: Qt.rgba(themeBg.r * 0.95,
+                                                             themeBg.g * 0.95,
+                                                             themeBg.b * 0.95, 0.9) }
+                GradientStop { position: 1.0; color: Qt.rgba(themeBg.r * 0.9,
+                                                             themeBg.g * 0.9,
+                                                             themeBg.b * 0.9, 0.85) }
             }
 
             border.width: 1
-            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.08)
+            border.color: Qt.rgba(themeText.r, themeText.g, themeText.b, 0.08)
 
             // Now playing accent bar (left side)
             Rectangle {
@@ -5139,7 +5178,7 @@ Item {
                         font.weight: Font.Medium
                         wrapMode: Text.Wrap
                         maximumLineCount: 2
-                        color: currentStationName ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.disabledTextColor
+                        color: currentStationName ? themePositive : themeDisabled
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignVCenter
                         verticalAlignment: Text.AlignVCenter
@@ -5168,8 +5207,8 @@ Item {
                             color: {
                                 // Include favoritesVersion to force re-evaluation when favorites change
                                 var _v = favoritesVersion
-                                if (currentStationName === "" || currentStationHost === "" || currentStationPath === "") return Kirigami.Theme.textColor
-                                return isFavorite(currentStationName, currentStationHost, currentStationPath) ? "#FFD700" : Kirigami.Theme.textColor
+                                if (currentStationName === "" || currentStationHost === "" || currentStationPath === "") return themeText
+                                return isFavorite(currentStationName, currentStationHost, currentStationPath) ? "#FFD700" : themeText
                             }
                         }
                         onClicked: {
@@ -5191,7 +5230,7 @@ Item {
                     visible: currentStationUrl !== ""
                     text: currentStationUrl
                     font.pointSize: Math.max(6, Math.min(8, root.width / 50))
-                    color: Kirigami.Theme.textColor
+                    color: themeText
                     opacity: 0.6
                     elide: Text.ElideMiddle
                     Layout.fillWidth: true
@@ -5210,7 +5249,7 @@ Item {
                         }
                     }
                     font.pointSize: smallFontSize
-                    color: Kirigami.Theme.textColor
+                    color: themeText
                     readOnly: true
                     selectByMouse: true
                     wrapMode: Text.NoWrap
@@ -5230,16 +5269,16 @@ Item {
 
             // Gradient background for controls bar
             gradient: Gradient {
-                GradientStop { position: 0.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.9,
-                                                             Kirigami.Theme.backgroundColor.g * 0.9,
-                                                             Kirigami.Theme.backgroundColor.b * 0.9, 0.95) }
-                GradientStop { position: 1.0; color: Qt.rgba(Kirigami.Theme.backgroundColor.r * 0.85,
-                                                             Kirigami.Theme.backgroundColor.g * 0.85,
-                                                             Kirigami.Theme.backgroundColor.b * 0.85, 0.9) }
+                GradientStop { position: 0.0; color: Qt.rgba(themeBg.r * 0.9,
+                                                             themeBg.g * 0.9,
+                                                             themeBg.b * 0.9, 0.95) }
+                GradientStop { position: 1.0; color: Qt.rgba(themeBg.r * 0.85,
+                                                             themeBg.g * 0.85,
+                                                             themeBg.b * 0.85, 0.9) }
             }
 
             border.width: 1
-            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.1)
+            border.color: Qt.rgba(themeText.r, themeText.g, themeText.b, 0.1)
             
             // Vertical layout: Playback controls and timeline
             Item {
@@ -5310,9 +5349,9 @@ Item {
                         implicitWidth: Math.max(16, Math.min(22, parent.height * 0.5))
                         implicitHeight: implicitWidth
                         color: {
-                            if (!prevButton.enabled) return Kirigami.Theme.disabledTextColor
-                            if (prevButton.pressed || prevButton.hovered) return Kirigami.Theme.highlightedTextColor
-                            return Kirigami.Theme.textColor
+                            if (!prevButton.enabled) return themeDisabled
+                            if (prevButton.pressed || prevButton.hovered) return themeHLText
+                            return themeText
                         }
 
                         scale: prevButton.pressed ? 0.9 : 1.0
@@ -5455,7 +5494,7 @@ Item {
                         implicitWidth: Math.max(22, Math.min(28, playPauseButton.height * 0.5))
                         implicitHeight: implicitWidth
                         color: {
-                            if (!playPauseButton.enabled) return Kirigami.Theme.disabledTextColor
+                            if (!playPauseButton.enabled) return themeDisabled
                             return "#FFFFFF"
                         }
 
@@ -5521,9 +5560,9 @@ Item {
                         implicitWidth: Math.max(16, Math.min(22, nextButton.height * 0.5))
                         implicitHeight: implicitWidth
                         color: {
-                            if (!nextButton.enabled) return Kirigami.Theme.disabledTextColor
-                            if (nextButton.pressed || nextButton.hovered) return Kirigami.Theme.highlightedTextColor
-                            return Kirigami.Theme.textColor
+                            if (!nextButton.enabled) return themeDisabled
+                            if (nextButton.pressed || nextButton.hovered) return themeHLText
+                            return themeText
                         }
 
                         scale: nextButton.pressed ? 0.9 : 1.0
@@ -5550,13 +5589,13 @@ Item {
                     background: Rectangle {
                         radius: parent.width / 2
                         color: {
-                            if (!randomButton.enabled) return Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
-                            if (randomButton.pressed) return Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.8)
-                            if (randomButton.hovered) return Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.6)
-                            return Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.3)
+                            if (!randomButton.enabled) return Qt.rgba(themeBg.r, themeBg.g, themeBg.b, 0.3)
+                            if (randomButton.pressed) return Qt.rgba(themePositive.r, themePositive.g, themePositive.b, 0.8)
+                            if (randomButton.hovered) return Qt.rgba(themePositive.r, themePositive.g, themePositive.b, 0.6)
+                            return Qt.rgba(themePositive.r, themePositive.g, themePositive.b, 0.3)
                         }
                         border.width: 1
-                        border.color: randomButton.enabled ? Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.8) : Qt.rgba(Kirigami.Theme.disabledTextColor.r, Kirigami.Theme.disabledTextColor.g, Kirigami.Theme.disabledTextColor.b, 0.5)
+                        border.color: randomButton.enabled ? Qt.rgba(themePositive.r, themePositive.g, themePositive.b, 0.8) : Qt.rgba(themeDisabled.r, themeDisabled.g, themeDisabled.b, 0.5)
 
                         // Subtle glow effect
                         Rectangle {
@@ -5566,7 +5605,7 @@ Item {
                             radius: 10
                             color: "transparent"
                             border.width: randomButton.hovered ? 2 : 0
-                            border.color: Qt.rgba(Kirigami.Theme.positiveTextColor.r, Kirigami.Theme.positiveTextColor.g, Kirigami.Theme.positiveTextColor.b, 0.3)
+                            border.color: Qt.rgba(themePositive.r, themePositive.g, themePositive.b, 0.3)
                             visible: randomButton.enabled
 
                             Behavior on border.width {
@@ -5584,9 +5623,9 @@ Item {
                         implicitWidth: Math.max(16, Math.min(22, randomButton.height * 0.5))
                         implicitHeight: implicitWidth
                         color: {
-                            if (!randomButton.enabled) return Kirigami.Theme.disabledTextColor
-                            if (randomButton.pressed) return Kirigami.Theme.highlightedTextColor
-                            return Kirigami.Theme.textColor
+                            if (!randomButton.enabled) return themeDisabled
+                            if (randomButton.pressed) return themeHLText
+                            return themeText
                         }
 
                         // Rotation animation on click
@@ -5664,7 +5703,7 @@ Item {
                         return info ? "(" + info + ")" : ""
                     }
                     font.pointSize: Math.max(6, Math.min(9, root.width / 50))
-                    color: Kirigami.Theme.disabledTextColor
+                    color: themeDisabled
                     visible: actualBitrate !== "" || actualChannels !== ""
                     Layout.alignment: Qt.AlignVCenter
                 }
@@ -5681,9 +5720,9 @@ Item {
             Layout.fillWidth: true
             Layout.preferredHeight: visible ? 60 : 0
             Layout.maximumHeight: visible ? 60 : 0
-            color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.95)
+            color: Qt.rgba(themeBg.r, themeBg.g, themeBg.b, 0.95)
             border.width: 1
-            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.3)
+            border.color: Qt.rgba(themeText.r, themeText.g, themeText.b, 0.3)
             radius: 8
             
             Behavior on Layout.preferredHeight {
@@ -5699,7 +5738,7 @@ Item {
                     text: "Timeline:"
                     font.pointSize: baseFontSize
                     font.bold: true
-                    color: Kirigami.Theme.textColor
+                    color: themeText
                     Layout.alignment: Qt.AlignVCenter
                 }
                 
@@ -5758,23 +5797,106 @@ Item {
                         return ""
                     }
                     font.pointSize: baseFontSize
-                    color: Kirigami.Theme.textColor
+                    color: themeText
                     Layout.alignment: Qt.AlignVCenter
                 }
             }
         }
 
-        // Support link
+        // Theme picker + support link row
         RowLayout {
             Layout.fillWidth: true
             Layout.topMargin: spacingSmall
+
+            // Theme color swatches + light/dark toggle
+            Row {
+                spacing: 5
+                Layout.alignment: Qt.AlignVCenter
+
+                // Light/dark mode toggle
+                Row {
+                    spacing: 2
+                    Repeater {
+                        model: [{ id: "light", icon: "☀" }, { id: "dark", icon: "🌙" }]
+                        delegate: Rectangle {
+                            required property var modelData
+                            width: 22; height: 14; radius: 3
+                            property bool hov: false
+                            color: appSettings.displayMode === modelData.id
+                                ? accentPrimary
+                                : Qt.rgba(themeText.r, themeText.g, themeText.b, hov ? 0.2 : 0.1)
+                            border.width: 1
+                            border.color: appSettings.displayMode === modelData.id
+                                ? accentPrimary
+                                : Qt.rgba(themeText.r, themeText.g, themeText.b, 0.25)
+                            Text {
+                                anchors.centerIn: parent
+                                text: modelData.icon
+                                font.pixelSize: 9
+                                color: appSettings.displayMode === modelData.id ? "#ffffff" : themeText
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                hoverEnabled: true
+                                onClicked: appSettings.displayMode = modelData.id
+                                onContainsMouseChanged: parent.hov = containsMouse
+                            }
+                            ToolTip.text: modelData.id === "light" ? "Light" : "Dark"
+                            ToolTip.visible: hov
+                            ToolTip.delay: 600
+                        }
+                    }
+                }
+
+                // Separator
+                Rectangle {
+                    width: 1; height: 14
+                    color: Qt.rgba(themeText.r, themeText.g, themeText.b, 0.2)
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                // Accent color swatches
+                Repeater {
+                    model: ["amber", "ocean", "forest", "grape", "ruby", "rose", "slate"]
+                    delegate: Rectangle {
+                        required property string modelData
+                        width: 14
+                        height: 14
+                        radius: 7
+                        color: themeSwatch[modelData] || "#808080"
+                        border.width: appSettings.colorTheme === modelData ? 2 : 1
+                        border.color: appSettings.colorTheme === modelData
+                            ? themeText
+                            : Qt.rgba(themeText.r, themeText.g, themeText.b, 0.25)
+                        antialiasing: true
+
+                        Behavior on border.width { NumberAnimation { duration: 120 } }
+                        Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutBack } }
+
+                        scale: swatchArea.containsMouse ? 1.25 : 1.0
+
+                        MouseArea {
+                            id: swatchArea
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            hoverEnabled: true
+                            onClicked: appSettings.colorTheme = modelData
+                        }
+
+                        ToolTip.text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
+                        ToolTip.visible: swatchArea.containsMouse
+                        ToolTip.delay: 600
+                    }
+                }
+            }
 
             Item { Layout.fillWidth: true }
 
             Text {
                 text: "☕ Support on Ko-fi"
                 font.pointSize: smallFontSize
-                color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.5)
+                color: Qt.rgba(themeText.r, themeText.g, themeText.b, 0.5)
 
                 MouseArea {
                     anchors.fill: parent
@@ -5782,7 +5904,7 @@ Item {
                     hoverEnabled: true
                     onClicked: Qt.openUrlExternally("https://ko-fi.com/donutsdelivery")
                     onEntered: parent.color = accentPrimary
-                    onExited: parent.color = Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.5)
+                    onExited: parent.color = Qt.rgba(themeText.r, themeText.g, themeText.b, 0.5)
                 }
             }
 
@@ -5811,10 +5933,10 @@ Item {
             anchors.centerIn: parent
             width: Math.min(parent.width * 0.9, 350)
             height: 200
-            color: Kirigami.Theme.backgroundColor
+            color: themeBg
             radius: 12
             border.width: 1
-            border.color: Kirigami.Theme.highlightColor
+            border.color: themeHL
             
             MouseArea {
                 anchors.fill: parent
@@ -5922,10 +6044,10 @@ Item {
             anchors.centerIn: parent
             width: Math.min(parent.width * 0.9, 500)
             height: 520
-            color: Kirigami.Theme.backgroundColor
+            color: themeBg
             radius: 12
             border.width: 1
-            border.color: Kirigami.Theme.highlightColor
+            border.color: themeHL
             
             MouseArea {
                 anchors.fill: parent
@@ -6050,13 +6172,13 @@ Item {
                         policy: ScrollBar.AsNeeded
                         active: true
                         background: Rectangle {
-                            color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                            color: Qt.rgba(themeBg.r, themeBg.g, themeBg.b, 0.3)
                             radius: 10
                             width: 24
                             implicitHeight: parent.height
                         }
                         contentItem: Rectangle {
-                            color: Kirigami.Theme.highlightColor
+                            color: themeHL
                             radius: 10
                             width: 24 - 2
                         }
@@ -6074,7 +6196,7 @@ Item {
                                 if (isPreviewPlaying && previewStationUrl === station.url) {
                                     return Qt.rgba(0.6, 0.2, 1, 0.3)  // Purple tint when previewing
                                 } else if (mouseArea.containsMouse) {
-                                    return Kirigami.Theme.highlightColor
+                                    return themeHL
                                 } else {
                                     return "transparent"
                                 }
@@ -6116,7 +6238,7 @@ Item {
                                     
                                     Text {
                                         text: (station.tags || "") + (station.country ? " • " + station.country : "")
-                                        color: Kirigami.Theme.disabledTextColor
+                                        color: themeDisabled
                                         font.pointSize: Math.max(8, Math.min(12, containerHeight * 0.18))
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
@@ -6124,7 +6246,7 @@ Item {
                                     
                                     Text {
                                         text: station.codec + " " + station.bitrate + "kbps"
-                                        color: Kirigami.Theme.disabledTextColor
+                                        color: themeDisabled
                                         font.pointSize: Math.max(6, Math.min(9, containerHeight * 0.13))
                                     }
                                 }
@@ -6174,7 +6296,7 @@ Item {
                 Text {
                     visible: radioSearchField.text.length > 2 && root.radioSearchResults.length === 0
                     text: "No stations found. Try a different search term."
-                    color: Kirigami.Theme.disabledTextColor
+                    color: themeDisabled
                     font.pointSize: baseFontSize
                     Layout.alignment: Qt.AlignHCenter
                 }
@@ -6219,10 +6341,10 @@ Item {
             anchors.centerIn: parent
             width: Math.min(parent.width * 0.9, 400)
             height: 300
-            color: Kirigami.Theme.backgroundColor
+            color: themeBg
             radius: 12
             border.width: 1
-            border.color: Kirigami.Theme.highlightColor
+            border.color: themeHL
             
             MouseArea {
                 anchors.fill: parent
@@ -6264,13 +6386,13 @@ Item {
                         policy: ScrollBar.AsNeeded
                         active: true
                         background: Rectangle {
-                            color: Qt.rgba(Kirigami.Theme.backgroundColor.r, Kirigami.Theme.backgroundColor.g, Kirigami.Theme.backgroundColor.b, 0.3)
+                            color: Qt.rgba(themeBg.r, themeBg.g, themeBg.b, 0.3)
                             radius: 10
                             width: 24
                             implicitHeight: parent.height
                         }
                         contentItem: Rectangle {
-                            color: Kirigami.Theme.highlightColor
+                            color: themeHL
                             radius: 10
                             width: 24 - 2
                         }
@@ -6362,10 +6484,10 @@ Item {
             anchors.centerIn: parent
             width: Math.min(parent.width * 0.9, 350)
             height: 200
-            color: Kirigami.Theme.backgroundColor
+            color: themeBg
             radius: 12
             border.width: 1
-            border.color: Kirigami.Theme.highlightColor
+            border.color: themeHL
             
             MouseArea {
                 anchors.fill: parent

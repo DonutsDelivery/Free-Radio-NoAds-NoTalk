@@ -170,6 +170,8 @@ PlasmoidItem {
             settings.lastStationUrl = plasmoid.configuration.lastStationUrl || ""
             settings.lastStationHost = plasmoid.configuration.lastStationHost || ""
             settings.lastStationPath = plasmoid.configuration.lastStationPath || ""
+            settings.colorTheme = plasmoid.configuration.colorTheme || "amber"
+            settings.displayMode = plasmoid.configuration.displayMode || "light"
 
             // Reload data with new settings
             console.log("Plasmoid wrapper: reloading data after settings bound")
@@ -195,6 +197,8 @@ PlasmoidItem {
             function onLastStationUrlChanged() { plasmoid.configuration.lastStationUrl = mainContent.settings.lastStationUrl }
             function onLastStationHostChanged() { plasmoid.configuration.lastStationHost = mainContent.settings.lastStationHost }
             function onLastStationPathChanged() { plasmoid.configuration.lastStationPath = mainContent.settings.lastStationPath }
+            function onColorThemeChanged() { plasmoid.configuration.colorTheme = mainContent.settings.colorTheme }
+            function onDisplayModeChanged() { plasmoid.configuration.displayMode = mainContent.settings.displayMode }
         }
     }
 

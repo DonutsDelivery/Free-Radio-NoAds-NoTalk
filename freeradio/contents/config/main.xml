@@ -60,6 +60,14 @@
       <label>Show spectrum visualizer</label>
       <default>false</default>
     </entry>
+    <entry name="colorTheme" type="String">
+      <label>Color theme</label>
+      <default>amber</default>
+    </entry>
+    <entry name="displayMode" type="String">
+      <label>Display mode</label>
+      <default>light</default>
+    </entry>
   </group>
 
 </kcfg>
