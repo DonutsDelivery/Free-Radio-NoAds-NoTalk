@@ -5220,7 +5220,7 @@ Item {
                                 // Category header
                                 Text {
                                     text: modelData.category
-                                    font.pixelSize: smallFontSize
+                                    font.pixelSize: smallFontSize * 2
                                     font.bold: true
                                     color: accentPrimary
                                     bottomPadding: 4
@@ -5232,7 +5232,7 @@ Item {
                                     delegate: ItemDelegate {
                                         required property var modelData
                                         width: groupColumn.width
-                                        height: Math.max(36, root.height / 22)
+                                        height: Math.max(52, root.height / 16)
                                         hoverEnabled: true
                                         padding: 0
 
@@ -5250,7 +5250,7 @@ Item {
                                             spacing: 6
                                             Text {
                                                 text: "▶"
-                                                font.pixelSize: smallFontSize - 1
+                                                font.pixelSize: smallFontSize * 2 - 1
                                                 color: currentStationHost === modelData.host && currentStationPath === modelData.path
                                                     ? nowPlayingColor
                                                     : Qt.rgba(themeText.r, themeText.g, themeText.b, 0.35)
@@ -5258,7 +5258,7 @@ Item {
                                             }
                                             Text {
                                                 text: modelData.title
-                                                font.pixelSize: baseFontSize
+                                                font.pixelSize: baseFontSize * 2
                                                 color: currentStationHost === modelData.host && currentStationPath === modelData.path
                                                     ? nowPlayingColor : themeText
                                                 elide: Text.ElideRight
