@@ -4701,6 +4701,21 @@ Item {
                     }
                     implicitWidth: Math.max(50, Math.min(80, root.width / 8))
                     implicitHeight: Math.max(25, Math.min(35, root.height / 25))
+                    contentItem: Text {
+                        text: parent.text
+                        font: parent.font
+                        color: Kirigami.Theme.textColor
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        radius: 4
+                        color: parent.pressed ? Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.2)
+                             : parent.hovered  ? Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.1)
+                             : Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.05)
+                        border.width: 1
+                        border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.25)
+                    }
                 }
 
                 Label {
@@ -4824,6 +4839,21 @@ Item {
                             categoriesModel.clear()
                             currentSource = ""
                         }
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        font: parent.font
+                        color: Kirigami.Theme.textColor
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        radius: 4
+                        color: parent.pressed ? Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.2)
+                             : parent.hovered  ? Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.1)
+                             : Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.05)
+                        border.width: 1
+                        border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.25)
                     }
                 }
                 Label {
@@ -5206,9 +5236,11 @@ Item {
                             width: parent.width - 16
                             x: 8
                             radius: 8
-                            color: surfaceCard
+                            color: Qt.rgba(Kirigami.Theme.backgroundColor.r,
+                                           Kirigami.Theme.backgroundColor.g,
+                                           Kirigami.Theme.backgroundColor.b, 0.7)
                             border.width: 1
-                            border.color: Qt.rgba(themeText.r, themeText.g, themeText.b, 0.12)
+                            border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.12)
                             height: groupColumn.implicitHeight + 16
 
                             Column {
@@ -5254,7 +5286,7 @@ Item {
                                                 font.pixelSize: 13
                                                 color: currentStationHost === modelData.host && currentStationPath === modelData.path
                                                     ? nowPlayingColor
-                                                    : Qt.rgba(themeText.r, themeText.g, themeText.b, 0.35)
+                                                    : Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.35)
                                                 verticalAlignment: Text.AlignVCenter
                                             }
                                             Text {
@@ -5262,7 +5294,7 @@ Item {
                                                 font.pixelSize: 13
                                                 font.bold: true
                                                 color: currentStationHost === modelData.host && currentStationPath === modelData.path
-                                                    ? nowPlayingColor : themeText
+                                                    ? nowPlayingColor : Kirigami.Theme.textColor
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true
                                                 verticalAlignment: Text.AlignVCenter
