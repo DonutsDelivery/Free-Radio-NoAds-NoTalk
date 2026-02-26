@@ -5150,15 +5150,17 @@ Item {
 
             // Grouped favorites view — shown only when in ⭐ Favorites source
             ScrollView {
+                id: favScrollView
                 visible: currentSource === "⭐ Favorites"
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
                 ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                 ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                contentWidth: availableWidth  // break circular width dependency
 
                 Column {
-                    width: parent.width
+                    width: favScrollView.availableWidth
                     spacing: 8
                     topPadding: 4
                     bottomPadding: 8
