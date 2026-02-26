@@ -5220,7 +5220,7 @@ Item {
                                 // Category header
                                 Text {
                                     text: modelData.category
-                                    font.pixelSize: smallFontSize * 2
+                                    font.pixelSize: 13
                                     font.bold: true
                                     color: accentPrimary
                                     bottomPadding: 4
@@ -5232,25 +5232,26 @@ Item {
                                     delegate: ItemDelegate {
                                         required property var modelData
                                         width: groupColumn.width
-                                        height: Math.max(52, root.height / 16)
+                                        height: Math.max(44, Math.min(56, root.height / 18))
                                         hoverEnabled: true
                                         padding: 0
 
                                         background: Rectangle {
-                                            radius: 5
+                                            radius: 8
                                             color: parent.hovered
-                                                ? Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.12)
+                                                ? Qt.rgba(accentPrimary.r, accentPrimary.g, accentPrimary.b, 0.15)
                                                 : "transparent"
+                                            border.width: 1
+                                            border.color: Qt.rgba(themeText.r, themeText.g, themeText.b, parent.hovered ? 0.1 : 0.0)
                                         }
 
                                         RowLayout {
                                             anchors.fill: parent
-                                            anchors.leftMargin: 4
-                                            anchors.rightMargin: 4
-                                            spacing: 6
+                                            anchors.margins: 8
+                                            spacing: 8
                                             Text {
                                                 text: "▶"
-                                                font.pixelSize: smallFontSize * 2 - 1
+                                                font.pixelSize: 13
                                                 color: currentStationHost === modelData.host && currentStationPath === modelData.path
                                                     ? nowPlayingColor
                                                     : Qt.rgba(themeText.r, themeText.g, themeText.b, 0.35)
@@ -5258,7 +5259,8 @@ Item {
                                             }
                                             Text {
                                                 text: modelData.title
-                                                font.pixelSize: baseFontSize * 2
+                                                font.pixelSize: 13
+                                                font.bold: true
                                                 color: currentStationHost === modelData.host && currentStationPath === modelData.path
                                                     ? nowPlayingColor : themeText
                                                 elide: Text.ElideRight
