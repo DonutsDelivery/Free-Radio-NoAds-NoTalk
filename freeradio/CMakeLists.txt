@@ -78,7 +78,9 @@ endif()
 # Set output directory for QML modules
 set_target_properties(freeradio PROPERTIES
     QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml
-    WIN32_EXECUTABLE TRUE
+    # GUI subsystem (no console window) for all builds EXCEPT Debug.
+    # Debug builds keep the console so qDebug()/console.log output is visible.
+    WIN32_EXECUTABLE $<NOT:$<CONFIG:Debug>>
     MACOSX_BUNDLE TRUE
 )
 

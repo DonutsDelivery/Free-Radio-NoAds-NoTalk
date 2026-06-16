@@ -45,8 +45,20 @@ fi
 # Deploy Qt libraries
 macdeployqt "$APP_BUNDLE" -qmldir="$PROJECT_DIR/freeradio/contents/ui" -verbose=1
 
+# Ad-hoc sign the bundle. Without ANY signature, Apple Silicon (arm64) kills the
+# process on launch ("Killed: 9") before the window can appear -- this is the
+# "no window, not in running apps" symptom. The "-" identity is a free ad-hoc
+# signature: no Apple Developer license, no notarization required.
+# NOTE: this does NOT clear Gatekeeper quarantine on a downloaded copy. After
+# installing, users must run:  xattr -dr com.apple.quarantine "/Applications/Free Radio.app"
+# (or System Settings -> Privacy & Security -> Open Anyway).
+codesign --force --deep --sign - "$APP_BUNDLE"
+codesign --verify --verbose "$APP_BUNDLE" || echo "Warning: ad-hoc signature verification failed"
+
 # Create DMG
 hdiutil create -volname "Free Radio" -srcfolder "$APP_BUNDLE" -ov -format UDZO "FreeRadio-2.0.0-macOS.dmg"
 
 echo "macOS build complete!"
+echo "Reminder: ad-hoc signed only. Tell users to clear quarantine after install:"
+echo "  xattr -dr com.apple.quarantine \"/Applications/Free Radio.app\""
 ls -la *.dmg

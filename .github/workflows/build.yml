@@ -188,6 +188,16 @@ jobs:
             -qmldir=../freeradio/contents/ui \
             -verbose=1 || true
 
+          # Ad-hoc re-sign the WHOLE bundle after macdeployqt. macdeployqt rewrites the
+          # copied Qt frameworks with install_name_tool, which invalidates their code
+          # signatures; on Apple Silicon dyld then refuses to load them and the kernel
+          # kills the app on launch (no window, not in the running-apps list). A deep
+          # ad-hoc signature ("-") is free -- no Apple Developer account, no notarization
+          # -- and makes the bundle launchable. Users still must clear quarantine once:
+          #   xattr -dr com.apple.quarantine "/Applications/Free Radio.app"
+          codesign --force --deep --sign - "Free Radio.app"
+          codesign --verify --verbose "Free Radio.app" || echo "ad-hoc signature verify failed"
+
           # Create DMG
           hdiutil create -volname "Free Radio" \
             -srcfolder "Free Radio.app" \
