@@ -1,0 +1,69 @@
+name: Smoke Install Release
+
+# Downloads a published release artifact and verifies it actually launches.
+# Runs on an Apple Silicon (macos-14) runner -- the same arch as end users --
+# so it catches the "unsigned/invalid bundle gets kernel-killed on launch"
+# failure that quarantine removal cannot fix.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version to smoke test, without leading v (e.g. 2.2.1)
+        required: true
+
+jobs:
+  macos:
+    runs-on: macos-14
+    steps:
+      - name: Download release DMG
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          gh release download "v$VERSION" --repo "$GITHUB_REPOSITORY" \
+            --pattern "FreeRadio-macOS.dmg" --dir "$RUNNER_TEMP/release"
+
+      - name: Mount DMG and stage app
+        run: |
+          set -euo pipefail
+          hdiutil attach "$RUNNER_TEMP/release/FreeRadio-macOS.dmg" \
+            -nobrowse -mountpoint "$RUNNER_TEMP/dmg"
+          mkdir -p "$RUNNER_TEMP/app"
+          cp -R "$RUNNER_TEMP/dmg/Free Radio.app" "$RUNNER_TEMP/app/"
+          hdiutil detach "$RUNNER_TEMP/dmg"
+
+      - name: Verify code signature
+        run: |
+          set -euo pipefail
+          app="$RUNNER_TEMP/app/Free Radio.app"
+          # Strict verification of the whole bundle (incl. nested Qt frameworks).
+          # A broken signature here is exactly what kills the app on Apple Silicon.
+          codesign --verify --deep --strict --verbose=2 "$app"
+          codesign --display --verbose=2 "$app" 2>&1 | grep -i "Signature" || true
+
+      - name: Smoke launch standalone
+        run: |
+          set -euo pipefail
+          app="$RUNNER_TEMP/app/Free Radio.app"
+          binary="$app/Contents/MacOS/freeradio"
+          chmod +x "$binary"
+          mkdir -p "$RUNNER_TEMP/launch"
+          "$binary" >"$RUNNER_TEMP/launch/stdout.log" 2>"$RUNNER_TEMP/launch/stderr.log" &
+          pid=$!
+          sleep 5
+          if kill -0 "$pid" 2>/dev/null; then
+            kill "$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            echo "Free Radio stayed alive for 5 seconds -- launch OK."
+            exit 0
+          fi
+          wait "$pid" || status=$?
+          echo "Free Radio exited early with status ${status:-0}" >&2
+          echo "--- stdout ---"; cat "$RUNNER_TEMP/launch/stdout.log" || true
+          echo "--- stderr ---"; cat "$RUNNER_TEMP/launch/stderr.log" || true
+          echo "--- crash reports ---"
+          find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 1 -type f \
+            -iname '*freeradio*' -print -exec cat {} \; 2>/dev/null || true
+          exit 1
