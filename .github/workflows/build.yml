@@ -183,9 +183,18 @@ jobs:
           magick ../freeradio/icons/freeradio.png -resize 1024x1024 PNG32:freeradio.iconset/icon_512x512@2x.png
           iconutil -c icns freeradio.iconset -o "Free Radio.app/Contents/Resources/freeradio.icns" || echo "Icon creation failed, continuing without custom icon"
 
-          # Deploy Qt frameworks
+          # Kirigami is built into the custom $HOME/kde prefix, which macdeployqt does
+          # NOT scan -- so without this its QML plugin never lands in the bundle and the
+          # app dies at launch with: module "org.kde.kirigami" plugin not found.
+          # Find the Kirigami QML module and pass its import root to macdeployqt.
+          kirigami_mod="$(find "$HOME/kde" -type d -path '*/org/kde/kirigami' | head -1)"
+          qml_import_root="${kirigami_mod%/org/kde/kirigami}"
+          echo "Kirigami QML import root: ${qml_import_root:-<not found>}"
+
+          # Deploy Qt frameworks (+ the Kirigami QML module from the custom prefix)
           macdeployqt "Free Radio.app" \
             -qmldir=../freeradio/contents/ui \
+            -qmlimport="$qml_import_root" \
             -verbose=1 || true
 
           # Ad-hoc re-sign the WHOLE bundle after macdeployqt. macdeployqt rewrites the
@@ -203,6 +212,25 @@ jobs:
             -srcfolder "Free Radio.app" \
             -ov -format UDZO \
             FreeRadio-macOS.dmg || echo "DMG creation failed"
+
+      - name: Verify bundle launches
+        run: |
+          set -euo pipefail
+          binary="build/Free Radio.app/Contents/MacOS/freeradio"
+          mkdir -p "$RUNNER_TEMP/launch"
+          "$binary" >"$RUNNER_TEMP/launch/stdout.log" 2>"$RUNNER_TEMP/launch/stderr.log" &
+          pid=$!
+          sleep 5
+          if kill -0 "$pid" 2>/dev/null; then
+            kill "$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+            echo "Bundle stayed alive for 5 seconds -- launch OK."
+            exit 0
+          fi
+          wait "$pid" || status=$?
+          echo "Bundle exited early with status ${status:-0} -- failing the build." >&2
+          echo "--- stderr ---"; cat "$RUNNER_TEMP/launch/stderr.log" || true
+          exit 1
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
