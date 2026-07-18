@@ -18,7 +18,9 @@
 #include <QTimer>
 #include <algorithm>
 #include <atomic>
+#include <cerrno>
 #include <condition_variable>
+#include <cstdio>
 #include <cstring>
 #include <mutex>
 #include <thread>
@@ -105,6 +107,10 @@ struct AudioEngine::Session
     std::atomic<bool> decoderDone{false};
     std::atomic<bool> workerDone{false};
     std::atomic<qint64> playedFrames{0};
+    std::atomic<bool> rangeSupported{false};
+    std::atomic<bool> rangePending{false};
+    qint64 seekTargetMs = -1;
+    qint64 positionBaseMs = 0;
     std::thread worker;
     QString networkError;
     ma_context context{};
@@ -139,9 +145,22 @@ struct DecoderResources
     }
 };
 
-static int readNetwork(void *opaque, uint8_t *buffer, int size)
+struct AudioWorker
 {
-    const int result = static_cast<NetworkBuffer *>(opaque)->read(buffer, size);
+    static int readNetwork(void *opaque, uint8_t *buffer, int size);
+    static int interruptDecode(void *opaque);
+    static int64_t seekNetwork(void *opaque, int64_t offset, int whence);
+    static void postRangeRequest(AudioEngine::Session *session, qint64 offset);
+    static void postDecoderReady(const std::shared_ptr<AudioEngine::Session> &session, qint64 duration);
+    static void postDecoderEnded(const std::shared_ptr<AudioEngine::Session> &session,
+                                 const QString &message, bool endOfStream);
+    static void decodeStream(const std::shared_ptr<AudioEngine::Session> &session);
+};
+
+int AudioWorker::readNetwork(void *opaque, uint8_t *buffer, int size)
+{
+    auto *session = static_cast<AudioEngine::Session *>(opaque);
+    const int result = session->network.read(buffer, size);
     if (result == NetworkBuffer::Cancelled)
         return AVERROR_EXIT;
     if (result == NetworkBuffer::EndOfStream)
@@ -149,18 +168,47 @@ static int readNetwork(void *opaque, uint8_t *buffer, int size)
     return result;
 }
 
-static int interruptDecode(void *opaque)
+int AudioWorker::interruptDecode(void *opaque)
 {
-    return static_cast<NetworkBuffer *>(opaque)->isCancelled() ? 1 : 0;
+    return static_cast<AudioEngine::Session *>(opaque)->cancelled.load(std::memory_order_acquire) ? 1 : 0;
 }
 
-struct AudioWorker
+void AudioWorker::postRangeRequest(AudioEngine::Session *session, qint64 offset)
 {
-    static void postDecoderReady(const std::shared_ptr<AudioEngine::Session> &session, qint64 duration);
-    static void postDecoderEnded(const std::shared_ptr<AudioEngine::Session> &session,
-                                 const QString &message, bool endOfStream);
-    static void decodeStream(const std::shared_ptr<AudioEngine::Session> &session);
-};
+    const auto control = session->control;
+    QMetaObject::invokeMethod(QCoreApplication::instance(), [control, generation = session->generation, offset] {
+        if (auto *engine = control->owner.load(std::memory_order_acquire))
+            engine->rangeRequested(generation, offset);
+    }, Qt::QueuedConnection);
+}
+
+int64_t AudioWorker::seekNetwork(void *opaque, int64_t offset, int whence)
+{
+    auto *session = static_cast<AudioEngine::Session *>(opaque);
+    if (whence & AVSEEK_SIZE)
+        return session->network.totalSize();
+    const int origin = whence & ~AVSEEK_FORCE;
+    if (!session->rangeSupported.load(std::memory_order_acquire))
+        return AVERROR(ENOSYS);
+    int64_t target = offset;
+    if (origin == SEEK_CUR)
+        target += session->network.position();
+    else if (origin == SEEK_END) {
+        const auto size = session->network.totalSize();
+        if (size < 0)
+            return AVERROR(ENOSYS);
+        target += size;
+    } else if (origin != SEEK_SET) {
+        return AVERROR(EINVAL);
+    }
+    const auto size = session->network.totalSize();
+    if (target < 0 || (size >= 0 && target > size))
+        return AVERROR(EINVAL);
+    session->rangePending.store(true, std::memory_order_release);
+    session->network.resetForRange(target);
+    postRangeRequest(session, target);
+    return target;
+}
 
 void AudioWorker::postDecoderReady(const std::shared_ptr<AudioEngine::Session> &session, qint64 duration)
 {
@@ -199,8 +247,8 @@ void AudioWorker::decodeStream(const std::shared_ptr<AudioEngine::Session> &sess
         postDecoderEnded(session, QStringLiteral("Could not allocate FFmpeg input buffer"), false);
         return;
     }
-    resources.avio = avio_alloc_context(avioStorage, 32768, 0, &session->network,
-                                        readNetwork, nullptr, nullptr);
+    resources.avio = avio_alloc_context(avioStorage, 32768, 0, session.get(),
+                                        readNetwork, nullptr, seekNetwork);
     if (!resources.avio) {
         av_free(avioStorage);
         postDecoderEnded(session, QStringLiteral("Could not create FFmpeg network input"), false);
@@ -208,7 +256,7 @@ void AudioWorker::decodeStream(const std::shared_ptr<AudioEngine::Session> &sess
     }
     resources.format->pb = resources.avio;
     resources.format->flags |= AVFMT_FLAG_CUSTOM_IO;
-    resources.format->interrupt_callback = {interruptDecode, &session->network};
+    resources.format->interrupt_callback = {interruptDecode, session.get()};
 
     int result = avformat_open_input(&resources.format, nullptr, nullptr, nullptr);
     if (result >= 0)
@@ -247,6 +295,25 @@ void AudioWorker::decodeStream(const std::shared_ptr<AudioEngine::Session> &sess
 
     const qint64 duration = resources.format->duration > 0
         ? resources.format->duration / (AV_TIME_BASE / 1000) : -1;
+    if (session->seekTargetMs >= 0) {
+        if (duration > 0)
+            session->seekTargetMs = std::min(session->seekTargetMs, duration);
+        const int64_t target = session->seekTargetMs * (AV_TIME_BASE / 1000);
+        result = avformat_seek_file(resources.format, -1, INT64_MIN, target, INT64_MAX,
+                                    AVSEEK_FLAG_BACKWARD);
+        if (result < 0) {
+            postDecoderEnded(session, QStringLiteral("Could not seek finite media: %1")
+                                      .arg(ffmpegError(result)), false);
+            return;
+        }
+        avcodec_flush_buffers(resources.codec);
+        swr_close(resources.resampler);
+        if (swr_init(resources.resampler) < 0) {
+            postDecoderEnded(session, QStringLiteral("Could not reset audio conversion after seek"), false);
+            return;
+        }
+        session->positionBaseMs = session->seekTargetMs;
+    }
     postDecoderReady(session, duration);
     resources.packet = av_packet_alloc();
     resources.frame = av_frame_alloc();
@@ -408,13 +475,18 @@ void AudioEngine::play(const QUrl &source)
 void AudioEngine::play()
 {
     if (m_state == PausedState && m_session && m_session->requestedSource == m_source) {
+        m_pauseRequested = false;
         m_session->paused.store(false, std::memory_order_release);
         m_session->pcmSpace.notify_all();
         setState(BufferingState);
         m_playbackTimer->start();
         return;
     }
+    const bool resumeCancelledLoading = m_state == PausedState && !m_session;
     stopSession(true);
+    if (!resumeCancelledLoading)
+        m_seekTargetMs = -1;
+    m_pauseRequested = false;
     if (!m_source.isValid() || m_source.isEmpty()
         || (m_source.scheme() != QStringLiteral("http") && m_source.scheme() != QStringLiteral("https"))) {
         fail(UnsupportedError, QStringLiteral("A valid HTTP or HTTPS audio source is required"));
@@ -422,8 +494,12 @@ void AudioEngine::play()
     }
     m_error = NoError;
     m_errorString.clear();
-    m_position = 0;
+    m_position = m_seekTargetMs >= 0 ? m_seekTargetMs : 0;
     m_duration = -1;
+    if (!resumeCancelledLoading && m_seekable) {
+        m_seekable = false;
+        emit seekableChanged();
+    }
     m_activeUrl = m_source;
     m_playlistEntries.clear();
     m_playlistIndex = -1;
@@ -441,7 +517,14 @@ void AudioEngine::play()
 
 void AudioEngine::pause()
 {
+    if (m_state == LoadingState && !m_session) {
+        m_pauseRequested = true;
+        stopSession(true);
+        setState(PausedState);
+        return;
+    }
     if ((m_state == PlayingState || m_state == BufferingState) && m_session) {
+        m_pauseRequested = true;
         m_session->paused.store(true, std::memory_order_release);
         if (m_session->deviceStarted) {
             ma_device_stop(&m_session->device);
@@ -454,6 +537,12 @@ void AudioEngine::pause()
 void AudioEngine::stop()
 {
     stopSession(true);
+    m_pauseRequested = false;
+    m_seekTargetMs = -1;
+    if (m_seekable) {
+        m_seekable = false;
+        emit seekableChanged();
+    }
     m_position = 0;
     m_spectrum.fill(0.0f);
     m_analysisWindow.clear();
@@ -461,6 +550,42 @@ void AudioEngine::stop()
     emit bufferingChanged();
     emit spectrumChanged();
     setState(StoppedState);
+}
+
+void AudioEngine::seek(qint64 positionMs)
+{
+    const bool pendingFiniteSource = (m_state == LoadingState
+                                      || (m_state == PausedState && !m_session))
+        && (m_sourceIntent == FiniteIntent
+            || (m_sourceIntent == AutoIntent && looksFiniteUrl(m_source)));
+    if (!m_seekable && pendingFiniteSource) {
+        m_seekTargetMs = std::max<qint64>(0, positionMs);
+        m_position = m_seekTargetMs;
+        emit positionChanged();
+        return;
+    }
+    if (!m_seekable || m_activeUrl.isEmpty()) {
+        m_error = UnsupportedError;
+        m_errorString = QStringLiteral("The current source is not seekable");
+        emit errorChanged();
+        return;
+    }
+    const qint64 target = std::clamp(positionMs, qint64(0), std::max<qint64>(0, m_duration));
+    const bool remainPaused = m_state == PausedState;
+    const QUrl mediaUrl = m_activeUrl;
+    stopSession(true);
+    m_seekTargetMs = target;
+    m_pauseRequested = remainPaused;
+    m_analysisWindow.clear();
+    m_spectrum.fill(0.0f);
+    m_position = target;
+    m_error = NoError;
+    m_errorString.clear();
+    emit positionChanged();
+    emit spectrumChanged();
+    emit errorChanged();
+    setState(remainPaused ? PausedState : LoadingState);
+    beginRequest(mediaUrl, m_generation);
 }
 
 void AudioEngine::beginRequest(const QUrl &url, quint64 generation, int playlistDepth)
@@ -558,6 +683,74 @@ void AudioEngine::beginRequest(const QUrl &url, quint64 generation, int playlist
     });
 }
 
+void AudioEngine::beginRangeRequest(const std::shared_ptr<Session> &session, qint64 offset)
+{
+    if (!session || session != m_session || session->generation != m_generation)
+        return;
+    if (m_reply) {
+        disconnect(m_reply, nullptr, this, nullptr);
+        m_reply->abort();
+        m_reply->deleteLater();
+    }
+    session->replyFinished = false;
+    QNetworkRequest request(m_activeUrl);
+    request.setRawHeader("Range", QByteArray("bytes=") + QByteArray::number(offset) + '-');
+    request.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("FreeRadio/2.0"));
+    request.setTransferTimeout(15000);
+    request.setMaximumRedirectsAllowed(8);
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+    auto *reply = m_network->get(request);
+    m_reply = reply;
+    reply->setReadBufferSize(256 * 1024);
+    auto validate = [session, reply, offset]() {
+        const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        const QByteArray contentRange = reply->rawHeader("Content-Range").trimmed();
+        const int dash = contentRange.indexOf('-');
+        bool offsetOk = false;
+        const qint64 returnedOffset = contentRange.startsWith("bytes ") && dash > 6
+            ? contentRange.mid(6, dash - 6).toLongLong(&offsetOk) : -1;
+        if (status != 206 || !offsetOk || returnedOffset != offset) {
+            session->networkError = QStringLiteral("HTTP range request at byte %1 returned an invalid partial response")
+                                        .arg(offset);
+            session->network.cancel();
+            return false;
+        }
+        session->rangePending.store(false, std::memory_order_release);
+        return true;
+    };
+    connect(reply, &QIODevice::readyRead, this, [this, session, reply, validate] {
+        if (session != m_session || !validate())
+            return;
+        drainNetworkReply(reply, session->generation);
+    });
+    connect(reply, &QNetworkReply::finished, this, [this, session, reply, validate] {
+        if (session != m_session)
+            return;
+        if (reply->error() != QNetworkReply::NoError) {
+            session->networkError = reply->errorString();
+            session->network.cancel();
+        } else if (validate()) {
+            drainNetworkReply(reply, session->generation);
+            session->replyFinished = true;
+            if (reply->bytesAvailable() == 0) {
+                session->network.finish();
+            } else {
+                m_networkBackpressured = true;
+                return;
+            }
+        }
+        if (m_reply == reply)
+            m_reply = nullptr;
+        reply->deleteLater();
+    });
+}
+
+void AudioEngine::rangeRequested(quint64 generation, qint64 offset)
+{
+    if (generation == m_generation && m_session)
+        beginRangeRequest(m_session, offset);
+}
+
 void AudioEngine::attachStreamReply(QNetworkReply *reply, quint64 generation)
 {
     if (generation != m_generation || m_session)
@@ -568,20 +761,34 @@ void AudioEngine::attachStreamReply(QNetworkReply *reply, quint64 generation)
             || !reply->rawHeader("icy-name").isEmpty();
         intent = hasIcyHeaders || !looksFiniteUrl(reply->url()) ? LiveIntent : FiniteIntent;
     }
+    const qint64 contentLength = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong();
+    const bool supportsRanges = intent == FiniteIntent && contentLength > 0
+        && reply->rawHeader("Accept-Ranges").toLower().contains("bytes");
+    if (m_seekTargetMs >= 0 && !supportsRanges) {
+        m_seekTargetMs = -1;
+        fail(UnsupportedError, QStringLiteral("This finite source does not support HTTP byte ranges"));
+        return;
+    }
     m_session = std::make_shared<Session>(m_workerControl, generation, m_source, intent);
+    m_session->rangeSupported.store(supportsRanges, std::memory_order_release);
+    m_session->network.setTotalSize(contentLength);
+    m_session->seekTargetMs = m_seekTargetMs;
+    m_session->positionBaseMs = std::max<qint64>(0, m_seekTargetMs);
+    m_session->paused.store(m_pauseRequested, std::memory_order_release);
     m_activeUrl = reply->url();
     m_icyName = QString::fromUtf8(reply->rawHeader("icy-name"));
     m_icyUrl = QUrl(QString::fromUtf8(reply->rawHeader("icy-url")));
     m_session->icy.reset(reply->rawHeader("icy-metaint").toInt());
     emit icyMetadataChanged();
-    setState(BufferingState);
+    setState(m_pauseRequested ? PausedState : BufferingState);
     startDecoder();
     m_playbackTimer->start();
 }
 
 void AudioEngine::drainNetworkReply(QNetworkReply *reply, quint64 generation)
 {
-    if (generation != m_generation || !reply || !m_session)
+    if (generation != m_generation || !reply || !m_session
+        || m_session->rangePending.load(std::memory_order_acquire))
         return;
     m_networkBackpressured = false;
     while (reply->bytesAvailable() > 0 && m_session->network.freeSpace() > 0) {
@@ -665,46 +872,59 @@ void AudioEngine::reapWorkers(bool waitForAll)
 
 void AudioEngine::updatePlayback()
 {
-    if (!m_session)
+    const auto session = m_session;
+    if (!session)
         return;
     if (m_networkBackpressured && m_reply)
         drainNetworkReply(m_reply, m_generation);
+    if (session != m_session)
+        return;
     analyzeConsumedPcm();
+    if (session != m_session)
+        return;
 
-    const auto frames = m_session->pcm.availableFrames();
+    const auto frames = session->pcm.availableFrames();
     emit bufferingChanged();
-    if (!m_session->paused.load(std::memory_order_acquire))
-        m_session->pcmSpace.notify_all();
+    if (session != m_session)
+        return;
+    if (!session->paused.load(std::memory_order_acquire))
+        session->pcmSpace.notify_all();
     if (m_state == PausedState)
         return;
 
-    if (m_session->deviceInitialized && !m_session->deviceStarted
+    if (session->deviceInitialized && !session->deviceStarted
         && (frames >= PrebufferFrames
-            || (m_session->decoderDone.load(std::memory_order_acquire) && frames > 0))) {
-        if (ma_device_start(&m_session->device) != MA_SUCCESS) {
+            || (session->decoderDone.load(std::memory_order_acquire) && frames > 0))) {
+        if (ma_device_start(&session->device) != MA_SUCCESS) {
             fail(OutputError, QStringLiteral("Could not start the miniaudio output device"));
             return;
         }
-        m_session->deviceStarted = true;
+        session->deviceStarted = true;
         setState(PlayingState);
-    } else if (m_session->deviceStarted && frames < StallFrames
-               && !m_session->decoderDone.load(std::memory_order_acquire)) {
-        ma_device_stop(&m_session->device);
-        m_session->deviceStarted = false;
+        if (session != m_session)
+            return;
+    } else if (session->deviceStarted && frames < StallFrames
+               && !session->decoderDone.load(std::memory_order_acquire)) {
+        ma_device_stop(&session->device);
+        session->deviceStarted = false;
         setState(BufferingState);
+        if (session != m_session)
+            return;
     }
 
-    const qint64 playedFrames = m_session->playedFrames.load(std::memory_order_relaxed);
+    const qint64 playedFrames = session->playedFrames.load(std::memory_order_relaxed);
     if (playedFrames >= StablePlaybackFrames)
         m_reconnectAttempt = 0;
-    const qint64 position = playedFrames * 1000 / OutputRate;
+    const qint64 position = session->positionBaseMs + playedFrames * 1000 / OutputRate;
     if (position != m_position) {
         m_position = position;
         emit positionChanged();
+        if (session != m_session)
+            return;
     }
-    if (m_session->decoderDone.load(std::memory_order_acquire) && frames == 0) {
-        const QString networkError = m_session->networkError;
-        const bool shouldReconnect = m_session->resolvedIntent == LiveIntent;
+    if (session->decoderDone.load(std::memory_order_acquire) && frames == 0) {
+        const QString networkError = session->networkError;
+        const bool shouldReconnect = session->resolvedIntent == LiveIntent;
         if (!networkError.isEmpty() && !shouldReconnect) {
             tryNextPlaylist(m_generation, networkError);
         } else if (shouldReconnect) {
@@ -801,6 +1021,16 @@ void AudioEngine::decoderReady(quint64 generation, qint64 durationMs)
     if (generation != m_generation || !m_session)
         return;
     m_duration = durationMs;
+    const bool canSeek = durationMs > 0
+        && m_session->rangeSupported.load(std::memory_order_acquire);
+    if (m_seekable != canSeek) {
+        m_seekable = canSeek;
+        emit seekableChanged();
+    }
+    if (m_session->seekTargetMs >= 0 && m_position != m_session->positionBaseMs) {
+        m_position = m_session->positionBaseMs;
+        emit positionChanged();
+    }
     emit durationChanged();
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.format = ma_format_f32;
@@ -834,6 +1064,8 @@ void AudioEngine::decoderEnded(quint64 generation, const QString &message, bool 
     if (!message.isEmpty()) {
         if (m_session->resolvedIntent == LiveIntent) {
             m_session->networkError = message;
+        } else if (!m_session->networkError.isEmpty()) {
+            tryNextPlaylist(generation, m_session->networkError);
         } else if (m_playlistIndex + 1 < m_playlistEntries.size()) {
             tryNextPlaylist(generation, message);
         } else {

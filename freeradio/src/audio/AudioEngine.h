@@ -31,7 +31,7 @@ class AudioEngine : public QObject
     Q_PROPERTY(float bufferingProgress READ bufferingProgress NOTIFY bufferingChanged)
     Q_PROPERTY(qint64 position READ position NOTIFY positionChanged)
     Q_PROPERTY(qint64 duration READ duration NOTIFY durationChanged)
-    Q_PROPERTY(bool seekable READ seekable CONSTANT)
+    Q_PROPERTY(bool seekable READ seekable NOTIFY seekableChanged)
     Q_PROPERTY(QString icyTitle READ icyTitle NOTIFY icyMetadataChanged)
     Q_PROPERTY(QString icyName READ icyName NOTIFY icyMetadataChanged)
     Q_PROPERTY(QUrl icyUrl READ icyUrl NOTIFY icyMetadataChanged)
@@ -61,7 +61,7 @@ public:
     float bufferingProgress() const;
     qint64 position() const { return m_position; }
     qint64 duration() const { return m_duration; }
-    bool seekable() const { return false; }
+    bool seekable() const { return m_seekable; }
     QString icyTitle() const { return m_icyTitle; }
     QString icyName() const { return m_icyName; }
     QUrl icyUrl() const { return m_icyUrl; }
@@ -71,6 +71,7 @@ public:
     Q_INVOKABLE void play(const QUrl &source);
     Q_INVOKABLE void pause();
     Q_INVOKABLE void stop();
+    Q_INVOKABLE void seek(qint64 positionMs);
     Q_INVOKABLE int spectrumBins() const { return m_spectrum.size(); }
     Q_INVOKABLE float spectrumBin(int index) const;
 
@@ -83,6 +84,7 @@ signals:
     void bufferingChanged();
     void positionChanged();
     void durationChanged();
+    void seekableChanged();
     void icyMetadataChanged();
     void spectrumChanged();
 
@@ -91,6 +93,7 @@ private:
     struct Session;
 
     void beginRequest(const QUrl &url, quint64 generation, int playlistDepth = 0);
+    void beginRangeRequest(const std::shared_ptr<Session> &session, qint64 offset);
     void attachStreamReply(QNetworkReply *reply, quint64 generation);
     void drainNetworkReply(QNetworkReply *reply, quint64 generation);
     void startDecoder();
@@ -103,6 +106,7 @@ private:
     void fail(PlaybackError error, const QString &message);
     void decoderReady(quint64 generation, qint64 durationMs);
     void decoderEnded(quint64 generation, const QString &message, bool endOfStream);
+    void rangeRequested(quint64 generation, qint64 offset);
 
     QUrl m_source;
     QUrl m_activeUrl;
@@ -113,6 +117,9 @@ private:
     QString m_errorString;
     qint64 m_position = 0;
     qint64 m_duration = -1;
+    qint64 m_seekTargetMs = -1;
+    bool m_seekable = false;
+    bool m_pauseRequested = false;
     QString m_icyTitle;
     QString m_icyName;
     QUrl m_icyUrl;

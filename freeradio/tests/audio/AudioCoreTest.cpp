@@ -2,6 +2,7 @@
 #include <QDataStream>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QRegularExpression>
 #include <cmath>
 #include <future>
 
@@ -17,10 +18,10 @@ using namespace FreeRadio::Audio;
 namespace {
 constexpr double Pi = 3.14159265358979323846;
 
-QByteArray wavFixture()
+QByteArray wavFixture(int durationMs = 500)
 {
     constexpr int sampleRate = 48000;
-    constexpr int frames = sampleRate / 2;
+    const int frames = sampleRate * durationMs / 1000;
     QByteArray pcm(frames * 2 * 2, Qt::Uninitialized);
     auto *samples = reinterpret_cast<qint16 *>(pcm.data());
     for (int i = 0; i < frames; ++i) {
@@ -41,6 +42,68 @@ QByteArray wavFixture()
     stream.writeRawData(pcm.constData(), pcm.size());
     return wav;
 }
+
+class RangeFixtureServer
+{
+public:
+    RangeFixtureServer(QObject *context, QByteArray fixture)
+        : m_fixture(std::move(fixture))
+    {
+        QObject::connect(&m_server, &QTcpServer::newConnection, context, [this] {
+            while (m_server.hasPendingConnections()) {
+                auto *socket = m_server.nextPendingConnection();
+                QObject::connect(socket, &QTcpSocket::readyRead, socket, [this, socket] {
+                    if (socket->property("responded").toBool())
+                        return;
+                    QByteArray request = socket->property("request").toByteArray();
+                    request += socket->readAll();
+                    socket->setProperty("request", request);
+                    if (!request.contains("\r\n\r\n"))
+                        return;
+                    socket->setProperty("responded", true);
+                    static const QRegularExpression rangePattern(
+                        QStringLiteral("Range: bytes=(\\d+)-"),
+                        QRegularExpression::CaseInsensitiveOption);
+                    const auto match = rangePattern.match(QString::fromLatin1(request));
+                    qint64 offset = 0;
+                    if (match.hasMatch()) {
+                        offset = match.captured(1).toLongLong();
+                        ++rangeRequests;
+                        requestedOffsets.append(offset);
+                    }
+                    offset = std::clamp<qint64>(offset, 0, m_fixture.size());
+                    const QByteArray body = m_fixture.mid(offset);
+                    if (match.hasMatch()) {
+                        socket->write("HTTP/1.1 206 Partial Content\r\nContent-Type: audio/wav\r\n");
+                        socket->write("Accept-Ranges: bytes\r\nContent-Range: bytes ");
+                        socket->write(QByteArray::number(offset));
+                        socket->write("-");
+                        socket->write(QByteArray::number(m_fixture.size() - 1));
+                        socket->write("/");
+                        socket->write(QByteArray::number(m_fixture.size()));
+                        socket->write("\r\nContent-Length: ");
+                    } else {
+                        socket->write("HTTP/1.1 200 OK\r\nContent-Type: audio/wav\r\nAccept-Ranges: bytes\r\nContent-Length: ");
+                    }
+                    socket->write(QByteArray::number(body.size()));
+                    socket->write("\r\nConnection: close\r\n\r\n");
+                    socket->write(body);
+                    socket->disconnectFromHost();
+                });
+            }
+        });
+    }
+
+    bool listen() { return m_server.listen(QHostAddress::LocalHost); }
+    quint16 port() const { return m_server.serverPort(); }
+
+    int rangeRequests = 0;
+    QVector<qint64> requestedOffsets;
+
+private:
+    QTcpServer m_server;
+    QByteArray m_fixture;
+};
 } // namespace
 
 class AudioCoreTest : public QObject
@@ -200,6 +263,92 @@ private slots:
         QTRY_VERIFY_WITH_TIMEOUT(connection->state() == QAbstractSocket::UnconnectedState, 1000);
     }
 
+    void pauseDuringLoadingCancelsUntilExplicitResume()
+    {
+        // AC: @custom-inprocess-audio ac-6
+        QTcpServer server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        AudioEngine engine;
+        const QUrl url(QStringLiteral("http://127.0.0.1:%1/book.wav").arg(server.serverPort()));
+        engine.play(url);
+        QCOMPARE(engine.playbackState(), AudioEngine::LoadingState);
+        QTRY_VERIFY_WITH_TIMEOUT(server.hasPendingConnections(), 1000);
+        engine.pause();
+        QCOMPARE(engine.playbackState(), AudioEngine::PausedState);
+        std::unique_ptr<QTcpSocket> cancelled(server.nextPendingConnection());
+        QTRY_VERIFY_WITH_TIMEOUT(cancelled->state() == QAbstractSocket::UnconnectedState, 1000);
+        QTest::qWait(100);
+        QCOMPARE(engine.playbackState(), AudioEngine::PausedState);
+
+        engine.play();
+        QCOMPARE(engine.playbackState(), AudioEngine::LoadingState);
+        QTRY_VERIFY_WITH_TIMEOUT(server.hasPendingConnections(), 1000);
+        engine.stop();
+    }
+
+    void finiteHttpRangeSeekResumesAndPreservesPause()
+    {
+        // AC: @custom-inprocess-audio ac-6
+        qputenv("FREERADIO_AUDIO_NULL_DEVICE", "1");
+        RangeFixtureServer server(this, wavFixture(5000));
+        QVERIFY(server.listen());
+        AudioEngine engine;
+        const QUrl url(QStringLiteral("http://127.0.0.1:%1/book.wav").arg(server.port()));
+        engine.play(url);
+        engine.seek(1500);
+        QCOMPARE(engine.position(), qint64(1500));
+        QTRY_COMPARE_WITH_TIMEOUT(engine.playbackState(), AudioEngine::PlayingState, 3000);
+        QTRY_VERIFY_WITH_TIMEOUT(engine.position() >= 1500, 1000);
+        QVERIFY(engine.seekable());
+        QVERIFY(engine.duration() >= 4900);
+
+        engine.pause();
+        QCOMPARE(engine.playbackState(), AudioEngine::PausedState);
+        engine.seek(2500);
+        QCOMPARE(engine.playbackState(), AudioEngine::PausedState);
+        QTRY_VERIFY_WITH_TIMEOUT(server.rangeRequests > 0, 3000);
+        QTest::qWait(100);
+        QCOMPARE(engine.position(), qint64(2500));
+
+        engine.play();
+        QTRY_COMPARE_WITH_TIMEOUT(engine.playbackState(), AudioEngine::PlayingState, 3000);
+        QTRY_VERIFY_WITH_TIMEOUT(engine.position() >= 2500, 1000);
+        engine.seek(1000);
+        QTRY_COMPARE_WITH_TIMEOUT(engine.playbackState(), AudioEngine::PlayingState, 3000);
+        QTRY_VERIFY_WITH_TIMEOUT(engine.position() >= 1000 && engine.position() < 2500, 1000);
+        QVERIFY(server.rangeRequests >= 2);
+        QVERIFY(std::all_of(server.requestedOffsets.cbegin(), server.requestedOffsets.cend(),
+                            [](qint64 offset) { return offset >= 0; }));
+        QVERIFY(std::any_of(server.requestedOffsets.cbegin(), server.requestedOffsets.cend(),
+                            [](qint64 offset) { return offset > 100000; }));
+        engine.stop();
+        qunsetenv("FREERADIO_AUDIO_NULL_DEVICE");
+    }
+
+    void seekFromPlaybackSignalIsReentrantSafe()
+    {
+        // AC: @custom-inprocess-audio ac-6
+        qputenv("FREERADIO_AUDIO_NULL_DEVICE", "1");
+        RangeFixtureServer server(this, wavFixture(5000));
+        QVERIFY(server.listen());
+        AudioEngine engine;
+        bool sought = false;
+        connect(&engine, &AudioEngine::playbackStateChanged, this, [&] {
+            if (!sought && engine.playbackState() == AudioEngine::PlayingState) {
+                sought = true;
+                engine.pause();
+                engine.seek(2000);
+            }
+        });
+        engine.play(QUrl(QStringLiteral("http://127.0.0.1:%1/book.wav").arg(server.port())));
+        QTRY_VERIFY_WITH_TIMEOUT(sought, 3000);
+        QTRY_VERIFY_WITH_TIMEOUT(server.rangeRequests > 0, 3000);
+        QCOMPARE(engine.playbackState(), AudioEngine::PausedState);
+        QCOMPARE(engine.position(), qint64(2000));
+        engine.stop();
+        qunsetenv("FREERADIO_AUDIO_NULL_DEVICE");
+    }
+
     void repeatedShortLiveStreamHitsReconnectCap()
     {
         // AC: @custom-inprocess-audio ac-1
@@ -303,7 +452,7 @@ private slots:
         engine.play();
         QTRY_COMPARE_WITH_TIMEOUT(engine.playbackState(), AudioEngine::PlayingState, 1000);
         QTRY_COMPARE_WITH_TIMEOUT(engine.playbackState(), AudioEngine::StoppedState, 3000);
-        QVERIFY(engine.position() >= 400);
+        QVERIFY(engine.position() >= pausedPosition);
         QVERIFY(engine.spectrum().size() == 512);
         qunsetenv("FREERADIO_AUDIO_NULL_DEVICE");
     }

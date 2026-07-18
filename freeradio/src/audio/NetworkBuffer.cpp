@@ -42,6 +42,7 @@ int NetworkBuffer::read(unsigned char *destination, int requested)
     std::memcpy(destination + first, m_storage.data(), count - first);
     m_read = (m_read + count) % m_storage.size();
     m_size -= count;
+    m_position += static_cast<std::int64_t>(count);
     return static_cast<int>(count);
 }
 
@@ -49,6 +50,34 @@ std::size_t NetworkBuffer::freeSpace() const
 {
     std::lock_guard lock(m_mutex);
     return m_storage.size() - m_size;
+}
+
+void NetworkBuffer::resetForRange(std::int64_t offset)
+{
+    std::lock_guard lock(m_mutex);
+    m_read = 0;
+    m_write = 0;
+    m_size = 0;
+    m_position = offset;
+    m_finished = false;
+}
+
+void NetworkBuffer::setTotalSize(std::int64_t size)
+{
+    std::lock_guard lock(m_mutex);
+    m_totalSize = size;
+}
+
+std::int64_t NetworkBuffer::position() const
+{
+    std::lock_guard lock(m_mutex);
+    return m_position;
+}
+
+std::int64_t NetworkBuffer::totalSize() const
+{
+    std::lock_guard lock(m_mutex);
+    return m_totalSize;
 }
 
 void NetworkBuffer::finish()
