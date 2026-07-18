@@ -1,1 +1,8 @@
-notes: []
+notes:
+  - _ulid: 01KXV4D4XQ2FH62V2QSJ3117XZ
+    content: Integrated as ea9cdce. Active main and preview playback now use shared PlaybackController
+      and FreeRadio.Audio; QtMultimedia was removed from the active build. Cleanup and full
+      post-audio-fix verification remain in progress.
+    supersedes: null
+    author: DonutsDelivery
+    created_at: 2026-07-18T17:29:24.663Z
