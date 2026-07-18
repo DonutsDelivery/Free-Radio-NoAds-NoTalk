@@ -7,13 +7,21 @@ description: Build the shared in-process Qt Network, FFmpeg, miniaudio, and FFT 
 spec_ref: "@custom-inprocess-audio"
 meta_ref: null
 plan_ref: null
-status: in_progress
+status: pending_review
 blocked_by: []
 depends_on: []
 context: []
 priority: 1
 tags: []
 vcs_refs: []
+submission_linkage:
+  review_url: null
+  branch: feature/android-shared-app
+  captured_at: 2026-07-18T17:35:17.004Z
+  commit: d035e114b87a46cf88dc765df70bde5ad0dc5bef
+  remote: null
+  remote_url: null
+  upstream_ref: null
 history:
   - author: "@claude"
     changes:
@@ -25,7 +33,28 @@ history:
         previous: null
     command: task-start
     timestamp: 2026-07-18T15:27:32.405Z
+  - author: DonutsDelivery
+    changes:
+      status:
+        new: pending_review
+        previous: in_progress
+      submission_linkage:
+        new:
+          review_url: null
+          branch: feature/android-shared-app
+          captured_at: 2026-07-18T17:35:17.004Z
+          commit: d035e114b87a46cf88dc765df70bde5ad0dc5bef
+          remote: null
+          remote_url: null
+          upstream_ref: null
+        previous: null
+      submitted_at:
+        new: 2026-07-18T17:35:17.010Z
+        previous: null
+    command: task-submit
+    timestamp: 2026-07-18T17:35:17.010Z
 created_at: 2026-07-18T15:27:32.152Z
 started_at: 2026-07-18T15:27:32.404Z
+submitted_at: 2026-07-18T17:35:17.010Z
 todos: []
 automation: needs_review

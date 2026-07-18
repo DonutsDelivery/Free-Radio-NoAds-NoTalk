@@ -38,7 +38,7 @@ tasks:
     title: Implement custom streaming engine
     type: task
     spec_ref: "@custom-inprocess-audio"
-    status: in_progress
+    status: pending_review
     blocked_by: []
     depends_on: []
     priority: 1
@@ -47,6 +47,7 @@ tasks:
     todos_count: 0
     created_at: 2026-07-18T15:27:32.152Z
     started_at: 2026-07-18T15:27:32.404Z
+    submitted_at: 2026-07-18T17:35:17.010Z
     automation: needs_review
   - _ulid: 01KXTXDZTFFKSRPC1G6CGN8T8D
     slugs:
