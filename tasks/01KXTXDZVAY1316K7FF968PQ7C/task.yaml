@@ -1,0 +1,21 @@
+_ulid: 01KXTXDZVAY1316K7FF968PQ7C
+slugs:
+  - make-shared-ui-mobile-portable
+title: Make shared UI mobile portable
+type: task
+description: Remove shared desktop-only imports and adapt touch, insets, keyboard, sizing, and back
+  behavior without forking MainContent.
+spec_ref: "@shared-portable-qml"
+meta_ref: null
+plan_ref: null
+status: pending
+blocked_by: []
+depends_on:
+  - "@migrate-shared-qml-playback"
+context: []
+priority: 2
+tags: []
+vcs_refs: []
+created_at: 2026-07-18T15:27:32.202Z
+todos: []
+automation: needs_review

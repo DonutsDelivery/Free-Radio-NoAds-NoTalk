@@ -1,0 +1,19 @@
+_ulid: 01KXTXDZR2CW00CKXX50QMV532
+slugs:
+  - build-shared-android-apk
+title: Build shared Android APK
+type: epic
+description: Coordinate the approved multi-phase Android application delivery.
+spec_ref: "@android-apk-shared"
+meta_ref: null
+plan_ref: null
+status: pending
+blocked_by: []
+depends_on: []
+context: []
+priority: 1
+tags: []
+vcs_refs: []
+created_at: 2026-07-18T15:27:32.098Z
+todos: []
+automation: manual_only

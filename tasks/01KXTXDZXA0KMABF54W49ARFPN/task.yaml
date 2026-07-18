@@ -1,0 +1,20 @@
+_ulid: 01KXTXDZXA0KMABF54W49ARFPN
+slugs:
+  - add-android-ci-github-release
+title: Add Android CI and GitHub release
+type: task
+description: Build, test, sign, and publish emulator and arm64 APK artifacts.
+spec_ref: "@github-android-apk-release"
+meta_ref: null
+plan_ref: null
+status: pending
+blocked_by: []
+depends_on:
+  - "@add-android-background-integration"
+context: []
+priority: 2
+tags: []
+vcs_refs: []
+created_at: 2026-07-18T15:27:32.266Z
+todos: []
+automation: needs_review

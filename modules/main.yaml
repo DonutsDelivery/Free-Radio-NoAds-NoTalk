@@ -1,12 +1,216 @@
 _ulid: 01KXTT775QWACCVS5AVN516NMK
 slugs:
   - main
-title: "Project - Main Module"
+title: Project - Main Module
 type: module
+description: |
+  Default module for Project. Add your spec items here.
 status:
   maturity: draft
   implementation: not_started
-description: |
-  Default module for Project. Add your spec items here.
-
+features:
+  - _ulid: 01KXTXDZ9KWJBRHKKA0XAJE45H
+    slugs:
+      - android-apk-shared
+    title: Shared Android application
+    type: feature
+    description: Deliver Free Radio as a GitHub-distributed Android APK while sharing all routinely
+      maintained catalog, URL resolution, playback, metadata, spectrum, persistence, and UI behavior
+      with desktop targets; isolate only platform lifecycle, output, and packaging adapters.
+    depends_on: []
+    implements: []
+    relates_to: []
+    tests: []
+    traits: []
+    priority: high
+    tags:
+      - android
+      - audio
+      - release
+    requirements:
+      - _ulid: 01KXTXDZB3KVVE2PC20Q7TX8QB
+        slugs:
+          - single-source-radio-catalog
+        title: Single-source radio catalog
+        type: requirement
+        description: One ordered canonical catalog is the only hand-edited source for station data and
+          deterministically generates the QML runtime resource.
+        status:
+          maturity: draft
+          implementation: in_progress
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        acceptance_criteria:
+          - given: the canonical catalog is valid
+            id: ac-1
+            then: it produces deterministic QML JavaScript preserving every source, category, station value, and
+              declaration order
+            when: the generator runs
+          - given: existing persisted favorites and custom stations
+            id: ac-2
+            then: the name, host, path, source, and category identity schemas remain compatible
+            when: the generated catalog is loaded
+          - given: malformed fields, invalid provider structure, unresolved genre references, or an unapproved
+              duplicate occurrence
+            id: ac-3
+            then: validation fails with a clear diagnostic
+            when: catalog validation runs
+          - given: canonical JSON and generated runtime data differ
+            id: ac-4
+            then: the build fails before packaging stale station data
+            when: continuous integration or release packaging runs
+        priority: high
+        tags: []
+        created: 2026-07-18T15:27:31.683Z
+        notes: []
+      - _ulid: 01KXTXDZDSAB8NQVX641HG71DF
+        slugs:
+          - custom-inprocess-audio
+        title: Custom in-process audio engine
+        type: requirement
+        description: All active playback uses a shared in-process network, decode, output, and spectrum
+          pipeline without Qt MediaPlayer fallback.
+        status:
+          maturity: draft
+          implementation: in_progress
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        acceptance_criteria:
+          - given: a supported radio or audiobook source
+            id: ac-1
+            then: Qt Network and FFmpeg resolve and decode it in-process and miniaudio outputs the decoded PCM
+              without Qt Multimedia
+            when: playback starts
+          - given: HTTP redirects, supported playlists, ICY metadata, transient disconnects, or station
+              switching
+            id: ac-2
+            then: the engine resolves, reports metadata, reconnects or cancels generation-safely, and exposes
+              honest typed state and errors
+            when: the stream is processed
+          - given: decoded audio is audible
+            id: ac-3
+            then: a real off-realtime FFT analyzes the same PCM actually consumed by the output and remains
+              synchronized with audible playback
+            when: spectrum visualization updates
+          - given: the realtime device callback runs
+            id: ac-4
+            then: it performs no network access, decoding, allocation, blocking lock, Qt signal emission, or FFT
+              work and fills underruns with silence
+            when: it requests frames
+          - given: main playback, preview playback, or finite audiobook playback ends or fails
+            id: ac-5
+            then: all network, decoder, buffer, timer, and device resources stop and the public state reflects
+              the outcome
+            when: the pipeline reaches completion or a terminal error
+        priority: high
+        tags: []
+        created: 2026-07-18T15:27:31.769Z
+        notes: []
+      - _ulid: 01KXTXDZGTCNCYW48AEX0KM3H6
+        slugs:
+          - shared-portable-qml
+        title: Shared portable QML experience
+        type: requirement
+        description: Desktop standalone, Plasma, and Android consume the same maintainable catalog, URL
+          rules, playback controller, navigation, favorites, search, metadata, and primary QML UI.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        acceptance_criteria:
+          - given: a station, link, category, ordering, search, metadata, or shared UI edit
+            id: ac-1
+            then: the edit is made once in shared source and appears in desktop and Android outputs
+            when: all platform packages are built
+          - given: existing standalone or Plasma settings
+            id: ac-2
+            then: favorites, custom stations, volume, last station, and audiobook progress load without autoplay
+              or schema loss
+            when: the shared controller replaces Qt MediaPlayer
+          - given: Android phone layouts, software keyboard, rotation, font scaling, and back navigation
+            id: ac-3
+            then: controls remain reachable, touch-sized, inset-safe, and navigable without an Android-only copy
+              of MainContent
+            when: the shared QML is used
+        priority: high
+        tags: []
+        created: 2026-07-18T15:27:31.866Z
+        notes: []
+      - _ulid: 01KXTXDZJXE6ADDGEYYMZ3BFNX
+        slugs:
+          - android-background-media
+        title: Android background media integration
+        type: requirement
+        description: Android-specific adapters provide lifecycle, routing, focus, and foreground media
+          service behavior while the shared engine owns playback.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        acceptance_criteria:
+          - given: radio playback is active
+            id: ac-1
+            then: playback continues through a foreground mediaPlayback service with a visible media
+              notification
+            when: the app is backgrounded or the screen locks
+          - given: notification, lock-screen, headset, or Bluetooth controls
+            id: ac-2
+            then: the shared playback controller performs the command and notification state stays synchronized
+            when: play, pause, next, previous, or stop is invoked
+          - given: audio-focus loss, becoming-noisy, or route change
+            id: ac-3
+            then: the app ducks, pauses, resumes only when appropriate, or reopens output without unintended
+              autoplay
+            when: Android reports the event
+          - given: the release manifest
+            id: ac-4
+            then: it requests only required internet, notification, and foreground-media permissions, never
+              microphone/storage, and limits cleartext access to catalog-approved hosts
+            when: permissions and network policy are inspected
+        priority: high
+        tags: []
+        created: 2026-07-18T15:27:31.933Z
+        notes: []
+      - _ulid: 01KXTXDZNBN1J71XTG21GQDXQP
+        slugs:
+          - github-android-apk-release
+        title: GitHub APK release
+        type: requirement
+        description: CI verifies and publishes a freeware Android APK through GitHub Releases with protected
+          signing credentials and license compliance.
+        depends_on: []
+        implements: []
+        relates_to: []
+        tests: []
+        traits: []
+        acceptance_criteria:
+          - given: the Android build workflow
+            id: ac-1
+            then: it builds x86_64 emulator and arm64 phone artifacts from pinned Qt, NDK, miniaudio, and
+              LGPL-compatible FFmpeg dependencies
+            when: CI runs
+          - given: an x86_64 APK
+            id: ac-2
+            then: the app installs, launches, browses shared data, plays representative HTTP and HTTPS streams,
+              and exercises background controls
+            when: the emulator smoke suite runs
+          - given: a version tag and configured GitHub secrets
+            id: ac-3
+            then: it signs the arm64 APK without exposing credentials and attaches it with required LGPL notices
+              and source/build information to GitHub Releases
+            when: the release workflow completes
+        priority: high
+        tags: []
+        created: 2026-07-18T15:27:32.011Z
+        notes: []
+    created: 2026-07-18T15:27:31.635Z
+    notes: []
 items: []

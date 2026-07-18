@@ -1,0 +1,7 @@
+notes:
+  - _ulid: 01KXTXE02KPWPT3H9T16EFEZDG
+    content: Implementation started from the approved Android plan; independent correctness, realtime,
+      reuse, lifecycle, and packaging reviews are being incorporated before integration.
+    supersedes: null
+    author: "@claude"
+    created_at: 2026-07-18T15:27:32.436Z

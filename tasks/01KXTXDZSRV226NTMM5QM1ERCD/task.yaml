@@ -1,0 +1,31 @@
+_ulid: 01KXTXDZSRV226NTMM5QM1ERCD
+slugs:
+  - implement-custom-streaming-engine
+title: Implement custom streaming engine
+type: task
+description: Build the shared in-process Qt Network, FFmpeg, miniaudio, and FFT engine with focused tests.
+spec_ref: "@custom-inprocess-audio"
+meta_ref: null
+plan_ref: null
+status: in_progress
+blocked_by: []
+depends_on: []
+context: []
+priority: 1
+tags: []
+vcs_refs: []
+history:
+  - author: "@claude"
+    changes:
+      status:
+        new: in_progress
+        previous: pending
+      started_at:
+        new: 2026-07-18T15:27:32.404Z
+        previous: null
+    command: task-start
+    timestamp: 2026-07-18T15:27:32.405Z
+created_at: 2026-07-18T15:27:32.152Z
+started_at: 2026-07-18T15:27:32.404Z
+todos: []
+automation: needs_review

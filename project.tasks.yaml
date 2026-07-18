@@ -1,4 +1,130 @@
-# Project - Tasks
-# Track implementation work here
-
-tasks: []
+tasks:
+  - _ulid: 01KXTXDZR2CW00CKXX50QMV532
+    slugs:
+      - build-shared-android-apk
+    title: Build shared Android APK
+    type: epic
+    spec_ref: "@android-apk-shared"
+    status: pending
+    blocked_by: []
+    depends_on: []
+    priority: 1
+    tags: []
+    notes_count: 0
+    todos_count: 0
+    created_at: 2026-07-18T15:27:32.098Z
+    automation: manual_only
+  - _ulid: 01KXTXDZRV28R8W7XT02RPXVHX
+    slugs:
+      - create-canonical-station-catalog
+    title: Create canonical station catalog
+    type: task
+    spec_ref: "@single-source-radio-catalog"
+    status: in_progress
+    blocked_by: []
+    depends_on: []
+    priority: 1
+    tags: []
+    notes_count: 1
+    todos_count: 0
+    created_at: 2026-07-18T15:27:32.123Z
+    started_at: 2026-07-18T15:27:32.326Z
+    automation: needs_review
+  - _ulid: 01KXTXDZSRV226NTMM5QM1ERCD
+    slugs:
+      - implement-custom-streaming-engine
+    title: Implement custom streaming engine
+    type: task
+    spec_ref: "@custom-inprocess-audio"
+    status: in_progress
+    blocked_by: []
+    depends_on: []
+    priority: 1
+    tags: []
+    notes_count: 1
+    todos_count: 0
+    created_at: 2026-07-18T15:27:32.152Z
+    started_at: 2026-07-18T15:27:32.404Z
+    automation: needs_review
+  - _ulid: 01KXTXDZTFFKSRPC1G6CGN8T8D
+    slugs:
+      - migrate-shared-qml-playback
+    title: Migrate shared QML playback
+    type: task
+    spec_ref: "@shared-portable-qml"
+    status: pending
+    blocked_by: []
+    depends_on:
+      - "@implement-custom-streaming-engine"
+    priority: 1
+    tags: []
+    notes_count: 0
+    todos_count: 0
+    created_at: 2026-07-18T15:27:32.175Z
+    automation: needs_review
+  - _ulid: 01KXTXDZVAY1316K7FF968PQ7C
+    slugs:
+      - make-shared-ui-mobile-portable
+    title: Make shared UI mobile portable
+    type: task
+    spec_ref: "@shared-portable-qml"
+    status: pending
+    blocked_by: []
+    depends_on:
+      - "@migrate-shared-qml-playback"
+    priority: 2
+    tags: []
+    notes_count: 0
+    todos_count: 0
+    created_at: 2026-07-18T15:27:32.202Z
+    automation: needs_review
+  - _ulid: 01KXTXDZW9ZKF8SD23K19S9Z8P
+    slugs:
+      - add-android-background-integration
+    title: Add Android background integration
+    type: task
+    spec_ref: "@android-background-media"
+    status: pending
+    blocked_by: []
+    depends_on:
+      - "@create-canonical-station-catalog"
+      - "@implement-custom-streaming-engine"
+      - "@make-shared-ui-mobile-portable"
+    priority: 1
+    tags: []
+    notes_count: 0
+    todos_count: 0
+    created_at: 2026-07-18T15:27:32.233Z
+    automation: needs_review
+  - _ulid: 01KXTXDZXA0KMABF54W49ARFPN
+    slugs:
+      - add-android-ci-github-release
+    title: Add Android CI and GitHub release
+    type: task
+    spec_ref: "@github-android-apk-release"
+    status: pending
+    blocked_by: []
+    depends_on:
+      - "@add-android-background-integration"
+    priority: 2
+    tags: []
+    notes_count: 0
+    todos_count: 0
+    created_at: 2026-07-18T15:27:32.266Z
+    automation: needs_review
+  - _ulid: 01KXTXDZYE96TWYN6JN73TD799
+    slugs:
+      - verify-android-apk-end-to-end
+    title: Verify Android APK end to end
+    type: task
+    spec_ref: "@android-apk-shared"
+    status: pending
+    blocked_by: []
+    depends_on:
+      - "@add-android-ci-github-release"
+    priority: 1
+    tags: []
+    notes_count: 0
+    todos_count: 0
+    created_at: 2026-07-18T15:27:32.302Z
+    automation: manual_only

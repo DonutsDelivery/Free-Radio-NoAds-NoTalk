@@ -1,0 +1,21 @@
+_ulid: 01KXTXDZYE96TWYN6JN73TD799
+slugs:
+  - verify-android-apk-end-to-end
+title: Verify Android APK end to end
+type: task
+description: Exercise desktop flows, Appium emulator coverage, and physical arm64
+  background/routing/network behavior.
+spec_ref: "@android-apk-shared"
+meta_ref: null
+plan_ref: null
+status: pending
+blocked_by: []
+depends_on:
+  - "@add-android-ci-github-release"
+context: []
+priority: 1
+tags: []
+vcs_refs: []
+created_at: 2026-07-18T15:27:32.302Z
+todos: []
+automation: manual_only

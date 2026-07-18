@@ -1,0 +1,32 @@
+_ulid: 01KXTXDZRV28R8W7XT02RPXVHX
+slugs:
+  - create-canonical-station-catalog
+title: Create canonical station catalog
+type: task
+description: Convert the production catalog to one validated ordered source and wire deterministic
+  generation into CI.
+spec_ref: "@single-source-radio-catalog"
+meta_ref: null
+plan_ref: null
+status: in_progress
+blocked_by: []
+depends_on: []
+context: []
+priority: 1
+tags: []
+vcs_refs: []
+history:
+  - author: "@claude"
+    changes:
+      status:
+        new: in_progress
+        previous: pending
+      started_at:
+        new: 2026-07-18T15:27:32.326Z
+        previous: null
+    command: task-start
+    timestamp: 2026-07-18T15:27:32.326Z
+created_at: 2026-07-18T15:27:32.123Z
+started_at: 2026-07-18T15:27:32.326Z
+todos: []
+automation: needs_review

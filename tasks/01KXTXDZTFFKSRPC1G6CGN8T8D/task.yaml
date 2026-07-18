@@ -1,0 +1,21 @@
+_ulid: 01KXTXDZTFFKSRPC1G6CGN8T8D
+slugs:
+  - migrate-shared-qml-playback
+title: Migrate shared QML playback
+type: task
+description: Replace every active Qt MediaPlayer main, preview, remote, and audiobook path with the
+  shared engine/controller.
+spec_ref: "@shared-portable-qml"
+meta_ref: null
+plan_ref: null
+status: pending
+blocked_by: []
+depends_on:
+  - "@implement-custom-streaming-engine"
+context: []
+priority: 1
+tags: []
+vcs_refs: []
+created_at: 2026-07-18T15:27:32.175Z
+todos: []
+automation: needs_review
