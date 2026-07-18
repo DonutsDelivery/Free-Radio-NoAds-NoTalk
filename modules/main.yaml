@@ -147,6 +147,11 @@ features:
             then: controls remain reachable, touch-sized, inset-safe, and navigable without an Android-only copy
               of MainContent
             when: the shared QML is used
+          - given: main playback is loading or buffering
+            id: ac-4
+            then: the request is cancelled or paused according to user intent and audio does not begin until the
+              user explicitly resumes
+            when: the user invokes pause from the UI or remote controls
         priority: high
         tags: []
         created: 2026-07-18T15:27:31.866Z
