@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="radio_amber">#FFB300</color>
+    <color name="radio_background">#151515</color>
+    <style name="FreeRadioTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowBackground">@color/radio_background</item>
+        <item name="android:colorAccent">@color/radio_amber</item>
+        <item name="android:navigationBarColor">@color/radio_background</item>
+        <item name="android:statusBarColor">@color/radio_background</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

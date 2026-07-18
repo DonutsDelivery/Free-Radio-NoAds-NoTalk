@@ -1,18 +1,28 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.21)
 
 project(FreeRadioApp VERSION 2.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# Enable Qt's MOC and automatic handling
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Find required Qt components
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Qml Quick QuickControls2 DBus Network Xml)
+if(ANDROID)
+    set(QT_ANDROID_ABIS "arm64-v8a;x86_64" CACHE STRING
+        "Android ABIs packaged by Free Radio" FORCE)
+endif()
+
+set(FREERADIO_QT_COMPONENTS Core Gui Qml Quick QuickControls2 Network Xml)
+if(NOT ANDROID)
+    list(APPEND FREERADIO_QT_COMPONENTS Widgets DBus)
+endif()
+find_package(Qt6 REQUIRED COMPONENTS ${FREERADIO_QT_COMPONENTS})
 qt_policy(SET QTP0001 NEW)
+if(NOT ANDROID)
+    find_package(KF6Kirigami REQUIRED)
+endif()
+
 find_package(PkgConfig QUIET)
 set(FREERADIO_AUDIO_CORE_MODE "AUTO" CACHE STRING "Audio core mode: AUTO, REQUIRED, or OFF")
 set_property(CACHE FREERADIO_AUDIO_CORE_MODE PROPERTY STRINGS AUTO REQUIRED OFF)
@@ -40,7 +50,7 @@ if(NOT FREERADIO_AUDIO_CORE_MODE STREQUAL "OFF")
         )
         set(FREERADIO_FFMPEG_TARGET freeradio_ffmpeg)
         set(FREERADIO_AUDIO_CORE_AVAILABLE ON)
-    elseif(PkgConfig_FOUND)
+    elseif(PkgConfig_FOUND AND NOT ANDROID)
         pkg_check_modules(FFMPEG QUIET IMPORTED_TARGET
             libavformat libavcodec libavutil libswresample
         )
@@ -53,15 +63,9 @@ endif()
 if((FREERADIO_AUDIO_CORE_MODE STREQUAL "REQUIRED" OR FREERADIO_APP_REQUIRES_AUDIO_CORE)
    AND NOT FREERADIO_AUDIO_CORE_AVAILABLE)
     message(FATAL_ERROR "FreeRadio.Audio is required but FFmpeg was not found. Provide pkg-config metadata or all FREERADIO_*_LIBRARY and FREERADIO_FFMPEG_INCLUDE_DIR cache paths.")
-elseif(FREERADIO_AUDIO_CORE_MODE STREQUAL "AUTO" AND NOT FREERADIO_AUDIO_CORE_AVAILABLE)
-    message(WARNING "FreeRadio.Audio is unavailable. Current QML may build, but set FREERADIO_APP_REQUIRES_AUDIO_CORE=ON when migrating playback so missing runtime imports fail at configure time.")
 endif()
 
-# Find KDE Frameworks 6 Kirigami
-find_package(KF6Kirigami REQUIRED)
-
-# Find PulseAudio (Linux only - optional for cross-platform)
-if(PkgConfig_FOUND)
+if(UNIX AND NOT APPLE AND NOT ANDROID AND PkgConfig_FOUND)
     pkg_check_modules(PULSEAUDIO libpulse libpulse-simple)
 endif()
 
@@ -94,43 +98,37 @@ if(FREERADIO_AUDIO_CORE_AVAILABLE)
     )
 endif()
 
-# Add executables
 set(FREERADIO_SOURCES
     main.cpp
+    AndroidMediaIntegration.cpp
+    AndroidMediaIntegration.h
     AudioCapture.cpp
     AudioCapture.h
     SessionMonitor.cpp
     SessionMonitor.h
     resources.qrc
 )
-
-# Add Windows icon resource
 if(WIN32)
     list(APPEND FREERADIO_SOURCES freeradio.rc)
 endif()
 
-add_executable(freeradio ${FREERADIO_SOURCES})
-
-# Optional test executable
-if(PULSEAUDIO_FOUND)
-    add_executable(test-audio
-        test_audio.cpp
-        AudioCapture.cpp
-        AudioCapture.h
-    )
+if(ANDROID)
+    qt_add_executable(freeradio MANUAL_FINALIZATION ${FREERADIO_SOURCES})
+else()
+    add_executable(freeradio ${FREERADIO_SOURCES})
 endif()
 
-# Link Qt and Kirigami libraries
+if(PULSEAUDIO_FOUND)
+    add_executable(test-audio test_audio.cpp AudioCapture.cpp AudioCapture.h)
+endif()
+
 target_link_libraries(freeradio PRIVATE
-    Qt6::Core
-    Qt6::Widgets
-    Qt6::Qml
-    Qt6::Quick
-    Qt6::QuickControls2
-    Qt6::DBus
-    KF6::Kirigami
+    Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::QuickControls2
     freeradio_audio
 )
+if(NOT ANDROID)
+    target_link_libraries(freeradio PRIVATE Qt6::Widgets Qt6::DBus KF6::Kirigami)
+endif()
 if(FREERADIO_AUDIO_CORE_AVAILABLE)
     add_dependencies(freeradio freeradio_audioplugin)
     target_compile_definitions(freeradio PRIVATE
@@ -139,47 +137,67 @@ if(FREERADIO_AUDIO_CORE_AVAILABLE)
     )
 endif()
 
-# Optional PulseAudio support
 if(PULSEAUDIO_FOUND)
     target_link_libraries(freeradio PRIVATE ${PULSEAUDIO_LIBRARIES})
     target_include_directories(freeradio PRIVATE ${PULSEAUDIO_INCLUDE_DIRS})
     target_compile_definitions(freeradio PRIVATE ${PULSEAUDIO_CFLAGS_OTHER} HAVE_PULSEAUDIO)
-
-    target_link_libraries(test-audio PRIVATE
-        Qt6::Core
-        ${PULSEAUDIO_LIBRARIES}
-    )
+    target_link_libraries(test-audio PRIVATE Qt6::Core ${PULSEAUDIO_LIBRARIES})
     target_include_directories(test-audio PRIVATE ${PULSEAUDIO_INCLUDE_DIRS})
     target_compile_definitions(test-audio PRIVATE ${PULSEAUDIO_CFLAGS_OTHER})
 endif()
 
-# Set output directory for QML modules
 set_target_properties(freeradio PROPERTIES
     QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml
-    # GUI subsystem (no console window) for all builds EXCEPT Debug.
-    # Debug builds keep the console so qDebug()/console.log output is visible.
     WIN32_EXECUTABLE $<NOT:$<CONFIG:Debug>>
     MACOSX_BUNDLE TRUE
 )
 
-# Installation rules
-include(GNUInstallDirs)
+if(ANDROID)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    set(FREERADIO_ANDROID_PACKAGE_DIR "${CMAKE_CURRENT_BINARY_DIR}/android-package")
+    file(REMOVE_RECURSE "${FREERADIO_ANDROID_PACKAGE_DIR}")
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/android/"
+         DESTINATION "${FREERADIO_ANDROID_PACKAGE_DIR}")
+    execute_process(
+        COMMAND "${Python3_EXECUTABLE}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/android/generate_network_security_config.py"
+                --output "${FREERADIO_ANDROID_PACKAGE_DIR}/res/xml/network_security_config.xml"
+                "${CMAKE_CURRENT_SOURCE_DIR}/catalog/radiodata.json"
+        RESULT_VARIABLE FREERADIO_NETWORK_POLICY_RESULT
+        OUTPUT_VARIABLE FREERADIO_NETWORK_POLICY_OUTPUT
+        ERROR_VARIABLE FREERADIO_NETWORK_POLICY_ERROR
+    )
+    if(NOT FREERADIO_NETWORK_POLICY_RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to generate Android network policy: ${FREERADIO_NETWORK_POLICY_ERROR}")
+    endif()
+    message(STATUS "${FREERADIO_NETWORK_POLICY_OUTPUT}")
 
+    set_target_properties(freeradio PROPERTIES
+        QT_ANDROID_PACKAGE_SOURCE_DIR "${FREERADIO_ANDROID_PACKAGE_DIR}"
+        QT_ANDROID_PACKAGE_NAME "org.freeradio.app"
+        QT_ANDROID_MIN_SDK_VERSION 26
+        QT_ANDROID_TARGET_SDK_VERSION 35
+        QT_ANDROID_VERSION_CODE 20000
+        QT_ANDROID_VERSION_NAME "${PROJECT_VERSION}"
+    )
+    qt_finalize_executable(freeradio)
+endif()
+
+include(GNUInstallDirs)
 install(TARGETS freeradio
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     BUNDLE DESTINATION .
 )
-
-install(FILES freeradio.desktop
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
-)
-
-install(FILES icons/freeradio.svg
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
-)
+if(NOT ANDROID)
+    install(FILES freeradio.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+    install(FILES icons/freeradio.svg DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
+endif()
 
 if(FREERADIO_AUDIO_CORE_AVAILABLE)
-    if(APPLE)
+    if(ANDROID)
+        set(FREERADIO_QML_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/qt6/qml/FreeRadio/Audio")
+    elseif(APPLE)
         set(FREERADIO_QML_INSTALL_DIR "freeradio.app/Contents/Resources/qml/FreeRadio/Audio")
         set_target_properties(freeradio_audioplugin PROPERTIES INSTALL_RPATH "@loader_path")
     elseif(WIN32)

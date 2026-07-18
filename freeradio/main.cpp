@@ -1,4 +1,9 @@
+#include <QtGlobal>
+#ifdef Q_OS_ANDROID
+#include <QGuiApplication>
+#else
 #include <QApplication>
+#endif
 #include <QQmlApplicationEngine>
 #include <QQmlComponent>
 #include <QQmlContext>
@@ -8,20 +13,27 @@
 #include <QDir>
 #include <memory>
 #include "AudioCapture.h"
+#include "AndroidMediaIntegration.h"
 #include "SessionMonitor.h"
 
 int main(int argc, char *argv[])
 {
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
     // Force PulseAudio API instead of native PipeWire protocol.
     // Native PipeWire sets PW_STREAM_FLAG_DONT_RECONNECT which kills the stream
     // when monitors DPMS off during screen lock (graph reconfiguration).
     // PulseAudio via pipewire-pulse has a ~500ms ring buffer that survives this.
     qputenv("QT_AUDIO_BACKEND", "pulseaudio");
+#endif
 
     // Enable GPU acceleration where available
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
+#ifdef Q_OS_ANDROID
+    QGuiApplication app(argc, argv);
+#else
     QApplication app(argc, argv);
+#endif
 
     app.setApplicationName("Free Radio");
     app.setApplicationVersion("2.0.0");
@@ -29,10 +41,13 @@ int main(int argc, char *argv[])
     app.setOrganizationDomain("freeradio.app");
     app.setWindowIcon(QIcon::fromTheme("radio"));
 
-    // Use appropriate style per platform
-    // Try org.kde.desktop first (KDE), fall back to Fusion (works everywhere)
+    // Use a native mobile control style; desktop keeps the KDE integration.
     if (QQuickStyle::name().isEmpty()) {
+#ifdef Q_OS_ANDROID
+        QQuickStyle::setStyle("Material");
+#else
         QQuickStyle::setStyle("org.kde.desktop");
+#endif
     }
 
     // Register types with QML
@@ -63,6 +78,8 @@ int main(int argc, char *argv[])
         return 0;
     }
 #endif
+    AndroidMediaIntegration androidMedia;
+    engine.rootContext()->setContextProperty("AndroidMedia", &androidMedia);
 
     // Try to load from Qt resources first (bundled app)
     QUrl qmlUrl = QUrl("qrc:/ui/main.qml");

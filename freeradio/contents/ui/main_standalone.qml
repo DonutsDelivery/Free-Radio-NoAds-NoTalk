@@ -78,6 +78,38 @@ Kirigami.ApplicationWindow {
             loadSources()
         }
 
+        function syncAndroidMedia() {
+            if (currentStationUrl === "") {
+                AndroidMedia.stopService()
+                return
+            }
+            AndroidMedia.updatePlaybackState(!userPaused,
+                                             currentStationName || "Free Radio",
+                                             currentSongTitle || currentArtist)
+        }
+
+        onCurrentStationUrlChanged: syncAndroidMedia()
+        onCurrentStationNameChanged: syncAndroidMedia()
+        onCurrentSongTitleChanged: syncAndroidMedia()
+        onCurrentArtistChanged: syncAndroidMedia()
+        onUserPausedChanged: syncAndroidMedia()
+
+        Connections {
+            target: AndroidMedia
+            function onPlayRequested() {
+                if (mainContent.userPaused) mainContent.handleRemoteCommand("playpause")
+            }
+            function onPauseRequested() {
+                if (!mainContent.userPaused) mainContent.handleRemoteCommand("playpause")
+            }
+            function onStopRequested() {
+                if (!mainContent.userPaused) mainContent.handleRemoteCommand("playpause")
+                Qt.callLater(function() { AndroidMedia.stopService() })
+            }
+            function onNextRequested() { mainContent.playNextStation() }
+            function onPreviousRequested() { mainContent.playPreviousStation() }
+        }
+
         // Save changes back to persistent settings
         Connections {
             target: mainContent.settings
