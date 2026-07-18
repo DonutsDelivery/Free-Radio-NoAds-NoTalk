@@ -30,3 +30,10 @@ notes:
     supersedes: null
     author: DonutsDelivery
     created_at: 2026-07-18T17:30:24.988Z
+  - _ulid: 01KXV4QWN4YWY00M5DCRGGG4HF
+    content: Integrated blocker fixes as d035e11 after reconciling CMake with the QML migration. Fresh
+      integrated Release build passed; 3/3 tests passed, including app-level FreeRadio.Audio import
+      smoke and no-QtMultimedia invariant.
+    supersedes: null
+    author: DonutsDelivery
+    created_at: 2026-07-18T17:35:16.644Z
