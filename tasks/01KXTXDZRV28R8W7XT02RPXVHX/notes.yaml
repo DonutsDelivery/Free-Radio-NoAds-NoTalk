@@ -36,3 +36,10 @@ notes:
     supersedes: null
     author: "@claude"
     created_at: 2026-07-18T17:13:02.016Z
+  - _ulid: 01KXV3Y98D4Z1V90VE16S02GA5
+    content: "Fix commit 412f073 addresses all confirmed review defects. Verification: 16 catalog tests
+      pass; drift validation reports 47 categories, 746 stations, 8 genre groups, and generated
+      files current."
+    supersedes: null
+    author: DonutsDelivery
+    created_at: 2026-07-18T17:21:17.581Z
