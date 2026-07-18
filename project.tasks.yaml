@@ -73,7 +73,7 @@ tasks:
     title: Make shared UI mobile portable
     type: task
     spec_ref: "@shared-portable-qml"
-    status: pending
+    status: in_progress
     blocked_by: []
     depends_on:
       - "@migrate-shared-qml-playback"
@@ -82,6 +82,7 @@ tasks:
     notes_count: 0
     todos_count: 0
     created_at: 2026-07-18T15:27:32.202Z
+    started_at: 2026-07-18T17:36:39.535Z
     automation: needs_review
   - _ulid: 01KXTXDZW9ZKF8SD23K19S9Z8P
     slugs:
