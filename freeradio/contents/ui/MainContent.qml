@@ -4,7 +4,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
-import org.kde.kirigami as Kirigami
 import "radiodata.js" as RadioData
 
 Item {
@@ -38,6 +37,23 @@ Item {
 
     // Popup state (used by plasmoid for panel popup)
     property bool showPopup: false
+
+    // Cross-platform UI capabilities. Wrappers may override safe-area values;
+    // compact Plasma mode deliberately ignores them to preserve panel sizing.
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
+    property real safeAreaLeft: 0
+    property real safeAreaTop: 0
+    property real safeAreaRight: 0
+    property real safeAreaBottom: 0
+    readonly property real effectiveSafeAreaLeft: isCompactMode ? 0 : safeAreaLeft
+    readonly property real effectiveSafeAreaTop: isCompactMode ? 0 : safeAreaTop
+    readonly property real effectiveSafeAreaRight: isCompactMode ? 0 : safeAreaRight
+    readonly property real effectiveSafeAreaBottom: isCompactMode ? 0 : safeAreaBottom
+    readonly property bool portraitLayout: height >= width
+    readonly property real fontScale: isMobile ? (portraitLayout ? 1.0 : 0.92) : 1.0
+    readonly property real touchTargetSize: isMobile ? 48 : buttonSize
+    readonly property bool keyboardVisible: Qt.inputMethod.visible
+    property bool androidBackEnabled: isMobile
     
     
     // Playback state tracking
@@ -47,10 +63,12 @@ Item {
     property int restartAttempts: 0
     property int maxRestartAttempts: 3
     
-    // Adaptive sizing properties - FORCE 720P SIMULATION MODE with optimized text sizing
-    // Simulate widget running on 720p screen by scaling down effective dimensions
-    property real simulatedWidth: Math.min(root.width, root.width * 720 / 2560) // Scale down from your 2560px to 720p equivalent
-    property real simulatedHeight: Math.min(root.height, root.height * 720 / 1440) // Scale down from your 1440px to 720p equivalent
+    // Desktop keeps the established 720p simulation; mobile uses its real
+    // viewport so controls and type do not collapse on narrow screens.
+    property real simulatedWidth: isMobile ? Math.max(0, root.width - effectiveSafeAreaLeft - effectiveSafeAreaRight)
+                                           : Math.min(root.width, root.width * 720 / 2560)
+    property real simulatedHeight: isMobile ? Math.max(0, root.height - effectiveSafeAreaTop - effectiveSafeAreaBottom)
+                                            : Math.min(root.height, root.height * 720 / 1440)
     
     // Optimized text sizing hierarchy that makes better use of space
     property real availableTextWidth: simulatedWidth - (marginSize * 2) // Account for margins
@@ -58,12 +76,12 @@ Item {
     property real marginSize: Math.max(6, Math.min(15, simulatedWidth / 40)) // Match spacingLarge value for consistent gaps
     
     // Text size hierarchy optimized for space utilization
-    property real microFontSize: Math.max(7, Math.min(9, availableTextWidth / 80))     // Very small text (codec info, etc)
-    property real smallFontSize: Math.max(8, Math.min(11, availableTextWidth / 65))    // Small text (secondary info)
-    property real baseFontSize: Math.max(10, Math.min(13, availableTextWidth / 50))    // Base text (most content)
-    property real titleFontSize: Math.max(12, Math.min(16, availableTextWidth / 40))   // Titles and important text
-    property real largeFontSize: Math.max(14, Math.min(18, availableTextWidth / 35))   // Large headings
-    property real headerFontSize: Math.max(16, Math.min(20, availableTextWidth / 30))  // Main headers
+    property real microFontSize: Math.max(7, Math.min(9, availableTextWidth / 80)) * fontScale
+    property real smallFontSize: Math.max(8, Math.min(11, availableTextWidth / 65)) * fontScale
+    property real baseFontSize: Math.max(10, Math.min(13, availableTextWidth / 50)) * fontScale
+    property real titleFontSize: Math.max(12, Math.min(16, availableTextWidth / 40)) * fontScale
+    property real largeFontSize: Math.max(14, Math.min(18, availableTextWidth / 35)) * fontScale
+    property real headerFontSize: Math.max(16, Math.min(20, availableTextWidth / 30)) * fontScale
     
     // Size classifications
     property bool isVerySmall: simulatedWidth < 180 || simulatedHeight < 120
@@ -970,64 +988,43 @@ Item {
         
         switch(command) {
             case "playpause":
-                if (playbackController.main.playbackState === playbackController.playingState) {
-                    console.log("Remote: Pausing playback")
-                    playbackController.main.pause()
+                if (playbackController.mainActive) {
+                    console.log("Remote: Suspending active playback")
+                    playbackController.suspendMain()
                     userPaused = true
                     songUpdateTimer.stop()
                     idleResetTimer.stop()
-                } else if (currentStationUrl !== "" && (playbackController.main.playbackState === playbackController.pausedState || userPaused)) {
-                    console.log("Remote: Resuming playback")
-                    console.log("Fetching updated song metadata")
-
-                    // Fetch fresh metadata before playing
+                    silentPlaybackDetector.stop()
+                    ebookProgressTimer.stop()
+                } else if (currentEbookUrl !== "") {
+                    console.log("Remote: Explicitly resuming audiobook")
+                    userPaused = false
+                    if (playbackController.main.playbackState === playbackController.pausedState) {
+                        playbackController.playMain()
+                        ebookProgressTimer.start()
+                    } else if (currentEbookChapterIndex >= 0
+                               && currentEbookChapterIndex < currentEbookChapters.length) {
+                        var saved = ebookProgress[currentEbookUrl]
+                        var resumePosition = saved && saved.chapterIndex === currentEbookChapterIndex
+                                           ? (saved.position || 0) : 0
+                        playEbookChapter(currentEbookChapterIndex, resumePosition)
+                    }
+                } else if (currentStationUrl !== "") {
+                    console.log("Remote: Explicitly resuming radio playback")
                     fetchStreamMetadata(currentStationUrl)
-
                     lastBufferProgress = 0
                     lastBufferUpdateTime = Date.now()
-
-                    // Use deferred play pattern to ensure proper initialization after idle
-                    playbackController.main.stop()
-                    playbackController.main.source = ""
-                    Qt.callLater(function() {
-                        playbackController.main.source = currentStationUrl
-                        Qt.callLater(function() {
-                            playbackController.playMain()
-                            userPaused = false
-                            songUpdateTimer.start()
-                            idleResetTimer.start()
-                            silentPlaybackDetector.start()
-                        })
-                    })
-                } else if (currentStationUrl !== "" && playbackController.main.playbackState === playbackController.stoppedState) {
-                    console.log("Remote: Starting playback from stopped state")
-                    console.log("Fetching updated song metadata")
-
-                    // Fetch fresh metadata before playing
-                    fetchStreamMetadata(currentStationUrl)
-
-                    lastBufferProgress = 0
-                    lastBufferUpdateTime = Date.now()
-
-                    // Use deferred play pattern to ensure proper initialization after idle
-                    playbackController.main.stop()
-                    playbackController.main.source = ""
-                    Qt.callLater(function() {
-                        playbackController.main.source = currentStationUrl
-                        Qt.callLater(function() {
-                            playbackController.playMain()
-                            userPaused = false
-                            songUpdateTimer.start()
-                            idleResetTimer.start()
-                            silentPlaybackDetector.start()
-                        })
-                    })
-                } else if (currentStationUrl === "") {
+                    userPaused = false
+                    if (playbackController.main.playbackState === playbackController.pausedState)
+                        playbackController.playMain()
+                    else
+                        playbackController.restartMain(currentStationUrl)
+                    songUpdateTimer.start()
+                    idleResetTimer.start()
+                    silentPlaybackDetector.start()
+                } else {
                     console.log("Remote: No station selected, starting random station")
-                    console.log("Current state - inSource:", inSource, "currentSource:", currentSource)
-                    console.log("sourcesModel count:", sourcesModel.count)
-                    var result = playRandomStation()
-                    console.log("playRandomStation result:", result)
+                    playRandomStation()
                 }
                 break
             
@@ -4131,13 +4128,16 @@ Item {
         Qt.callLater(function() {
             playbackController.main.source = chapter.url
             Qt.callLater(function() {
-                if (startPosition) {
-                    playbackController.seekMain(startPosition)
-                }
                 playbackController.playMain()
-                // Start ebook progress timer
+                if (startPosition && !playbackController.seekMain(startPosition)) {
+                    // Never overwrite saved progress by silently restarting at zero.
+                    playbackController.stopMain()
+                    userPaused = true
+                    ebookProgressTimer.stop()
+                    debugMetadata = "This audiobook stream cannot resume from its saved position"
+                    return
+                }
                 ebookProgressTimer.start()
-                // Save progress
                 saveEbookProgress()
             })
         })
@@ -4155,10 +4155,83 @@ Item {
         }
     }
 
+    function dismissKeyboard() {
+        if (Qt.inputMethod.visible)
+            Qt.inputMethod.hide()
+        root.forceActiveFocus()
+    }
+
+    // Returns true when the app consumed Back. A false result lets the
+    // standalone window close while Plasma keeps its existing popup behavior.
+    function handleBackNavigation() {
+        dismissKeyboard()
+        if (showCustomEbookDialog) {
+            showCustomEbookDialog = false
+            return true
+        }
+        if (showEbookSearchDialog) {
+            showEbookSearchDialog = false
+            return true
+        }
+        if (showSearchDialog) {
+            stopPreview()
+            showSearchDialog = false
+            return true
+        }
+        if (showCustomDialog) {
+            showCustomDialog = false
+            return true
+        }
+        if (isSearchMode) {
+            searchField.text = ""
+            searchResultsModel.clear()
+            isSearchMode = false
+            return true
+        }
+        if (inMiscGenre && !inCategory) {
+            inMiscGenre = false
+            currentMiscGenre = ""
+            loadCategories(RadioData.miscGenreGroups)
+            return true
+        }
+        if (inCategory) {
+            stationsModel.clear()
+            currentCategory = ""
+            inCategory = false
+            if (!inSource || currentSource === "⭐ Favorites" || currentSource === "🔗 Custom Radio") {
+                inSource = false
+                currentSource = ""
+            }
+            return true
+        }
+        if (inSource) {
+            categoriesModel.clear()
+            currentSource = ""
+            inSource = false
+            return true
+        }
+        if (showPopup) {
+            showPopup = false
+            return true
+        }
+        return false
+    }
+
+    onShowCustomDialogChanged: if (!showCustomDialog) dismissKeyboard()
+    onShowSearchDialogChanged: if (!showSearchDialog) dismissKeyboard()
+    onShowEbookSearchDialogChanged: if (!showEbookSearchDialog) dismissKeyboard()
+    onShowCustomEbookDialogChanged: if (!showCustomEbookDialog) dismissKeyboard()
+
+    Keys.onReleased: function(event) {
+        if (androidBackEnabled && (event.key === Qt.Key_Back || event.key === Qt.Key_Escape)) {
+            event.accepted = handleBackNavigation()
+        }
+    }
+
     // Refined Audio - Main container with subtle gradient
     Rectangle {
         anchors.fill: parent
-        radius: 20
+        radius: isMobile ? 0 : 20
         antialiasing: true
         visible: true  // Always visible in standalone mode
 
@@ -4205,7 +4278,10 @@ Item {
     ColumnLayout {
         id: mainWidget
         anchors.fill: parent
-        anchors.margins: spacingLarge
+        anchors.leftMargin: spacingLarge + effectiveSafeAreaLeft
+        anchors.topMargin: spacingLarge + effectiveSafeAreaTop
+        anchors.rightMargin: spacingLarge + effectiveSafeAreaRight
+        anchors.bottomMargin: spacingLarge + effectiveSafeAreaBottom
         spacing: spacingMedium
         visible: true  // Always visible in standalone mode
 
@@ -4221,6 +4297,7 @@ Item {
             TextField {
                 id: searchField
                 Layout.fillWidth: true
+                Layout.minimumHeight: isMobile ? touchTargetSize : 0
                 placeholderText: "🔍 Search radio stations..."
                 font.pointSize: baseFontSize
                 leftPadding: 14
@@ -4583,8 +4660,8 @@ Item {
                             console.log("Navigated back to sources")
                         }
                     }
-                    implicitWidth: Math.max(50, Math.min(80, root.width / 8))
-                    implicitHeight: Math.max(25, Math.min(35, root.height / 25))
+                    implicitWidth: isMobile ? Math.max(88, touchTargetSize) : Math.max(50, Math.min(80, root.width / 8))
+                    implicitHeight: isMobile ? touchTargetSize : Math.max(25, Math.min(35, root.height / 25))
                     contentItem: Text {
                         text: parent.text
                         font: parent.font
@@ -4697,6 +4774,7 @@ Item {
                 Layout.fillWidth: true
                 Button {
                     text: "⬅ Back"
+                    implicitHeight: isMobile ? touchTargetSize : implicitContentHeight + topPadding + bottomPadding
                     onClicked: {
                         if (inCategory) {
                             // Special handling for favorites and custom stations - go directly back to sources
@@ -5380,8 +5458,8 @@ Item {
                         }
                     }
 
-                    implicitWidth: buttonSize
-                    implicitHeight: buttonSize
+                    implicitWidth: touchTargetSize
+                    implicitHeight: touchTargetSize
                     Layout.alignment: Qt.AlignVCenter
 
                     ToolTip.text: currentEbookUrl ? "Previous chapter" : "Previous station"
@@ -5415,7 +5493,7 @@ Item {
                         }
                     }
 
-                    contentItem: Kirigami.Icon {
+                    contentItem: PortableIcon {
                         source: currentEbookUrl ? "media-seek-backward" : "media-skip-backward"
                         implicitWidth: Math.max(16, Math.min(22, parent.height * 0.5))
                         implicitHeight: implicitWidth
@@ -5436,8 +5514,8 @@ Item {
                     id: playPauseButton
                     enabled: currentStationUrl !== "" || currentEbookUrl !== ""
                     onClicked: {
-                        if (playbackController.main.playbackState === playbackController.playingState) {
-                            playbackController.main.pause()
+                        if (playbackController.mainActive) {
+                            playbackController.suspendMain()
                             userPaused = true
                             songUpdateTimer.stop()
                             idleResetTimer.stop()
@@ -5451,10 +5529,19 @@ Item {
                             console.log("Current ebook:", currentEbookTitle)
                             console.log("Current chapter index:", currentEbookChapterIndex)
 
+                            userPaused = false
                             if (currentEbookChapterIndex >= 0 && currentEbookChapterIndex < currentEbookChapters.length) {
-                                // Resume current chapter
-                                playbackController.playMain()
-                                ebookProgressTimer.start()
+                                if (playbackController.main.playbackState === playbackController.pausedState) {
+                                    // Resume the existing decoder session without resetting position.
+                                    playbackController.playMain()
+                                    ebookProgressTimer.start()
+                                } else {
+                                    var savedProgress = ebookProgress[currentEbookUrl]
+                                    var savedPosition = savedProgress
+                                                        && savedProgress.chapterIndex === currentEbookChapterIndex
+                                                        ? (savedProgress.position || 0) : 0
+                                    playEbookChapter(currentEbookChapterIndex, savedPosition)
+                                }
                             } else if (currentEbookChapters.length > 0) {
                                 // Start from first chapter
                                 playEbookChapter(0)
@@ -5501,8 +5588,8 @@ Item {
                         }
                     }
 
-                    implicitWidth: Math.max(50, Math.min(60, root.width / 11))
-                    implicitHeight: Math.max(50, Math.min(60, root.height / 13))
+                    implicitWidth: isMobile ? Math.max(56, touchTargetSize) : Math.max(50, Math.min(60, root.width / 11))
+                    implicitHeight: isMobile ? Math.max(56, touchTargetSize) : Math.max(50, Math.min(60, root.height / 13))
                     Layout.alignment: Qt.AlignVCenter
 
                     // Main play button - larger, more prominent with accent gradient
@@ -5551,8 +5638,8 @@ Item {
                         }
                     }
 
-                    contentItem: Kirigami.Icon {
-                        source: playbackController.main.playbackState === playbackController.playingState ? "media-playback-pause" : "media-playback-start"
+                    contentItem: PortableIcon {
+                        source: playbackController.mainActive ? "media-playback-pause" : "media-playback-start"
                         implicitWidth: Math.max(22, Math.min(28, playPauseButton.height * 0.5))
                         implicitHeight: implicitWidth
                         color: {
@@ -5581,8 +5668,8 @@ Item {
                         }
                     }
 
-                    implicitWidth: buttonSize
-                    implicitHeight: buttonSize
+                    implicitWidth: touchTargetSize
+                    implicitHeight: touchTargetSize
                     Layout.alignment: Qt.AlignVCenter
 
                     ToolTip.text: currentEbookUrl ? "Next chapter" : "Next station"
@@ -5617,7 +5704,7 @@ Item {
                         }
                     }
 
-                    contentItem: Kirigami.Icon {
+                    contentItem: PortableIcon {
                         source: currentEbookUrl ? "media-seek-forward" : "media-skip-forward"
                         implicitWidth: Math.max(16, Math.min(22, nextButton.height * 0.5))
                         implicitHeight: implicitWidth
@@ -5640,8 +5727,8 @@ Item {
                     id: randomButton
                     enabled: true  // Always enabled since it can pick from all sources
                     onClicked: playRandomStation()
-                    implicitWidth: buttonSize
-                    implicitHeight: buttonSize
+                    implicitWidth: touchTargetSize
+                    implicitHeight: touchTargetSize
                     Layout.alignment: Qt.AlignVCenter
 
                     ToolTip.text: "Random station"
@@ -5680,7 +5767,7 @@ Item {
                         }
                     }
 
-                    contentItem: Kirigami.Icon {
+                    contentItem: PortableIcon {
                         source: "media-playlist-shuffle"
                         implicitWidth: Math.max(16, Math.min(22, randomButton.height * 0.5))
                         implicitHeight: implicitWidth
@@ -5820,8 +5907,11 @@ Item {
                         } else {
                             userSeeking = false
                             if (currentEbookUrl && playbackController.main.duration > 0) {
-                                playbackController.seekMain(value)
-                                saveEbookProgress()
+                                if (playbackController.seekMain(value)) {
+                                    saveEbookProgress()
+                                } else {
+                                    dedicatedEbookSlider.value = playbackController.main.position
+                                }
                             }
                         }
                     }
@@ -5835,11 +5925,8 @@ Item {
                         }
                     }
                     
-                    onValueChanged: {
-                        if (userSeeking && currentEbookUrl && playbackController.main.duration > 0) {
-                            playbackController.seekMain(value)
-                        }
-                    }
+                    // Seek only once on release; this avoids flooding the engine
+                    // and only commits progress after AudioEngine accepts it.
                 }
                 
                 Label {

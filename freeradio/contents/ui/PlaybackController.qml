@@ -25,6 +25,9 @@ QtObject {
     readonly property int pausedState: AudioEngine.PausedState
     readonly property int errorState: AudioEngine.ErrorState
     readonly property bool mainPlaying: mainEngine.playbackState === playingState
+    readonly property bool mainActive: mainEngine.playbackState === loadingState
+                                       || mainEngine.playbackState === bufferingState
+                                       || mainEngine.playbackState === playingState
     readonly property bool previewPlaying: previewEngine.playbackState === playingState
 
     property AudioEngine _mainEngine: AudioEngine {
@@ -46,6 +49,16 @@ QtObject {
 
     function pauseMain() {
         mainEngine.pause()
+    }
+
+    function suspendMain() {
+        // Loading has no decoder session to pause yet, so cancellation is the
+        // only way to guarantee a late network response cannot start audio.
+        if (mainEngine.playbackState === loadingState)
+            mainEngine.stop()
+        else if (mainEngine.playbackState === bufferingState
+                 || mainEngine.playbackState === playingState)
+            mainEngine.pause()
     }
 
     function stopMain() {
@@ -79,10 +92,11 @@ QtObject {
         mainEngine.stop()
     }
 
-    // AudioEngine currently advertises seekable=false. Keep the UI contract
-    // explicit rather than silently introducing a Qt MediaPlayer fallback.
     function seekMain(position) {
-        console.warn("Seeking is unavailable for the current AudioEngine stream")
-        return false
+        if (!mainEngine.seekable || typeof mainEngine.seek !== "function") {
+            console.warn("Seeking is unavailable for the current AudioEngine stream")
+            return false
+        }
+        return mainEngine.seek(position) === true
     }
 }

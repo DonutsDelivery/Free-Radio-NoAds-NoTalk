@@ -2,10 +2,9 @@
 import QtQuick
 import QtQuick.Controls
 import Qt.labs.settings
-import org.kde.kirigami as Kirigami
 import SessionMonitor 1.0
 
-Kirigami.ApplicationWindow {
+ApplicationWindow {
     id: window
     title: "Free Radio"
     width: 400
@@ -13,6 +12,14 @@ Kirigami.ApplicationWindow {
     minimumWidth: 300
     minimumHeight: 400
     visible: true
+    readonly property bool mobilePlatform: Qt.platform.os === "android" || Qt.platform.os === "ios"
+
+    // Android Back first dismisses dialogs/keyboards or navigates the shared
+    // hierarchy. The window closes only when MainContent has nothing to pop.
+    onClosing: function(close) {
+        if (mobilePlatform && mainContent.handleBackNavigation())
+            close.accepted = false
+    }
 
     // Let dark theme control the window background
     background: Rectangle {
@@ -49,6 +56,11 @@ Kirigami.ApplicationWindow {
         id: mainContent
         anchors.fill: parent
         sessionMonitor: sessionMonitor
+        isMobile: window.mobilePlatform
+        safeAreaLeft: window.mobilePlatform ? window.contentItem.SafeArea.margins.left : 0
+        safeAreaTop: window.mobilePlatform ? window.contentItem.SafeArea.margins.top : 0
+        safeAreaRight: window.mobilePlatform ? window.contentItem.SafeArea.margins.right : 0
+        safeAreaBottom: window.mobilePlatform ? window.contentItem.SafeArea.margins.bottom : 0
 
         // Standalone mode - no panel integration
         isCompactMode: false

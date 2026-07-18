@@ -34,6 +34,54 @@ private slots:
         QCOMPARE(controller->property("playingState").toInt(), 3);
     }
 
+    void sharedUiIsMobilePortable()
+    {
+        // AC3: one shared UI supports desktop, Plasma, and mobile wrappers.
+        QFile mainContent(QStringLiteral(FREERADIO_UI_PATH "/MainContent.qml"));
+        QVERIFY(mainContent.open(QIODevice::ReadOnly));
+        const QByteArray shared = mainContent.readAll();
+        QVERIFY(!shared.contains("Kirigami.Icon"));
+        QVERIFY(!shared.contains("org.kde.kirigami"));
+        QVERIFY(shared.contains("PortableIcon"));
+        QVERIFY(shared.contains("property bool isMobile"));
+        QVERIFY(shared.contains("property real safeAreaLeft"));
+        QVERIFY(shared.contains("touchTargetSize"));
+        QVERIFY(shared.contains("portraitLayout"));
+        QVERIFY(shared.contains("Qt.Key_Back"));
+        QVERIFY(shared.contains("handleBackNavigation"));
+
+        QFile standalone(QStringLiteral(FREERADIO_UI_PATH "/main_standalone.qml"));
+        QVERIFY(standalone.open(QIODevice::ReadOnly));
+        const QByteArray wrapper = standalone.readAll();
+        QVERIFY(wrapper.contains("ApplicationWindow {"));
+        QVERIFY(!wrapper.contains("Kirigami.ApplicationWindow"));
+        QVERIFY(!wrapper.contains("org.kde.kirigami"));
+        QVERIFY(wrapper.contains("SafeArea.margins"));
+        QVERIFY(wrapper.contains("handleBackNavigation"));
+    }
+
+    void bufferingCommandsHonorUserIntent()
+    {
+        // AC4: Loading/Buffering are active states and must be cancellable.
+        QFile controller(QStringLiteral(FREERADIO_UI_PATH "/PlaybackController.qml"));
+        QVERIFY(controller.open(QIODevice::ReadOnly));
+        const QByteArray playback = controller.readAll();
+        QVERIFY(playback.contains("readonly property bool mainActive"));
+        QVERIFY(playback.contains("playbackState === loadingState"));
+        QVERIFY(playback.contains("playbackState === bufferingState"));
+        QVERIFY(playback.contains("function suspendMain()"));
+        QVERIFY(playback.contains("typeof mainEngine.seek"));
+        QVERIFY(playback.contains("return mainEngine.seek(position) === true"));
+
+        QFile mainContent(QStringLiteral(FREERADIO_UI_PATH "/MainContent.qml"));
+        QVERIFY(mainContent.open(QIODevice::ReadOnly));
+        const QByteArray shared = mainContent.readAll();
+        QVERIFY(shared.count("if (playbackController.mainActive)") >= 2);
+        QVERIFY(shared.contains("playbackController.suspendMain()"));
+        QVERIFY(shared.contains("if (playbackController.seekMain(value))"));
+        QVERIFY(shared.contains("This audiobook stream cannot resume"));
+    }
+
     void productionPlaybackHasNoQtMultimediaFallback()
     {
         const QString repository = QStringLiteral(FREERADIO_REPOSITORY_PATH);

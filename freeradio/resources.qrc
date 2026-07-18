@@ -5,6 +5,7 @@
         <file alias="ui/radiodata.js">contents/ui/radiodata.js</file>
         <file alias="ui/fft.js">contents/ui/fft.js</file>
         <file alias="ui/PlaybackController.qml">contents/ui/PlaybackController.qml</file>
+        <file alias="ui/PortableIcon.qml">contents/ui/PortableIcon.qml</file>
         <file alias="ui/RemoteControl.qml">contents/ui/RemoteControl.qml</file>
     </qresource>
 </RCC>
