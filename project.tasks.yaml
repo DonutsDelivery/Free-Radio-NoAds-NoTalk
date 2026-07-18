@@ -89,7 +89,7 @@ tasks:
     title: Add Android background integration
     type: task
     spec_ref: "@android-background-media"
-    status: pending
+    status: in_progress
     blocked_by: []
     depends_on:
       - "@create-canonical-station-catalog"
@@ -100,6 +100,7 @@ tasks:
     notes_count: 0
     todos_count: 0
     created_at: 2026-07-18T15:27:32.233Z
+    started_at: 2026-07-18T17:36:39.079Z
     automation: needs_review
   - _ulid: 01KXTXDZXA0KMABF54W49ARFPN
     slugs:
