@@ -1,10 +1,12 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlComponent>
 #include <QQmlContext>
 #include <QQuickStyle>
 #include <QQuickWindow>
 #include <QIcon>
 #include <QDir>
+#include <memory>
 #include "AudioCapture.h"
 #include "SessionMonitor.h"
 
@@ -41,6 +43,26 @@ int main(int argc, char *argv[])
     // qt_add_qml_module places FreeRadio.Audio beside the build output under
     // qml/. Installed builds also find it through Qt's standard import path.
     engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml");
+
+#ifdef FREERADIO_AUDIO_CORE_AVAILABLE
+#ifdef FREERADIO_BUILD_QML_IMPORT_PATH
+    engine.addImportPath(QStringLiteral(FREERADIO_BUILD_QML_IMPORT_PATH));
+#endif
+    const QString appDir = QCoreApplication::applicationDirPath();
+    engine.addImportPath(QDir::cleanPath(appDir + QStringLiteral("/qml")));
+    engine.addImportPath(QDir::cleanPath(appDir + QStringLiteral("/../Resources/qml")));
+    engine.addImportPath(QDir::cleanPath(appDir + QStringLiteral("/../lib/qt6/qml")));
+    if (app.arguments().contains(QStringLiteral("--audio-qml-smoke"))) {
+        QQmlComponent smoke(&engine);
+        smoke.setData("import QtQml\nimport FreeRadio.Audio 1.0\nAudioEngine {}", QUrl());
+        std::unique_ptr<QObject> instance(smoke.create());
+        if (!instance) {
+            qCritical().noquote() << smoke.errorString();
+            return 2;
+        }
+        return 0;
+    }
+#endif
 
     // Try to load from Qt resources first (bundled app)
     QUrl qmlUrl = QUrl("qrc:/ui/main.qml");

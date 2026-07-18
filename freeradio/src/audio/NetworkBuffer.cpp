@@ -12,7 +12,7 @@ NetworkBuffer::NetworkBuffer(std::size_t capacityBytes)
 
 std::size_t NetworkBuffer::append(const char *data, std::size_t size)
 {
-    QMutexLocker lock(&m_mutex);
+    std::lock_guard lock(m_mutex);
     if (m_cancelled.load(std::memory_order_relaxed) || m_finished)
         return 0;
     const auto count = std::min(size, m_storage.size() - m_size);
@@ -22,15 +22,16 @@ std::size_t NetworkBuffer::append(const char *data, std::size_t size)
     m_write = (m_write + count) % m_storage.size();
     m_size += count;
     if (count)
-        m_readable.wakeOne();
+        m_readable.notify_one();
     return count;
 }
 
 int NetworkBuffer::read(unsigned char *destination, int requested)
 {
-    QMutexLocker lock(&m_mutex);
-    while (m_size == 0 && !m_finished && !m_cancelled.load(std::memory_order_relaxed))
-        m_readable.wait(&m_mutex);
+    std::unique_lock lock(m_mutex);
+    m_readable.wait(lock, [this] {
+        return m_size > 0 || m_finished || m_cancelled.load(std::memory_order_relaxed);
+    });
     if (m_cancelled.load(std::memory_order_relaxed))
         return Cancelled;
     if (m_size == 0 && m_finished)
@@ -46,22 +47,26 @@ int NetworkBuffer::read(unsigned char *destination, int requested)
 
 std::size_t NetworkBuffer::freeSpace() const
 {
-    QMutexLocker lock(&m_mutex);
+    std::lock_guard lock(m_mutex);
     return m_storage.size() - m_size;
 }
 
 void NetworkBuffer::finish()
 {
-    QMutexLocker lock(&m_mutex);
-    m_finished = true;
-    m_readable.wakeAll();
+    {
+        std::lock_guard lock(m_mutex);
+        m_finished = true;
+    }
+    m_readable.notify_all();
 }
 
 void NetworkBuffer::cancel()
 {
-    QMutexLocker lock(&m_mutex);
-    m_cancelled.store(true, std::memory_order_release);
-    m_readable.wakeAll();
+    {
+        std::lock_guard lock(m_mutex);
+        m_cancelled.store(true, std::memory_order_release);
+    }
+    m_readable.notify_all();
 }
 
 } // namespace FreeRadio::Audio

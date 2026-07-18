@@ -70,6 +70,7 @@ void IcyDemuxer::parseMetadata(Metadata *metadata)
     if (newUrl != m_url) {
         m_url = newUrl;
         metadata->url = m_url;
+        metadata->urlChanged = true;
         metadata->changed = true;
     }
 }

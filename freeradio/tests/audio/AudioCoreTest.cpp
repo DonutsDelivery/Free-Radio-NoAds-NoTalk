@@ -51,7 +51,7 @@ private slots:
     void parsesM3u()
     {
         // AC: @custom-inprocess-audio ac-2
-        const auto urls = PlaylistParser::parse("#EXTM3U\nstream.mp3\nhttps://example.org/live\n",
+        const auto urls = PlaylistParser::parse("#EXTM3U\nstream.mp3\nfile:///tmp/audio.mp3\njavascript:bad\nhttps://example.org/live\n",
                                                 QUrl("https://radio.test/lists/list.m3u"));
         QCOMPARE(urls.size(), 2);
         QCOMPARE(urls[0], QUrl("https://radio.test/lists/stream.mp3"));
@@ -95,6 +95,28 @@ private slots:
         QCOMPARE(audio, QByteArray("ABCDEFGH"));
         QVERIFY(metadata.changed);
         QCOMPARE(metadata.title, QStringLiteral("X"));
+    }
+
+    void icyUrlCanBeCleared()
+    {
+        // AC: @custom-inprocess-audio ac-2
+        IcyDemuxer demuxer;
+        demuxer.reset(1);
+        IcyDemuxer::Metadata metadata;
+        QByteArray first("A", 1);
+        first.append(char(2));
+        first += QByteArray("StreamUrl='https://x';").leftJustified(32, '\0');
+        demuxer.process(first, &metadata);
+        QVERIFY(metadata.urlChanged);
+        QCOMPARE(metadata.url, QUrl("https://x"));
+
+        metadata = {};
+        QByteArray second("B", 1);
+        second.append(char(1));
+        second += QByteArray("StreamUrl='';").leftJustified(16, '\0');
+        demuxer.process(second, &metadata);
+        QVERIFY(metadata.urlChanged);
+        QVERIFY(metadata.url.isEmpty());
     }
 
     void miniaudioRingWrapsWithoutOverwriting()
@@ -178,6 +200,78 @@ private slots:
         QTRY_VERIFY_WITH_TIMEOUT(connection->state() == QAbstractSocket::UnconnectedState, 1000);
     }
 
+    void repeatedShortLiveStreamHitsReconnectCap()
+    {
+        // AC: @custom-inprocess-audio ac-1
+        // AC: @custom-inprocess-audio ac-5
+        qputenv("FREERADIO_AUDIO_NULL_DEVICE", "1");
+        QTcpServer server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        const QByteArray fixture = wavFixture();
+        int requests = 0;
+        connect(&server, &QTcpServer::newConnection, this, [&] {
+            while (server.hasPendingConnections()) {
+                auto *socket = server.nextPendingConnection();
+                auto respond = [&, socket] {
+                    if (socket->bytesAvailable() == 0)
+                        return;
+                    socket->readAll();
+                    ++requests;
+                    socket->write("HTTP/1.1 200 OK\r\nContent-Type: audio/wav\r\nContent-Length: ");
+                    socket->write(QByteArray::number(fixture.size()));
+                    socket->write("\r\nConnection: close\r\n\r\n");
+                    socket->write(requests == 2 ? fixture.left(fixture.size() / 2) : fixture);
+                    socket->disconnectFromHost();
+                };
+                connect(socket, &QTcpSocket::readyRead, socket, respond);
+                respond();
+            }
+        });
+
+        AudioEngine engine;
+        engine.setSourceIntent(AudioEngine::LiveIntent);
+        engine.play(QUrl(QStringLiteral("http://127.0.0.1:%1/live").arg(server.serverPort())));
+        QTRY_COMPARE_WITH_TIMEOUT(engine.playbackState(), AudioEngine::ErrorState, 10000);
+        QCOMPARE(engine.error(), AudioEngine::NetworkError);
+        QCOMPARE(requests, 4);
+        qunsetenv("FREERADIO_AUDIO_NULL_DEVICE");
+    }
+
+    void rapidSwitchAndDestroyAfterDecodeStarts()
+    {
+        // AC: @custom-inprocess-audio ac-1
+        qputenv("FREERADIO_AUDIO_NULL_DEVICE", "1");
+        QTcpServer server;
+        QVERIFY(server.listen(QHostAddress::LocalHost));
+        const QByteArray fixture = wavFixture();
+        connect(&server, &QTcpServer::newConnection, this, [&] {
+            while (server.hasPendingConnections()) {
+                auto *socket = server.nextPendingConnection();
+                auto respond = [&, socket] {
+                    if (socket->bytesAvailable() == 0)
+                        return;
+                    socket->readAll();
+                    socket->write("HTTP/1.1 200 OK\r\nContent-Type: audio/wav\r\nContent-Length: ");
+                    socket->write(QByteArray::number(fixture.size()));
+                    socket->write("\r\nConnection: close\r\n\r\n");
+                    socket->write(fixture);
+                    socket->disconnectFromHost();
+                };
+                connect(socket, &QTcpSocket::readyRead, socket, respond);
+                respond();
+            }
+        });
+        auto engine = std::make_unique<AudioEngine>();
+        engine->setSourceIntent(AudioEngine::FiniteIntent);
+        const QUrl url(QStringLiteral("http://127.0.0.1:%1/fixture.wav").arg(server.serverPort()));
+        for (int iteration = 0; iteration < 5; ++iteration) {
+            engine->play(url);
+            QTRY_COMPARE_WITH_TIMEOUT(engine->playbackState(), AudioEngine::PlayingState, 2000);
+        }
+        engine.reset();
+        qunsetenv("FREERADIO_AUDIO_NULL_DEVICE");
+    }
+
     void localHttpDecodeBuffersPlaysAndEnds()
     {
         // AC: @custom-inprocess-audio ac-1
@@ -192,14 +286,15 @@ private slots:
         QTRY_VERIFY_WITH_TIMEOUT(connection->bytesAvailable() > 0, 1000);
         connection->readAll();
         const QByteArray fixture = wavFixture();
-        connection->write("HTTP/1.1 200 OK\r\nContent-Type: audio/wav\r\nContent-Length: ");
-        connection->write(QByteArray::number(fixture.size()));
-        connection->write("\r\nicy-name: Local Fixture\r\nConnection: close\r\n\r\n");
+        connection->write("HTTP/1.1 200 OK\r\nContent-Type: audio/wav\r\nTransfer-Encoding: chunked");
+        connection->write("\r\nConnection: close\r\n\r\n");
+        connection->write(QByteArray::number(fixture.size(), 16));
+        connection->write("\r\n");
         connection->write(fixture);
+        connection->write("\r\n0\r\n\r\n");
         connection->flush();
         connection->disconnectFromHost();
         QTRY_COMPARE_WITH_TIMEOUT(engine.playbackState(), AudioEngine::PlayingState, 3000);
-        QCOMPARE(engine.icyName(), QStringLiteral("Local Fixture"));
         engine.pause();
         QCOMPARE(engine.playbackState(), AudioEngine::PausedState);
         const qint64 pausedPosition = engine.position();

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <QMutex>
-#include <QWaitCondition>
 #include <atomic>
+#include <condition_variable>
 #include <cstddef>
+#include <mutex>
 #include <vector>
 
 namespace FreeRadio::Audio {
@@ -24,8 +24,8 @@ public:
     bool isCancelled() const { return m_cancelled.load(std::memory_order_acquire); }
 
 private:
-    mutable QMutex m_mutex;
-    QWaitCondition m_readable;
+    mutable std::mutex m_mutex;
+    std::condition_variable m_readable;
     std::vector<unsigned char> m_storage;
     std::size_t m_read = 0;
     std::size_t m_write = 0;

@@ -10,17 +10,17 @@
 #include "PlaylistParser.h"
 #include "SpectrumAnalyzer.h"
 
+#include <QCoreApplication>
 #include <QMetaObject>
-#include <QMutex>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
-#include <QPointer>
 #include <QTimer>
-#include <QWaitCondition>
 #include <algorithm>
 #include <atomic>
+#include <condition_variable>
 #include <cstring>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -40,6 +40,7 @@ constexpr std::size_t PcmCapacityFrames = OutputRate;
 constexpr std::size_t AnalysisCapacityFrames = 4096;
 constexpr std::size_t PrebufferFrames = OutputRate / 5;
 constexpr std::size_t StallFrames = OutputRate / 50;
+constexpr qint64 StablePlaybackFrames = OutputRate * 10;
 
 QString ffmpegError(int code)
 {
@@ -47,12 +48,30 @@ QString ffmpegError(int code)
     av_strerror(code, text, sizeof(text));
     return QString::fromUtf8(text);
 }
+
+bool looksFiniteUrl(const QUrl &url)
+{
+    static const QStringList extensions = {
+        QStringLiteral(".aac"), QStringLiteral(".flac"), QStringLiteral(".m4a"),
+        QStringLiteral(".mp3"), QStringLiteral(".ogg"), QStringLiteral(".opus"),
+        QStringLiteral(".wav"), QStringLiteral(".wma")
+    };
+    const QString path = url.path().toLower();
+    return std::any_of(extensions.cbegin(), extensions.cend(),
+                       [&path](const QString &extension) { return path.endsWith(extension); });
+}
 } // namespace
+
+struct WorkerControl
+{
+    std::atomic<AudioEngine *> owner{nullptr};
+};
 
 struct AudioEngine::Session
 {
-    explicit Session(AudioEngine *owner, quint64 value)
-        : engine(owner), generation(value), requestedSource(owner->source()),
+    Session(const std::shared_ptr<WorkerControl> &workerControl, quint64 value,
+            const QUrl &source, SourceIntent intent)
+        : control(workerControl), generation(value), requestedSource(source), resolvedIntent(intent),
           pcm(PcmCapacityFrames, OutputChannels),
           consumed(AnalysisCapacityFrames, OutputChannels)
     {
@@ -71,26 +90,29 @@ struct AudioEngine::Session
                   samples + static_cast<std::size_t>(frames) * OutputChannels, 0.0f);
     }
 
-    QPointer<AudioEngine> engine;
+    std::shared_ptr<WorkerControl> control;
     quint64 generation;
     QUrl requestedSource;
+    SourceIntent resolvedIntent;
     NetworkBuffer network;
     PcmRingBuffer pcm;
     PcmRingBuffer consumed;
     IcyDemuxer icy;
-    QMutex pcmWaitMutex;
-    QWaitCondition pcmSpace;
+    std::mutex pcmWaitMutex;
+    std::condition_variable pcmSpace;
     std::atomic<bool> cancelled{false};
     std::atomic<bool> paused{false};
     std::atomic<bool> decoderDone{false};
+    std::atomic<bool> workerDone{false};
     std::atomic<qint64> playedFrames{0};
+    std::thread worker;
+    QString networkError;
     ma_context context{};
     ma_device device{};
     bool contextInitialized = false;
     bool deviceInitialized = false;
     bool deviceStarted = false;
     bool replyFinished = false;
-    bool finiteResponse = false;
 };
 
 struct DecoderResources
@@ -142,11 +164,9 @@ struct AudioWorker
 
 void AudioWorker::postDecoderReady(const std::shared_ptr<AudioEngine::Session> &session, qint64 duration)
 {
-    const QPointer<AudioEngine> engine = session->engine;
-    if (!engine)
-        return;
-    QMetaObject::invokeMethod(engine.data(), [engine, generation = session->generation, duration] {
-        if (engine)
+    const auto control = session->control;
+    QMetaObject::invokeMethod(QCoreApplication::instance(), [control, generation = session->generation, duration] {
+        if (auto *engine = control->owner.load(std::memory_order_acquire))
             engine->decoderReady(generation, duration);
     }, Qt::QueuedConnection);
 }
@@ -154,17 +174,20 @@ void AudioWorker::postDecoderReady(const std::shared_ptr<AudioEngine::Session> &
 void AudioWorker::postDecoderEnded(const std::shared_ptr<AudioEngine::Session> &session,
                                    const QString &message, bool endOfStream)
 {
-    const QPointer<AudioEngine> engine = session->engine;
-    if (!engine)
-        return;
-    QMetaObject::invokeMethod(engine.data(), [engine, generation = session->generation, message, endOfStream] {
-        if (engine)
+    const auto control = session->control;
+    QMetaObject::invokeMethod(QCoreApplication::instance(),
+                              [control, generation = session->generation, message, endOfStream] {
+        if (auto *engine = control->owner.load(std::memory_order_acquire))
             engine->decoderEnded(generation, message, endOfStream);
     }, Qt::QueuedConnection);
 }
 
 void AudioWorker::decodeStream(const std::shared_ptr<AudioEngine::Session> &session)
 {
+    struct CompletionGuard {
+        AudioEngine::Session *session;
+        ~CompletionGuard() { session->workerDone.store(true, std::memory_order_release); }
+    } completion{session.get()};
     DecoderResources resources;
     resources.format = avformat_alloc_context();
     if (!resources.format) {
@@ -250,9 +273,9 @@ void AudioWorker::decodeStream(const std::shared_ptr<AudioEngine::Session> &sess
             offset += session->pcm.write(converted.data() + offset * OutputChannels,
                                          static_cast<std::size_t>(outputFrames) - offset);
             if (offset < static_cast<std::size_t>(outputFrames)) {
-                QMutexLocker lock(&session->pcmWaitMutex);
+                std::unique_lock lock(session->pcmWaitMutex);
                 if (!session->cancelled.load(std::memory_order_relaxed))
-                    session->pcmSpace.wait(&session->pcmWaitMutex);
+                    session->pcmSpace.wait(lock);
             }
         }
         av_frame_unref(resources.frame);
@@ -291,9 +314,9 @@ void AudioWorker::decodeStream(const std::shared_ptr<AudioEngine::Session> &sess
                 offset += session->pcm.write(converted.data() + offset * OutputChannels,
                                              static_cast<std::size_t>(outputFrames) - offset);
                 if (offset < static_cast<std::size_t>(outputFrames)) {
-                    QMutexLocker lock(&session->pcmWaitMutex);
+                    std::unique_lock lock(session->pcmWaitMutex);
                     if (!session->cancelled.load(std::memory_order_relaxed))
-                        session->pcmSpace.wait(&session->pcmWaitMutex);
+                        session->pcmSpace.wait(lock);
                 }
             }
         }
@@ -305,17 +328,24 @@ void AudioWorker::decodeStream(const std::shared_ptr<AudioEngine::Session> &sess
 
 AudioEngine::AudioEngine(QObject *parent)
     : QObject(parent), m_spectrum(512, 0.0f), m_network(new QNetworkAccessManager(this)),
-      m_playbackTimer(new QTimer(this)), m_analyzer(std::make_unique<SpectrumAnalyzer>(1024))
+      m_playbackTimer(new QTimer(this)), m_reaperTimer(new QTimer(this)),
+      m_workerControl(std::make_shared<WorkerControl>()),
+      m_analyzer(std::make_unique<SpectrumAnalyzer>(1024))
 {
+    m_workerControl->owner.store(this, std::memory_order_release);
     m_analysisWindow.reserve(2048);
     m_analysisScratch.reserve(static_cast<qsizetype>(AnalysisCapacityFrames * OutputChannels));
     m_playbackTimer->setInterval(40);
     connect(m_playbackTimer, &QTimer::timeout, this, &AudioEngine::updatePlayback);
+    m_reaperTimer->setInterval(25);
+    connect(m_reaperTimer, &QTimer::timeout, this, [this] { reapWorkers(false); });
 }
 
 AudioEngine::~AudioEngine()
 {
+    m_workerControl->owner.store(nullptr, std::memory_order_release);
     stopSession(true);
+    reapWorkers(true);
 }
 
 float AudioEngine::bufferingProgress() const
@@ -361,6 +391,14 @@ void AudioEngine::setVolume(float volume)
     emit volumeChanged();
 }
 
+void AudioEngine::setSourceIntent(SourceIntent intent)
+{
+    if (m_sourceIntent == intent)
+        return;
+    m_sourceIntent = intent;
+    emit sourceIntentChanged();
+}
+
 void AudioEngine::play(const QUrl &source)
 {
     setSource(source);
@@ -371,7 +409,7 @@ void AudioEngine::play()
 {
     if (m_state == PausedState && m_session && m_session->requestedSource == m_source) {
         m_session->paused.store(false, std::memory_order_release);
-        m_session->pcmSpace.wakeAll();
+        m_session->pcmSpace.notify_all();
         setState(BufferingState);
         m_playbackTimer->start();
         return;
@@ -503,7 +541,7 @@ void AudioEngine::beginRequest(const QUrl &url, quint64 generation, int playlist
             m_session->replyFinished = true;
             if (reply->error() != QNetworkReply::NoError
                 && reply->error() != QNetworkReply::OperationCanceledError)
-                m_errorString = reply->errorString();
+                m_session->networkError = reply->errorString();
             if (reply->bytesAvailable() == 0) {
                 m_session->network.finish();
                 if (m_reply == reply)
@@ -524,8 +562,13 @@ void AudioEngine::attachStreamReply(QNetworkReply *reply, quint64 generation)
 {
     if (generation != m_generation || m_session)
         return;
-    m_session = std::make_shared<Session>(this, generation);
-    m_session->finiteResponse = reply->header(QNetworkRequest::ContentLengthHeader).toLongLong() > 0;
+    SourceIntent intent = m_sourceIntent;
+    if (intent == AutoIntent) {
+        const bool hasIcyHeaders = !reply->rawHeader("icy-metaint").isEmpty()
+            || !reply->rawHeader("icy-name").isEmpty();
+        intent = hasIcyHeaders || !looksFiniteUrl(reply->url()) ? LiveIntent : FiniteIntent;
+    }
+    m_session = std::make_shared<Session>(m_workerControl, generation, m_source, intent);
     m_activeUrl = reply->url();
     m_icyName = QString::fromUtf8(reply->rawHeader("icy-name"));
     m_icyUrl = QUrl(QString::fromUtf8(reply->rawHeader("icy-url")));
@@ -551,7 +594,7 @@ void AudioEngine::drainNetworkReply(QNetworkReply *reply, quint64 generation)
         if (metadata.changed) {
             if (!metadata.title.isNull())
                 m_icyTitle = metadata.title;
-            if (!metadata.url.isEmpty())
+            if (metadata.urlChanged)
                 m_icyUrl = metadata.url;
             emit icyMetadataChanged();
         }
@@ -570,7 +613,7 @@ void AudioEngine::drainNetworkReply(QNetworkReply *reply, quint64 generation)
 void AudioEngine::startDecoder()
 {
     const auto session = m_session;
-    std::thread([session] { AudioWorker::decodeStream(session); }).detach();
+    session->worker = std::thread([session] { AudioWorker::decodeStream(session); });
 }
 
 void AudioEngine::stopSession(bool advanceGeneration)
@@ -588,10 +631,9 @@ void AudioEngine::stopSession(bool advanceGeneration)
     if (!m_session)
         return;
     auto session = std::move(m_session);
-    session->engine.clear();
     session->cancelled.store(true, std::memory_order_release);
     session->network.cancel();
-    session->pcmSpace.wakeAll();
+    session->pcmSpace.notify_all();
     if (session->deviceInitialized) {
         if (session->deviceStarted)
             ma_device_stop(&session->device);
@@ -603,6 +645,22 @@ void AudioEngine::stopSession(bool advanceGeneration)
         ma_context_uninit(&session->context);
         session->contextInitialized = false;
     }
+    m_retiredSessions.append(std::move(session));
+    m_reaperTimer->start();
+}
+
+void AudioEngine::reapWorkers(bool waitForAll)
+{
+    for (qsizetype index = m_retiredSessions.size() - 1; index >= 0; --index) {
+        const auto &session = m_retiredSessions[index];
+        if (!waitForAll && !session->workerDone.load(std::memory_order_acquire))
+            continue;
+        if (session->worker.joinable())
+            session->worker.join();
+        m_retiredSessions.removeAt(index);
+    }
+    if (m_retiredSessions.isEmpty())
+        m_reaperTimer->stop();
 }
 
 void AudioEngine::updatePlayback()
@@ -616,7 +674,7 @@ void AudioEngine::updatePlayback()
     const auto frames = m_session->pcm.availableFrames();
     emit bufferingChanged();
     if (!m_session->paused.load(std::memory_order_acquire))
-        m_session->pcmSpace.wakeAll();
+        m_session->pcmSpace.notify_all();
     if (m_state == PausedState)
         return;
 
@@ -628,7 +686,6 @@ void AudioEngine::updatePlayback()
             return;
         }
         m_session->deviceStarted = true;
-        m_reconnectAttempt = 0;
         setState(PlayingState);
     } else if (m_session->deviceStarted && frames < StallFrames
                && !m_session->decoderDone.load(std::memory_order_acquire)) {
@@ -637,15 +694,20 @@ void AudioEngine::updatePlayback()
         setState(BufferingState);
     }
 
-    const qint64 position = m_session->playedFrames.load(std::memory_order_relaxed) * 1000 / OutputRate;
+    const qint64 playedFrames = m_session->playedFrames.load(std::memory_order_relaxed);
+    if (playedFrames >= StablePlaybackFrames)
+        m_reconnectAttempt = 0;
+    const qint64 position = playedFrames * 1000 / OutputRate;
     if (position != m_position) {
         m_position = position;
         emit positionChanged();
     }
     if (m_session->decoderDone.load(std::memory_order_acquire) && frames == 0) {
-        if (!m_errorString.isEmpty()) {
-            tryNextPlaylist(m_generation, m_errorString);
-        } else if (m_duration < 0 && !m_session->finiteResponse) {
+        const QString networkError = m_session->networkError;
+        const bool shouldReconnect = m_session->resolvedIntent == LiveIntent;
+        if (!networkError.isEmpty() && !shouldReconnect) {
+            tryNextPlaylist(m_generation, networkError);
+        } else if (shouldReconnect) {
             const QUrl reconnectUrl = m_activeUrl;
             const int reconnectAttempt = ++m_reconnectAttempt;
             stopSession(true);
@@ -770,10 +832,13 @@ void AudioEngine::decoderEnded(quint64 generation, const QString &message, bool 
         return;
     m_session->decoderDone.store(true, std::memory_order_release);
     if (!message.isEmpty()) {
-        if (m_playlistIndex + 1 < m_playlistEntries.size())
+        if (m_session->resolvedIntent == LiveIntent) {
+            m_session->networkError = message;
+        } else if (m_playlistIndex + 1 < m_playlistEntries.size()) {
             tryNextPlaylist(generation, message);
-        else
+        } else {
             fail(DecodeError, message);
+        }
     } else if (!endOfStream) {
         fail(DecodeError, QStringLiteral("Audio decoder stopped unexpectedly"));
     }

@@ -14,6 +14,7 @@ class QTimer;
 namespace FreeRadio::Audio {
 
 struct AudioWorker;
+struct WorkerControl;
 class SpectrumAnalyzer;
 
 class AudioEngine : public QObject
@@ -22,6 +23,7 @@ class AudioEngine : public QObject
     QML_ELEMENT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(float volume READ volume WRITE setVolume NOTIFY volumeChanged)
+    Q_PROPERTY(SourceIntent sourceIntent READ sourceIntent WRITE setSourceIntent NOTIFY sourceIntentChanged)
     Q_PROPERTY(PlaybackState playbackState READ playbackState NOTIFY playbackStateChanged)
     Q_PROPERTY(PlaybackError error READ error NOTIFY errorChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorChanged)
@@ -36,6 +38,8 @@ class AudioEngine : public QObject
     Q_PROPERTY(QVariantList spectrum READ spectrum NOTIFY spectrumChanged)
 
 public:
+    enum SourceIntent { AutoIntent, LiveIntent, FiniteIntent };
+    Q_ENUM(SourceIntent)
     enum PlaybackState { StoppedState, LoadingState, BufferingState, PlayingState, PausedState, ErrorState };
     Q_ENUM(PlaybackState)
     enum PlaybackError { NoError, NetworkError, PlaylistError, DecodeError, OutputError, UnsupportedError };
@@ -48,6 +52,8 @@ public:
     void setSource(const QUrl &source);
     float volume() const { return m_volume; }
     void setVolume(float volume);
+    SourceIntent sourceIntent() const { return m_sourceIntent; }
+    void setSourceIntent(SourceIntent intent);
     PlaybackState playbackState() const { return m_state; }
     PlaybackError error() const { return m_error; }
     QString errorString() const { return m_errorString; }
@@ -71,6 +77,7 @@ public:
 signals:
     void sourceChanged();
     void volumeChanged();
+    void sourceIntentChanged();
     void playbackStateChanged();
     void errorChanged();
     void bufferingChanged();
@@ -90,6 +97,7 @@ private:
     void stopSession(bool advanceGeneration);
     void updatePlayback();
     void analyzeConsumedPcm();
+    void reapWorkers(bool waitForAll = false);
     void tryNextPlaylist(quint64 generation, const QString &lastError);
     void setState(PlaybackState state);
     void fail(PlaybackError error, const QString &message);
@@ -99,6 +107,7 @@ private:
     QUrl m_source;
     QUrl m_activeUrl;
     float m_volume = 1.0f;
+    SourceIntent m_sourceIntent = AutoIntent;
     PlaybackState m_state = StoppedState;
     PlaybackError m_error = NoError;
     QString m_errorString;
@@ -115,8 +124,11 @@ private:
     QNetworkAccessManager *m_network = nullptr;
     QNetworkReply *m_reply = nullptr;
     QTimer *m_playbackTimer = nullptr;
+    QTimer *m_reaperTimer = nullptr;
+    std::shared_ptr<WorkerControl> m_workerControl;
     std::unique_ptr<SpectrumAnalyzer> m_analyzer;
     std::shared_ptr<Session> m_session;
+    QVector<std::shared_ptr<Session>> m_retiredSessions;
     quint64 m_generation = 0;
     int m_reconnectAttempt = 0;
     bool m_networkBackpressured = false;

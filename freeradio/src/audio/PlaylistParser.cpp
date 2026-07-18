@@ -15,7 +15,8 @@ QUrl resolvedUrl(const QString &text, const QUrl &base)
 void appendIfValid(QVector<QUrl> &result, const QString &text, const QUrl &base)
 {
     const auto url = resolvedUrl(text, base);
-    if (url.isValid() && !url.isEmpty())
+    if (url.isValid() && (url.scheme() == QStringLiteral("http")
+                          || url.scheme() == QStringLiteral("https")))
         result.append(url);
 }
 } // namespace

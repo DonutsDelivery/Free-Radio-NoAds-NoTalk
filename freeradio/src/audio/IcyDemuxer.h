@@ -13,6 +13,7 @@ public:
         QString title;
         QUrl url;
         bool changed = false;
+        bool urlChanged = false;
     };
 
     void reset(int metadataInterval);
