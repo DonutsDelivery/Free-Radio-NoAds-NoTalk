@@ -1,0 +1,4 @@
+# Git attributes for kspec
+
+*.yaml merge=kspec
+*.yml merge=kspec
