@@ -1,0 +1,349 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radiodata.schema.json",
+  "title": "Free Radio ordered station catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "catalogVersion",
+    "somafmCategories",
+    "radcapCategories",
+    "radioParadiseCategories",
+    "fipCategories",
+    "miscCategories",
+    "miscGenreGroups",
+    "allowedDuplicateStreams"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "radiodata.schema.json"
+    },
+    "catalogVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "somafmCategories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "stations"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stations": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "host",
+                "path"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "host": {
+                  "enum": [
+                    "https://somafm.com"
+                  ]
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^(?!/).*",
+                  "minLength": 1
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "radcapCategories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "stations"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stations": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "host",
+                "path"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "host": {
+                  "enum": [
+                    "http://213.141.131.10",
+                    "http://79.111.119.111",
+                    "http://79.111.14.76",
+                    "http://79.120.12.130",
+                    "http://79.120.39.202",
+                    "http://79.120.77.11"
+                  ]
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^(?!/).*",
+                  "minLength": 1
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "radioParadiseCategories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "stations"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stations": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "host",
+                "path"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "host": {
+                  "enum": [
+                    "https://stream.radioparadise.com"
+                  ]
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^(?!/).*",
+                  "minLength": 1
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      },
+      "maxItems": 1
+    },
+    "fipCategories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "stations"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stations": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "host",
+                "path"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "host": {
+                  "enum": [
+                    "https://icecast.radiofrance.fr"
+                  ]
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^(?!/).*",
+                  "minLength": 1
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      },
+      "maxItems": 1
+    },
+    "miscCategories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "stations"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stations": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "host",
+                "path"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "host": {
+                  "type": "string",
+                  "pattern": "^https?://[^/]+$"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^(?!/).*"
+                },
+                "description": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "miscGenreGroups": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "categories"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "categories": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "allowedDuplicateStreams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "host",
+          "path",
+          "reason",
+          "occurrences"
+        ],
+        "properties": {
+          "host": {
+            "type": "string",
+            "pattern": "^https?://[^/]+$"
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^(?!/).*"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurrences": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

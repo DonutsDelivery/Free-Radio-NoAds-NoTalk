@@ -11,6 +11,10 @@ Makefile
 *.so
 *.a
 
+# Python cache
+__pycache__/
+*.py[cod]
+
 # IDE
 .vscode/
 .idea/

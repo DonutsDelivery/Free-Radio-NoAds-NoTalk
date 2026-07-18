@@ -10,7 +10,19 @@ env:
   KF_VERSION: '6.3.0'
 
 jobs:
+  catalog-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check canonical station catalog
+        run: |
+          python3 tools/radiodata_catalog.py check
+          python3 -m unittest discover -s tests
+
   build-plasmoid:
+    needs: catalog-check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -31,6 +43,7 @@ jobs:
           path: freeradio.plasmoid
 
   build-linux:
+    needs: catalog-check
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -116,6 +129,7 @@ jobs:
           path: FreeRadio-Linux-x86_64.AppImage
 
   build-macos:
+    needs: catalog-check
     runs-on: macos-14
     steps:
       - name: Checkout
@@ -240,6 +254,7 @@ jobs:
           if-no-files-found: ignore
 
   build-windows:
+    needs: catalog-check
     runs-on: windows-latest
     steps:
       - name: Checkout
