@@ -23,79 +23,67 @@ if(NOT ANDROID)
     find_package(KF6Kirigami REQUIRED)
 endif()
 
+# Production builds fail closed: the custom in-process engine and pinned FFmpeg
+# ABI are mandatory on every platform.
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
+find_package(FreeRadioFFmpeg 8.0.3 EXACT REQUIRED)
 find_package(PkgConfig QUIET)
-set(FREERADIO_AUDIO_CORE_MODE "AUTO" CACHE STRING "Audio core mode: AUTO, REQUIRED, or OFF")
-set_property(CACHE FREERADIO_AUDIO_CORE_MODE PROPERTY STRINGS AUTO REQUIRED OFF)
-option(FREERADIO_APP_REQUIRES_AUDIO_CORE "Fail configure when the app QML requires FreeRadio.Audio" ON)
-set(FREERADIO_FFMPEG_INCLUDE_DIR "" CACHE PATH "FFmpeg include directory for non-pkg-config builds")
-set(FREERADIO_AVFORMAT_LIBRARY "" CACHE FILEPATH "Path to libavformat")
-set(FREERADIO_AVCODEC_LIBRARY "" CACHE FILEPATH "Path to libavcodec")
-set(FREERADIO_AVUTIL_LIBRARY "" CACHE FILEPATH "Path to libavutil")
-set(FREERADIO_SWRESAMPLE_LIBRARY "" CACHE FILEPATH "Path to libswresample")
-
-if(NOT FREERADIO_AUDIO_CORE_MODE MATCHES "^(AUTO|REQUIRED|OFF)$")
-    message(FATAL_ERROR "FREERADIO_AUDIO_CORE_MODE must be AUTO, REQUIRED, or OFF")
-endif()
-set(FREERADIO_AUDIO_CORE_AVAILABLE OFF)
-set(FREERADIO_FFMPEG_TARGET "")
-if(NOT FREERADIO_AUDIO_CORE_MODE STREQUAL "OFF")
-    if(FREERADIO_FFMPEG_INCLUDE_DIR AND FREERADIO_AVFORMAT_LIBRARY
-       AND FREERADIO_AVCODEC_LIBRARY AND FREERADIO_AVUTIL_LIBRARY
-       AND FREERADIO_SWRESAMPLE_LIBRARY)
-        add_library(freeradio_ffmpeg INTERFACE)
-        target_include_directories(freeradio_ffmpeg INTERFACE ${FREERADIO_FFMPEG_INCLUDE_DIR})
-        target_link_libraries(freeradio_ffmpeg INTERFACE
-            ${FREERADIO_AVFORMAT_LIBRARY} ${FREERADIO_AVCODEC_LIBRARY}
-            ${FREERADIO_AVUTIL_LIBRARY} ${FREERADIO_SWRESAMPLE_LIBRARY}
-        )
-        set(FREERADIO_FFMPEG_TARGET freeradio_ffmpeg)
-        set(FREERADIO_AUDIO_CORE_AVAILABLE ON)
-    elseif(PkgConfig_FOUND AND NOT ANDROID)
-        pkg_check_modules(FFMPEG QUIET IMPORTED_TARGET
-            libavformat libavcodec libavutil libswresample
-        )
-        if(FFMPEG_FOUND)
-            set(FREERADIO_FFMPEG_TARGET PkgConfig::FFMPEG)
-            set(FREERADIO_AUDIO_CORE_AVAILABLE ON)
-        endif()
-    endif()
-endif()
-if((FREERADIO_AUDIO_CORE_MODE STREQUAL "REQUIRED" OR FREERADIO_APP_REQUIRES_AUDIO_CORE)
-   AND NOT FREERADIO_AUDIO_CORE_AVAILABLE)
-    message(FATAL_ERROR "FreeRadio.Audio is required but FFmpeg was not found. Provide pkg-config metadata or all FREERADIO_*_LIBRARY and FREERADIO_FFMPEG_INCLUDE_DIR cache paths.")
-endif()
 
 if(UNIX AND NOT APPLE AND NOT ANDROID AND PkgConfig_FOUND)
     pkg_check_modules(PULSEAUDIO libpulse libpulse-simple)
 endif()
 
-if(FREERADIO_AUDIO_CORE_AVAILABLE)
-    qt_add_qml_module(freeradio_audio
-        SHARED
-        URI FreeRadio.Audio
-        VERSION 1.0
-        OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml/FreeRadio/Audio
-        SOURCES
-            src/audio/AudioEngine.cpp
-            src/audio/AudioEngine.h
-            src/audio/IcyDemuxer.cpp
-            src/audio/IcyDemuxer.h
-            src/audio/NetworkBuffer.cpp
-            src/audio/NetworkBuffer.h
-            src/audio/PcmRingBuffer.h
-            src/audio/PlaylistParser.cpp
-            src/audio/PlaylistParser.h
-            src/audio/SpectrumAnalyzer.cpp
-            src/audio/SpectrumAnalyzer.h
-    )
-    target_include_directories(freeradio_audio PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/audio
-    )
-    target_link_libraries(freeradio_audio
-        PUBLIC Qt6::Core Qt6::Network Qt6::Qml
-        PRIVATE Qt6::Xml ${FREERADIO_FFMPEG_TARGET}
-    )
+qt_add_qml_module(freeradio_audio
+    SHARED
+    URI FreeRadio.Audio
+    VERSION 1.0
+    OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml/FreeRadio/Audio
+    SOURCES
+        src/audio/AudioEngine.cpp
+        src/audio/AudioEngine.h
+        src/audio/IcyDemuxer.cpp
+        src/audio/IcyDemuxer.h
+        src/audio/NetworkBuffer.cpp
+        src/audio/NetworkBuffer.h
+        src/audio/PcmRingBuffer.h
+        src/audio/PlaylistParser.cpp
+        src/audio/PlaylistParser.h
+        src/audio/SpectrumAnalyzer.cpp
+        src/audio/SpectrumAnalyzer.h
+)
+target_include_directories(freeradio_audio PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/audio
+)
+target_link_libraries(freeradio_audio
+    PUBLIC Qt6::Core Qt6::Network Qt6::Qml
+    PRIVATE Qt6::Xml FreeRadio::FFmpeg
+)
+
+# miniaudio links directly to each platform's native output APIs.
+if(ANDROID)
+    foreach(_library IN ITEMS android log OpenSLES)
+        find_library(FREERADIO_${_library}_LIBRARY ${_library})
+        if(NOT FREERADIO_${_library}_LIBRARY)
+            message(FATAL_ERROR "Android platform library '${_library}' required by miniaudio was not found")
+        endif()
+        target_link_libraries(freeradio_audio PRIVATE ${FREERADIO_${_library}_LIBRARY})
+    endforeach()
+    target_link_libraries(freeradio_audio PRIVATE ${CMAKE_DL_LIBS})
+elseif(WIN32)
+    target_link_libraries(freeradio_audio PRIVATE ole32 winmm)
+elseif(APPLE)
+    foreach(_framework IN ITEMS CoreAudio AudioToolbox CoreFoundation)
+        string(TOUPPER "${_framework}" _framework_upper)
+        find_library(FREERADIO_${_framework_upper}_FRAMEWORK ${_framework})
+        if(NOT FREERADIO_${_framework_upper}_FRAMEWORK)
+            message(FATAL_ERROR "Apple framework '${_framework}' required by miniaudio was not found")
+        endif()
+        target_link_libraries(freeradio_audio PRIVATE ${FREERADIO_${_framework_upper}_FRAMEWORK})
+    endforeach()
+elseif(UNIX)
+    find_package(Threads REQUIRED)
+    target_link_libraries(freeradio_audio PRIVATE Threads::Threads ${CMAKE_DL_LIBS} m)
 endif()
 
 set(FREERADIO_SOURCES
@@ -123,18 +111,19 @@ if(PULSEAUDIO_FOUND)
 endif()
 
 target_link_libraries(freeradio PRIVATE
-    Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::QuickControls2
-    freeradio_audio
+    Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::QuickControls2 freeradio_audio
 )
 if(NOT ANDROID)
     target_link_libraries(freeradio PRIVATE Qt6::Widgets Qt6::DBus KF6::Kirigami)
 endif()
-if(FREERADIO_AUDIO_CORE_AVAILABLE)
-    add_dependencies(freeradio freeradio_audioplugin)
-    target_compile_definitions(freeradio PRIVATE
-        FREERADIO_AUDIO_CORE_AVAILABLE
-        FREERADIO_BUILD_QML_IMPORT_PATH="${CMAKE_BINARY_DIR}/qml"
-    )
+add_dependencies(freeradio freeradio_audioplugin)
+target_compile_definitions(freeradio PRIVATE
+    FREERADIO_AUDIO_CORE_AVAILABLE
+    FREERADIO_BUILD_QML_IMPORT_PATH="${CMAKE_BINARY_DIR}/qml"
+)
+if(ANDROID)
+    set_property(TARGET freeradio PROPERTY QT_ANDROID_EXTRA_LIBS
+        "${FREERADIO_AVFORMAT_LIBRARY};${FREERADIO_AVCODEC_LIBRARY};${FREERADIO_AVUTIL_LIBRARY};${FREERADIO_SWRESAMPLE_LIBRARY}")
 endif()
 
 if(PULSEAUDIO_FOUND)
@@ -156,8 +145,7 @@ if(ANDROID)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
     set(FREERADIO_ANDROID_PACKAGE_DIR "${CMAKE_CURRENT_BINARY_DIR}/android-package")
     file(REMOVE_RECURSE "${FREERADIO_ANDROID_PACKAGE_DIR}")
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/android/"
-         DESTINATION "${FREERADIO_ANDROID_PACKAGE_DIR}")
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/android/" DESTINATION "${FREERADIO_ANDROID_PACKAGE_DIR}")
     execute_process(
         COMMAND "${Python3_EXECUTABLE}"
                 "${CMAKE_CURRENT_SOURCE_DIR}/android/generate_network_security_config.py"
@@ -194,26 +182,29 @@ if(NOT ANDROID)
     install(FILES icons/freeradio.svg DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
 endif()
 
-if(FREERADIO_AUDIO_CORE_AVAILABLE)
-    if(ANDROID)
-        set(FREERADIO_QML_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/qt6/qml/FreeRadio/Audio")
-    elseif(APPLE)
-        set(FREERADIO_QML_INSTALL_DIR "freeradio.app/Contents/Resources/qml/FreeRadio/Audio")
-        set_target_properties(freeradio_audioplugin PROPERTIES INSTALL_RPATH "@loader_path")
-    elseif(WIN32)
-        set(FREERADIO_QML_INSTALL_DIR "${CMAKE_INSTALL_BINDIR}/qml/FreeRadio/Audio")
-    else()
-        set(FREERADIO_QML_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/qt6/qml/FreeRadio/Audio")
-        set_target_properties(freeradio_audioplugin PROPERTIES INSTALL_RPATH "$ORIGIN")
-    endif()
-    install(TARGETS freeradio_audio freeradio_audioplugin
-        LIBRARY DESTINATION ${FREERADIO_QML_INSTALL_DIR}
-        RUNTIME DESTINATION ${FREERADIO_QML_INSTALL_DIR}
-    )
-    install(FILES ${CMAKE_BINARY_DIR}/qml/FreeRadio/Audio/qmldir
-        DESTINATION ${FREERADIO_QML_INSTALL_DIR}
-    )
+if(ANDROID)
+    set(FREERADIO_QML_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/qt6/qml/FreeRadio/Audio")
+elseif(APPLE)
+    set(FREERADIO_QML_INSTALL_DIR "freeradio.app/Contents/Resources/qml/FreeRadio/Audio")
+    set_target_properties(freeradio_audioplugin PROPERTIES INSTALL_RPATH "@loader_path")
+elseif(WIN32)
+    set(FREERADIO_QML_INSTALL_DIR "${CMAKE_INSTALL_BINDIR}/qml/FreeRadio/Audio")
+else()
+    set(FREERADIO_QML_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/qt6/qml/FreeRadio/Audio")
+    set_target_properties(freeradio_audioplugin PROPERTIES INSTALL_RPATH "$ORIGIN")
 endif()
+install(TARGETS freeradio_audio freeradio_audioplugin
+    LIBRARY DESTINATION ${FREERADIO_QML_INSTALL_DIR}
+    RUNTIME DESTINATION ${FREERADIO_QML_INSTALL_DIR}
+)
+install(FILES ${CMAKE_BINARY_DIR}/qml/FreeRadio/Audio/qmldir
+    DESTINATION ${FREERADIO_QML_INSTALL_DIR}
+)
+install(FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/../LICENSES/FFmpeg-LGPL-2.1-or-later.txt
+    ${CMAKE_CURRENT_SOURCE_DIR}/../LICENSES/FFmpeg-NOTICE.txt
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/freeradio
+)
 
 include(CTest)
 if(BUILD_TESTING)
@@ -232,7 +223,5 @@ if(BUILD_TESTING)
     add_dependencies(freeradio-qml-import-test freeradio_audioplugin)
     add_test(NAME freeradio-qml-import-test COMMAND freeradio-qml-import-test)
     add_test(NAME freeradio-app-qml-import-smoke COMMAND freeradio --audio-qml-smoke)
-    set_tests_properties(freeradio-app-qml-import-smoke PROPERTIES
-        ENVIRONMENT "QT_QPA_PLATFORM=offscreen"
-    )
+    set_tests_properties(freeradio-app-qml-import-smoke PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()
