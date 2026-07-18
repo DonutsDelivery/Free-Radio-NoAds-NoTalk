@@ -119,6 +119,9 @@ features:
         type: requirement
         description: Desktop standalone, Plasma, and Android consume the same maintainable catalog, URL
           rules, playback controller, navigation, favorites, search, metadata, and primary QML UI.
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
