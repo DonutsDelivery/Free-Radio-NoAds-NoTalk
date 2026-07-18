@@ -1,4 +1,5 @@
 #include <QtTest>
+#include <QDirIterator>
 #include <QFile>
 #include <QQmlComponent>
 #include <QQmlEngine>
@@ -35,18 +36,43 @@ private slots:
 
     void productionPlaybackHasNoQtMultimediaFallback()
     {
+        const QString repository = QStringLiteral(FREERADIO_REPOSITORY_PATH);
+        QDirIterator files(repository,
+            {QStringLiteral("*.qml"), QStringLiteral("CMakeLists*.txt")},
+            QDir::Files, QDirIterator::Subdirectories);
+
+        int scannedFiles = 0;
+        while (files.hasNext()) {
+            const QString path = files.next();
+            const QString normalized = QDir::fromNativeSeparators(path);
+            if (normalized.contains(QStringLiteral("/tests/"))
+                || normalized.contains(QStringLiteral("/third_party/"))
+                || normalized.contains(QStringLiteral("/aur-freeradio/"))
+                || normalized.contains(QStringLiteral("/radcap-radio-widget/"))) {
+                continue;
+            }
+
+            QFile file(path);
+            QVERIFY2(file.open(QIODevice::ReadOnly), qPrintable(path));
+            const QByteArray content = file.readAll();
+            const QList<QByteArray> forbidden = {
+                QByteArrayLiteral("QtMultimedia"),
+                QByteArrayLiteral("MediaPlayer {"),
+                QByteArrayLiteral("AudioOutput {"),
+                QByteArrayLiteral("Qt6::Multimedia")
+            };
+            for (const QByteArray &token : forbidden) {
+                QVERIFY2(!content.contains(token),
+                    qPrintable(path + QStringLiteral(" contains forbidden playback token: ")
+                        + QString::fromLatin1(token)));
+            }
+            ++scannedFiles;
+        }
+        QVERIFY(scannedFiles > 0);
+
         QFile mainContent(QStringLiteral(FREERADIO_UI_PATH "/MainContent.qml"));
         QVERIFY(mainContent.open(QIODevice::ReadOnly));
-        const QByteArray qml = mainContent.readAll();
-        QVERIFY(!qml.contains("QtMultimedia"));
-        QVERIFY(!qml.contains("MediaPlayer"));
-        QVERIFY(qml.contains("PlaybackController"));
-
-        QFile cmake(QStringLiteral(FREERADIO_CMAKE_PATH));
-        QVERIFY(cmake.open(QIODevice::ReadOnly));
-        const QByteArray build = cmake.readAll();
-        QVERIFY(!build.contains("Qt6::Multimedia"));
-        QVERIFY(build.contains("freeradio_audio"));
+        QVERIFY(mainContent.readAll().contains("PlaybackController"));
     }
 };
 

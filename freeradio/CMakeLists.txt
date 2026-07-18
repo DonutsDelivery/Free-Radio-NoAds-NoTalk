@@ -151,7 +151,7 @@ if(BUILD_TESTING)
     target_compile_definitions(freeradio-qml-import-test PRIVATE
         FREERADIO_QML_IMPORT_PATH="${CMAKE_BINARY_DIR}/qml"
         FREERADIO_UI_PATH="${CMAKE_CURRENT_SOURCE_DIR}/contents/ui"
-        FREERADIO_CMAKE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt"
+        FREERADIO_REPOSITORY_PATH="${CMAKE_CURRENT_SOURCE_DIR}/.."
     )
     add_dependencies(freeradio-qml-import-test freeradio_audioplugin)
     add_test(NAME freeradio-qml-import-test COMMAND freeradio-qml-import-test)
