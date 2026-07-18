@@ -119,7 +119,7 @@ ApplicationWindow {
                 if (!mainContent.userPaused) mainContent.handleRemoteCommand("playpause")
             }
             function onStopRequested() {
-                if (!mainContent.userPaused) mainContent.handleRemoteCommand("playpause")
+                mainContent.handleRemoteCommand("stop")
                 Qt.callLater(function() { AndroidMedia.stopService() })
             }
             function onNextRequested() { mainContent.playNextStation() }

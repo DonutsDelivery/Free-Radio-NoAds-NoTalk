@@ -30,12 +30,17 @@ Use the platform's shared-library suffix on macOS or Windows. The explicit provi
 
 ## Android
 
-Set `ANDROID_NDK_ROOT` to an installed Android NDK, then build both supported ABIs:
+Set `ANDROID_NDK_ROOT` to Android NDK r25b, then build both supported FFmpeg ABIs and the pinned OpenSSL 3.0.21 TLS runtime:
 
 ```sh
 scripts/ffmpeg/build-android.sh --ndk "$ANDROID_NDK_ROOT" --abi arm64-v8a
 scripts/ffmpeg/build-android.sh --ndk "$ANDROID_NDK_ROOT" --abi x86_64
+scripts/openssl/build-android.sh \
+  --ndk "$ANDROID_NDK_ROOT" \
+  --prefix "$PWD/build/openssl/android"
 ```
+
+Qt 6.6 dynamically loads `libcrypto_3.so` and `libssl_3.so` on Android. Free Radio fails configuration when these libraries are absent because almost all catalog streams require HTTPS; silently producing an APK without a functional TLS backend would make playback fail at runtime.
 
 Configure the Qt Android application with the staged ABI matching `CMAKE_ANDROID_ARCH_ABI`:
 
@@ -45,7 +50,8 @@ prefix="$PWD/build/ffmpeg/android/$abi"
 cmake -S freeradio -B "build/android-$abi" \
   -DQT_HOST_PATH="$QT_HOST_PATH" \
   -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake" \
-  -DANDROID_ABI="$abi" -DANDROID_PLATFORM=android-24 \
+  -DANDROID_ABI="$abi" -DANDROID_PLATFORM=android-26 \
+  -DFREERADIO_ANDROID_OPENSSL_ROOT="$PWD/build/openssl/android" \
   -DFREERADIO_FFMPEG_PROVIDER=EXPLICIT \
   -DFREERADIO_FFMPEG_INCLUDE_DIR="$prefix/include" \
   -DFREERADIO_AVFORMAT_LIBRARY="$prefix/lib/libavformat.so" \

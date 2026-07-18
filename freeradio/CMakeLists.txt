@@ -11,6 +11,8 @@ set(CMAKE_AUTOUIC ON)
 if(ANDROID)
     set(FREERADIO_SUPPORTED_ANDROID_ABIS "arm64-v8a;x86_64" CACHE STRING
         "Android ABIs supported by Free Radio")
+    set(FREERADIO_ANDROID_OPENSSL_ROOT "$ENV{FREERADIO_ANDROID_OPENSSL_ROOT}" CACHE PATH
+        "Root containing ABI directories with Qt-compatible libcrypto_3.so and libssl_3.so")
     if(NOT QT_ANDROID_ABIS)
         set(QT_ANDROID_ABIS "${CMAKE_ANDROID_ARCH_ABI}" CACHE STRING
             "Android ABI packaged by this build")
@@ -19,6 +21,15 @@ if(ANDROID)
         if(NOT _abi IN_LIST FREERADIO_SUPPORTED_ANDROID_ABIS)
             message(FATAL_ERROR "Unsupported Android ABI '${_abi}'")
         endif()
+        foreach(_openssl_library IN ITEMS libcrypto_3.so libssl_3.so)
+            set(_openssl_path "${FREERADIO_ANDROID_OPENSSL_ROOT}/${_abi}/${_openssl_library}")
+            if(NOT IS_ABSOLUTE "${_openssl_path}" OR NOT EXISTS "${_openssl_path}")
+                message(FATAL_ERROR
+                    "Android HTTPS playback requires ${_openssl_library} for ${_abi}; "
+                    "run scripts/openssl/build-android.sh and set FREERADIO_ANDROID_OPENSSL_ROOT")
+            endif()
+            list(APPEND FREERADIO_ANDROID_OPENSSL_LIBRARIES "${_openssl_path}")
+        endforeach()
     endforeach()
 endif()
 
@@ -132,7 +143,7 @@ target_compile_definitions(freeradio PRIVATE
 )
 if(ANDROID)
     set_property(TARGET freeradio PROPERTY QT_ANDROID_EXTRA_LIBS
-        "${FREERADIO_AVFORMAT_LIBRARY};${FREERADIO_AVCODEC_LIBRARY};${FREERADIO_AVUTIL_LIBRARY};${FREERADIO_SWRESAMPLE_LIBRARY}")
+        "${FREERADIO_AVFORMAT_LIBRARY};${FREERADIO_AVCODEC_LIBRARY};${FREERADIO_AVUTIL_LIBRARY};${FREERADIO_SWRESAMPLE_LIBRARY};${FREERADIO_ANDROID_OPENSSL_LIBRARIES}")
 endif()
 
 if(PULSEAUDIO_FOUND)
@@ -213,6 +224,7 @@ install(FILES ${CMAKE_BINARY_DIR}/qml/FreeRadio/Audio/qmldir
 install(FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/../LICENSES/FFmpeg-LGPL-2.1-or-later.txt
     ${CMAKE_CURRENT_SOURCE_DIR}/../LICENSES/FFmpeg-NOTICE.txt
+    ${CMAKE_CURRENT_SOURCE_DIR}/../LICENSES/OpenSSL-Apache-2.0.txt
     DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/freeradio
 )
 

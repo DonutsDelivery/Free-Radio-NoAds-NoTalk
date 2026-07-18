@@ -1033,7 +1033,17 @@ Item {
                     playRandomStation()
                 }
                 break
-            
+
+            case "stop":
+                console.log("Remote: Stopping playback")
+                playbackController.stopMain()
+                userPaused = true
+                songUpdateTimer.stop()
+                idleResetTimer.stop()
+                silentPlaybackDetector.stop()
+                ebookProgressTimer.stop()
+                break
+
             case "next":
                 console.log("Remote command: next - calling playNextStation()")
                 var result = playNextStation()

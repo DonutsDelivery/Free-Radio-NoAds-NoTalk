@@ -304,16 +304,19 @@ private slots:
 
         engine.pause();
         QCOMPARE(engine.playbackState(), AudioEngine::PausedState);
+        const int requestsBeforePausedSeek = server.rangeRequests;
         engine.seek(2500);
         QCOMPARE(engine.playbackState(), AudioEngine::PausedState);
-        QTRY_VERIFY_WITH_TIMEOUT(server.rangeRequests > 0, 3000);
+        QTRY_VERIFY_WITH_TIMEOUT(server.rangeRequests > requestsBeforePausedSeek, 3000);
         QTest::qWait(100);
         QCOMPARE(engine.position(), qint64(2500));
 
         engine.play();
         QTRY_COMPARE_WITH_TIMEOUT(engine.playbackState(), AudioEngine::PlayingState, 3000);
         QTRY_VERIFY_WITH_TIMEOUT(engine.position() >= 2500, 1000);
+        const int requestsBeforePlayingSeek = server.rangeRequests;
         engine.seek(1000);
+        QTRY_VERIFY_WITH_TIMEOUT(server.rangeRequests > requestsBeforePlayingSeek, 3000);
         QTRY_COMPARE_WITH_TIMEOUT(engine.playbackState(), AudioEngine::PlayingState, 3000);
         QTRY_VERIFY_WITH_TIMEOUT(engine.position() >= 1000 && engine.position() < 2500, 1000);
         QVERIFY(server.rangeRequests >= 2);

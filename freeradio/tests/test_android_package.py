@@ -36,6 +36,16 @@ class AndroidPackageTest(unittest.TestCase):
         self.assertNotIn("READ_EXTERNAL_STORAGE", serialized)
         self.assertNotIn("WRITE_EXTERNAL_STORAGE", serialized)
 
+    def test_activity_keeps_qt_event_loop_running_in_background(self):
+        root = ET.parse(ANDROID / "AndroidManifest.xml").getroot()
+        activity = root.find("application/activity")
+        self.assertIsNotNone(activity)
+        metadata = {
+            node.attrib[ANDROID_NS + "name"]: node.attrib[ANDROID_NS + "value"]
+            for node in activity.findall("meta-data")
+        }
+        self.assertEqual(metadata.get("android.app.background_running"), "true")
+
     def test_service_is_private_media_playback_foreground_service(self):
         root = ET.parse(ANDROID / "AndroidManifest.xml").getroot()
         service = root.find("application/service")
@@ -70,6 +80,31 @@ class AndroidPackageTest(unittest.TestCase):
         self.assertIn('FREERADIO_SUPPORTED_ANDROID_ABIS "arm64-v8a;x86_64"', cmake)
         self.assertIn("QT_ANDROID_PACKAGE_SOURCE_DIR", cmake)
         self.assertIn("qt_finalize_executable(freeradio)", cmake)
+
+    def test_https_runtime_is_pinned_and_packaged_for_each_abi(self):
+        cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
+        self.assertIn("FREERADIO_ANDROID_OPENSSL_ROOT", cmake)
+        self.assertIn("libcrypto_3.so", cmake)
+        self.assertIn("libssl_3.so", cmake)
+        self.assertIn("FREERADIO_ANDROID_OPENSSL_LIBRARIES", cmake)
+
+        script = (ROOT.parent / "scripts/openssl/build-android.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("OPENSSL_VERSION=3.0.21", script)
+        self.assertIn(
+            "617e29af8e421f46649484a4937e48c685e47f46488167c982f88bc4ec1d522f",
+            script,
+        )
+        self.assertIn("sha256sum --check --status", script)
+        self.assertIn("arm64-v8a x86_64", script)
+
+    def test_notification_stop_fully_stops_the_custom_engine(self):
+        shell = (ROOT / "contents/ui/main_standalone.qml").read_text(encoding="utf-8")
+        content = (ROOT / "contents/ui/MainContent.qml").read_text(encoding="utf-8")
+        self.assertIn('mainContent.handleRemoteCommand("stop")', shell)
+        self.assertIn('case "stop":', content)
+        self.assertIn("playbackController.stopMain()", content)
 
     def test_service_has_media_controls_focus_and_noisy_receiver(self):
         service = (ANDROID / "src/org/freeradio/app/PlaybackService.java").read_text(

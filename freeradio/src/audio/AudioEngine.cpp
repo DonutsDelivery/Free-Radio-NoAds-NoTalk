@@ -702,7 +702,11 @@ void AudioEngine::beginRangeRequest(const std::shared_ptr<Session> &session, qin
     auto *reply = m_network->get(request);
     m_reply = reply;
     reply->setReadBufferSize(256 * 1024);
-    auto validate = [session, reply, offset]() {
+    auto responseAccepted = std::make_shared<bool>(false);
+    auto validate = [session, reply, offset, responseAccepted]() {
+        // A pending range after this response was accepted belongs to a newer FFmpeg seek.
+        if (*responseAccepted)
+            return !session->rangePending.load(std::memory_order_acquire);
         const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         const QByteArray contentRange = reply->rawHeader("Content-Range").trimmed();
         const int dash = contentRange.indexOf('-');
@@ -715,6 +719,7 @@ void AudioEngine::beginRangeRequest(const std::shared_ptr<Session> &session, qin
             session->network.cancel();
             return false;
         }
+        *responseAccepted = true;
         session->rangePending.store(false, std::memory_order_release);
         return true;
     };
@@ -932,7 +937,9 @@ void AudioEngine::updatePlayback()
             const int reconnectAttempt = ++m_reconnectAttempt;
             stopSession(true);
             if (reconnectAttempt > 3) {
-                fail(NetworkError, QStringLiteral("Live stream disconnected repeatedly"));
+                fail(NetworkError, networkError.isEmpty()
+                         ? QStringLiteral("Live stream disconnected repeatedly")
+                         : QStringLiteral("Live stream disconnected repeatedly: %1").arg(networkError));
                 return;
             }
             setState(BufferingState);
