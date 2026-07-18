@@ -67,7 +67,7 @@ class AndroidPackageTest(unittest.TestCase):
 
     def test_cmake_packages_both_required_abis(self):
         cmake = (ROOT / "CMakeLists.txt").read_text(encoding="utf-8")
-        self.assertIn('QT_ANDROID_ABIS "arm64-v8a;x86_64"', cmake)
+        self.assertIn('FREERADIO_SUPPORTED_ANDROID_ABIS "arm64-v8a;x86_64"', cmake)
         self.assertIn("QT_ANDROID_PACKAGE_SOURCE_DIR", cmake)
         self.assertIn("qt_finalize_executable(freeradio)", cmake)
 

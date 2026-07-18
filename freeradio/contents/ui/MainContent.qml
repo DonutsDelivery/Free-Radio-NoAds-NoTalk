@@ -58,6 +58,12 @@ Item {
     
     // Playback state tracking
     property bool userPaused: false
+    readonly property bool mainPlaybackPlaying: playbackController.mainPlaying
+    readonly property bool mainPlaybackEngaged:
+        playbackController.main.playbackState === playbackController.loadingState
+        || playbackController.main.playbackState === playbackController.bufferingState
+        || playbackController.main.playbackState === playbackController.playingState
+        || playbackController.main.playbackState === playbackController.pausedState
     property real lastBufferProgress: 0
     property int lastBufferUpdateTime: 0
     property int restartAttempts: 0

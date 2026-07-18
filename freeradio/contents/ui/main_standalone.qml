@@ -57,10 +57,13 @@ ApplicationWindow {
         anchors.fill: parent
         sessionMonitor: sessionMonitor
         isMobile: window.mobilePlatform
-        safeAreaLeft: window.mobilePlatform ? window.contentItem.SafeArea.margins.left : 0
-        safeAreaTop: window.mobilePlatform ? window.contentItem.SafeArea.margins.top : 0
-        safeAreaRight: window.mobilePlatform ? window.contentItem.SafeArea.margins.right : 0
-        safeAreaBottom: window.mobilePlatform ? window.contentItem.SafeArea.margins.bottom : 0
+        // Qt 6.6's Android window content rect already excludes system bars.
+        // Keep explicit capability values so newer edge-to-edge adapters can
+        // provide additional cutout insets without forking MainContent.
+        safeAreaLeft: 0
+        safeAreaTop: 0
+        safeAreaRight: 0
+        safeAreaBottom: 0
 
         // Standalone mode - no panel integration
         isCompactMode: false
@@ -91,11 +94,11 @@ ApplicationWindow {
         }
 
         function syncAndroidMedia() {
-            if (currentStationUrl === "") {
+            if (!mainPlaybackEngaged || currentStationUrl === "") {
                 AndroidMedia.stopService()
                 return
             }
-            AndroidMedia.updatePlaybackState(!userPaused,
+            AndroidMedia.updatePlaybackState(mainPlaybackPlaying,
                                              currentStationName || "Free Radio",
                                              currentSongTitle || currentArtist)
         }
@@ -104,7 +107,8 @@ ApplicationWindow {
         onCurrentStationNameChanged: syncAndroidMedia()
         onCurrentSongTitleChanged: syncAndroidMedia()
         onCurrentArtistChanged: syncAndroidMedia()
-        onUserPausedChanged: syncAndroidMedia()
+        onMainPlaybackPlayingChanged: syncAndroidMedia()
+        onMainPlaybackEngagedChanged: syncAndroidMedia()
 
         Connections {
             target: AndroidMedia

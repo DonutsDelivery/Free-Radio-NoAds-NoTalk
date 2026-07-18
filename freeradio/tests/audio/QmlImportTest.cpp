@@ -56,7 +56,10 @@ private slots:
         QVERIFY(wrapper.contains("ApplicationWindow {"));
         QVERIFY(!wrapper.contains("Kirigami.ApplicationWindow"));
         QVERIFY(!wrapper.contains("org.kde.kirigami"));
-        QVERIFY(wrapper.contains("SafeArea.margins"));
+        QVERIFY(wrapper.contains("safeAreaLeft: 0"));
+        QVERIFY(!wrapper.contains("SafeArea.margins"));
+        QVERIFY(wrapper.contains("if (!mainPlaybackEngaged"));
+        QVERIFY(wrapper.contains("updatePlaybackState(mainPlaybackPlaying"));
         QVERIFY(wrapper.contains("handleBackNavigation"));
     }
 

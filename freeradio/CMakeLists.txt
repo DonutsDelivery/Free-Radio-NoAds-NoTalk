@@ -9,8 +9,17 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 if(ANDROID)
-    set(QT_ANDROID_ABIS "arm64-v8a;x86_64" CACHE STRING
-        "Android ABIs packaged by Free Radio" FORCE)
+    set(FREERADIO_SUPPORTED_ANDROID_ABIS "arm64-v8a;x86_64" CACHE STRING
+        "Android ABIs supported by Free Radio")
+    if(NOT QT_ANDROID_ABIS)
+        set(QT_ANDROID_ABIS "${CMAKE_ANDROID_ARCH_ABI}" CACHE STRING
+            "Android ABI packaged by this build")
+    endif()
+    foreach(_abi IN LISTS QT_ANDROID_ABIS)
+        if(NOT _abi IN_LIST FREERADIO_SUPPORTED_ANDROID_ABIS)
+            message(FATAL_ERROR "Unsupported Android ABI '${_abi}'")
+        endif()
+    endforeach()
 endif()
 
 set(FREERADIO_QT_COMPONENTS Core Gui Qml Quick QuickControls2 Network Xml)
@@ -137,6 +146,7 @@ endif()
 
 set_target_properties(freeradio PROPERTIES
     QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml
+    QT_QML_IMPORT_PATH ${CMAKE_BINARY_DIR}/qml
     WIN32_EXECUTABLE $<NOT:$<CONFIG:Debug>>
     MACOSX_BUNDLE TRUE
 )
@@ -164,7 +174,7 @@ if(ANDROID)
         QT_ANDROID_PACKAGE_SOURCE_DIR "${FREERADIO_ANDROID_PACKAGE_DIR}"
         QT_ANDROID_PACKAGE_NAME "org.freeradio.app"
         QT_ANDROID_MIN_SDK_VERSION 26
-        QT_ANDROID_TARGET_SDK_VERSION 35
+        QT_ANDROID_TARGET_SDK_VERSION 34
         QT_ANDROID_VERSION_CODE 20000
         QT_ANDROID_VERSION_NAME "${PROJECT_VERSION}"
     )
