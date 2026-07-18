@@ -42,3 +42,9 @@ notes:
     supersedes: null
     author: DonutsDelivery
     created_at: 2026-07-18T17:40:47.510Z
+  - _ulid: 01KXV520HY54AQRZ2P6MF0X344
+    content: Playback migration review found audiobook seek/resume missing from AudioEngine; spec AC6
+      now requires finite-source seeking. Fix cycle reopened.
+    supersedes: null
+    author: DonutsDelivery
+    created_at: 2026-07-18T17:40:48.319Z
