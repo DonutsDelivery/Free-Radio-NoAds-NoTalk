@@ -153,6 +153,9 @@ features:
         type: requirement
         description: Android-specific adapters provide lifecycle, routing, focus, and foreground media
           service behavior while the shared engine owns playback.
+        status:
+          maturity: draft
+          implementation: in_progress
         depends_on: []
         implements: []
         relates_to: []
