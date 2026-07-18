@@ -22,3 +22,11 @@ notes:
     supersedes: null
     author: "@claude"
     created_at: 2026-07-18T17:13:02.042Z
+  - _ulid: 01KXV4EZTW2BT37EVS5DTGHP7P
+    content: "All six review blockers are implemented in the worker: fail-closed/discoverable module,
+      stable-window bounded reconnects, joinable worker lifecycle, finite/live/socket
+      classification, HTTP(S)-only playlists, and ICY URL clearing. Release and ASAN/UBSAN 3/3
+      passed; final integration is pending."
+    supersedes: null
+    author: DonutsDelivery
+    created_at: 2026-07-18T17:30:24.988Z
