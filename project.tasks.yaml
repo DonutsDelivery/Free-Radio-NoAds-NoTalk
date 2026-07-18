@@ -20,7 +20,7 @@ tasks:
     title: Create canonical station catalog
     type: task
     spec_ref: "@single-source-radio-catalog"
-    status: in_progress
+    status: pending_review
     blocked_by: []
     depends_on: []
     priority: 1
@@ -29,7 +29,7 @@ tasks:
     todos_count: 0
     created_at: 2026-07-18T15:27:32.123Z
     started_at: 2026-07-18T17:21:32.401Z
-    submitted_at: 2026-07-18T16:10:52.565Z
+    submitted_at: 2026-07-18T17:21:32.837Z
     automation: needs_review
   - _ulid: 01KXTXDZSRV226NTMM5QM1ERCD
     slugs:

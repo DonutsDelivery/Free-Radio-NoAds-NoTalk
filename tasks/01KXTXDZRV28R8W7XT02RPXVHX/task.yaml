@@ -8,7 +8,7 @@ description: Convert the production catalog to one validated ordered source and 
 spec_ref: "@single-source-radio-catalog"
 meta_ref: null
 plan_ref: null
-status: in_progress
+status: pending_review
 blocked_by: []
 depends_on: []
 context: []
@@ -18,8 +18,8 @@ vcs_refs: []
 submission_linkage:
   review_url: null
   branch: feature/android-shared-app
-  captured_at: 2026-07-18T16:10:52.560Z
-  commit: d0e2f2c92a01eb7abadb1017bbac17cf44d016bc
+  captured_at: 2026-07-18T17:21:32.829Z
+  commit: 412f073c861d1dd76500cc10a353253103dc6e3c
   remote: null
   remote_url: null
   upstream_ref: null
@@ -74,8 +74,35 @@ history:
         previous: 2026-07-18T15:27:32.326Z
     command: task-start
     timestamp: 2026-07-18T17:21:32.401Z
+  - author: DonutsDelivery
+    changes:
+      status:
+        new: pending_review
+        previous: in_progress
+      submission_linkage:
+        new:
+          review_url: null
+          branch: feature/android-shared-app
+          captured_at: 2026-07-18T17:21:32.829Z
+          commit: 412f073c861d1dd76500cc10a353253103dc6e3c
+          remote: null
+          remote_url: null
+          upstream_ref: null
+        previous:
+          review_url: null
+          branch: feature/android-shared-app
+          captured_at: 2026-07-18T16:10:52.560Z
+          commit: d0e2f2c92a01eb7abadb1017bbac17cf44d016bc
+          remote: null
+          remote_url: null
+          upstream_ref: null
+      submitted_at:
+        new: 2026-07-18T17:21:32.837Z
+        previous: 2026-07-18T16:10:52.565Z
+    command: task-submit
+    timestamp: 2026-07-18T17:21:32.837Z
 created_at: 2026-07-18T15:27:32.123Z
 started_at: 2026-07-18T17:21:32.401Z
-submitted_at: 2026-07-18T16:10:52.565Z
+submitted_at: 2026-07-18T17:21:32.837Z
 todos: []
 automation: needs_review
