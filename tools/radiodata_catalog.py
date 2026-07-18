@@ -4,8 +4,14 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import ipaddress
 import json
+import os
+import re
 import sys
+import tempfile
+import unicodedata
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Iterable
@@ -15,11 +21,13 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CATALOG = ROOT / "freeradio" / "catalog" / "radiodata.json"
 DEFAULT_SCHEMA = ROOT / "freeradio" / "catalog" / "radiodata.schema.json"
 DEFAULT_OUTPUT = ROOT / "freeradio" / "contents" / "ui" / "radiodata.js"
+DEFAULT_BASELINE = ROOT / "tests" / "fixtures" / "radiodata_migration_baseline.json"
 
 SCHEMA_REFERENCE = "radiodata.schema.json"
 CATALOG_VERSION = 1
-CLEAN_HOST_PATTERN = r"^https?://[^/]+$"
-PATH_PATTERN = r"^(?!/).*"
+PORT_PATTERN = r"(?:[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])"
+CLEAN_HOST_PATTERN = rf"^https?://(?:\[[0-9A-Fa-f:.]+\]|[^/?#@\s\x00-\x1f\x7f:]+)(?::{PORT_PATTERN})?$"
+PATH_PATTERN = r"^(?!/)[^\x00-\x1f\x7f-\x9f]*$"
 
 CATEGORY_VARIABLES = (
     "somafmCategories",
@@ -93,20 +101,64 @@ def _require_nonempty_string(value: Any, context: str) -> str:
     return value
 
 
+def _has_control_characters(value: str) -> bool:
+    return any(unicodedata.category(character) == "Cc" for character in value)
+
+
 def _validate_host(host: Any, context: str) -> str:
     host = _require_nonempty_string(host, context)
-    parsed = urlparse(host)
+    if _has_control_characters(host) or any(character.isspace() for character in host):
+        raise CatalogError(f"{context} must not contain whitespace or control characters")
+    if re.fullmatch(CLEAN_HOST_PATTERN, host) is None:
+        raise CatalogError(f"{context} must be a clean HTTP(S) origin without userinfo or a trailing slash")
+    try:
+        parsed = urlparse(host)
+        port = parsed.port
+    except ValueError as error:
+        raise CatalogError(f"{context} is malformed: {error}") from error
     if (
         parsed.scheme not in {"http", "https"}
-        or not parsed.netloc
+        or not parsed.hostname
+        or parsed.username is not None
+        or parsed.password is not None
         or parsed.path
         or parsed.params
         or parsed.query
         or parsed.fragment
-        or host.endswith("/")
+        or port == 0
     ):
-        raise CatalogError(f"{context} must be a clean HTTP(S) origin without a trailing slash")
+        raise CatalogError(f"{context} must be a clean HTTP(S) origin")
+    hostname = parsed.hostname
+    try:
+        if ":" in hostname:
+            ipaddress.IPv6Address(hostname)
+        elif re.fullmatch(r"[0-9.]+", hostname):
+            ipaddress.IPv4Address(hostname)
+        else:
+            ascii_hostname = hostname.encode("idna").decode("ascii")
+            labels = ascii_hostname.split(".")
+            if len(ascii_hostname) > 253 or any(
+                re.fullmatch(r"[A-Za-z0-9-]{1,63}", label) is None
+                or label.startswith("-")
+                or label.endswith("-")
+                for label in labels
+            ):
+                raise ValueError("invalid DNS hostname")
+    except (UnicodeError, ValueError) as error:
+        raise CatalogError(f"{context} has a malformed host: {error}") from error
     return host
+
+
+def _validate_path(path: Any, context: str, *, allow_empty: bool) -> str:
+    if not isinstance(path, str):
+        raise CatalogError(f"{context} must be a string")
+    if not allow_empty and not path:
+        raise CatalogError(f"{context} must be non-empty for dedicated providers")
+    if path.startswith("/"):
+        raise CatalogError(f"{context} must not start with a slash")
+    if _has_control_characters(path):
+        raise CatalogError(f"{context} must not contain control characters")
+    return path
 
 
 def _station_locations(catalog: dict[str, Any]) -> Iterable[tuple[str, str, dict[str, Any]]]:
@@ -161,11 +213,11 @@ def validate_catalog(catalog: dict[str, Any]) -> dict[str, Any]:
                 _require_exact_keys(station, STATION_REQUIRED, STATION_OPTIONAL, station_context)
                 _require_nonempty_string(station["name"], f"{station_context}.name")
                 host = _validate_host(station["host"], f"{station_context}.host")
-                path = station["path"]
-                if not isinstance(path, str) or path.startswith("/"):
-                    raise CatalogError(f"{station_context}.path must be a string without a leading slash")
-                if variable != "miscCategories" and not path:
-                    raise CatalogError(f"{station_context}.path must be non-empty for dedicated providers")
+                path = _validate_path(
+                    station["path"],
+                    f"{station_context}.path",
+                    allow_empty=variable == "miscCategories",
+                )
                 expected_hosts = PROVIDER_HOSTS.get(variable)
                 if expected_hosts is not None and host not in expected_hosts:
                     raise CatalogError(f"{station_context}.host is not valid for {variable}")
@@ -217,9 +269,7 @@ def validate_catalog(catalog: dict[str, Any]) -> dict[str, Any]:
             raise CatalogError(f"{context} must be an object")
         _require_exact_keys(entry, ("host", "path", "reason", "occurrences"), (), context)
         host = _validate_host(entry["host"], f"{context}.host")
-        path = entry["path"]
-        if not isinstance(path, str) or path.startswith("/"):
-            raise CatalogError(f"{context}.path must be a string without a leading slash")
+        path = _validate_path(entry["path"], f"{context}.path", allow_empty=True)
         _require_nonempty_string(entry["reason"], f"{context}.reason")
         occurrences = entry["occurrences"]
         if not isinstance(occurrences, list) or len(occurrences) < 2:
@@ -256,7 +306,11 @@ def validate_catalog(catalog: dict[str, Any]) -> dict[str, Any]:
 
 
 def _station_schema(*, hosts: set[str] | None = None, allow_empty_path: bool = False) -> dict[str, Any]:
-    host_schema: dict[str, Any] = {"type": "string", "pattern": CLEAN_HOST_PATTERN}
+    host_schema: dict[str, Any] = {
+        "type": "string",
+        "format": "uri",
+        "pattern": CLEAN_HOST_PATTERN,
+    }
     if hosts is not None:
         host_schema = {"enum": sorted(hosts)}
     path_schema: dict[str, Any] = {"type": "string", "pattern": PATH_PATTERN}
@@ -329,7 +383,11 @@ def schema_document() -> dict[str, Any]:
             "additionalProperties": False,
             "required": ["host", "path", "reason", "occurrences"],
             "properties": {
-                "host": {"type": "string", "pattern": CLEAN_HOST_PATTERN},
+                "host": {
+                    "type": "string",
+                    "format": "uri",
+                    "pattern": CLEAN_HOST_PATTERN,
+                },
                 "path": {"type": "string", "pattern": PATH_PATTERN},
                 "reason": {"type": "string", "minLength": 1},
                 "occurrences": {
@@ -369,20 +427,117 @@ def render_javascript(catalog: dict[str, Any], *, already_validated: bool = Fals
     ]
     for variable in EXPORTED_VARIABLES:
         encoded = json.dumps(catalog[variable], ensure_ascii=False, separators=(",", ":"))
+        encoded = encoded.replace(chr(0x2028), "\\u2028").replace(chr(0x2029), "\\u2029")
         lines.append(f"var {variable} = {encoded}")
         lines.append("")
     return "\n".join(lines).rstrip() + "\n"
 
 
-def _write_if_changed(path: Path, content: str) -> bool:
+def _resolved_paths_are_distinct(named_paths: dict[str, Path]) -> None:
+    resolved: dict[Path, str] = {}
+    for name, path in named_paths.items():
+        try:
+            candidate = path.resolve(strict=False)
+        except (OSError, RuntimeError) as error:
+            raise CatalogError(f"cannot resolve {name} path {path}: {error}") from error
+        if candidate in resolved:
+            raise CatalogError(
+                f"{name} path must differ from {resolved[candidate]} path: {candidate}"
+            )
+        resolved[candidate] = name
+
+
+def _stage_file(path: Path, content: bytes, mode: int) -> Path:
+    temporary: Path | None = None
     try:
-        if path.exists() and path.read_text(encoding="utf-8") == content:
-            return False
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content, encoding="utf-8")
-    except (OSError, UnicodeError) as error:
-        raise CatalogError(f"cannot write {path}: {error}") from error
-    return True
+        descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+        temporary = Path(temporary_name)
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(temporary, mode)
+        return temporary
+    except OSError as error:
+        if temporary is not None:
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError:
+                pass
+        raise CatalogError(f"cannot stage generated output for {path}: {error}") from error
+
+
+def _write_generated_transaction(contents: dict[Path, str]) -> dict[Path, bool]:
+    """Stage every changed file, then replace all with rollback on failure."""
+    changed: dict[Path, bool] = {}
+    staged: dict[Path, Path] = {}
+    backups: dict[Path, Path | None] = {}
+    replaced: list[Path] = []
+    try:
+        for path, content in contents.items():
+            encoded = content.encode("utf-8")
+            try:
+                current = path.read_bytes() if path.exists() else None
+                mode = (path.stat().st_mode & 0o777) if path.exists() else 0o644
+            except OSError as error:
+                raise CatalogError(f"cannot read generated output {path}: {error}") from error
+            changed[path] = current != encoded
+            if not changed[path]:
+                continue
+            staged[path] = _stage_file(path, encoded, mode)
+            backups[path] = None if current is None else _stage_file(path, current, mode)
+
+        for path, temporary in staged.items():
+            os.replace(temporary, path)
+            replaced.append(path)
+        return changed
+    except (OSError, CatalogError) as error:
+        rollback_errors: list[str] = []
+        for path in reversed(replaced):
+            backup = backups[path]
+            try:
+                if backup is None:
+                    path.unlink(missing_ok=True)
+                else:
+                    os.replace(backup, path)
+                    backups[path] = None
+            except OSError as rollback_error:
+                rollback_errors.append(f"{path}: {rollback_error}")
+        detail = f"; rollback failed for {', '.join(rollback_errors)}" if rollback_errors else ""
+        if isinstance(error, CatalogError):
+            raise CatalogError(f"{error}{detail}") from error
+        raise CatalogError(f"cannot atomically replace generated outputs: {error}{detail}") from error
+    finally:
+        for temporary in [*staged.values(), *(path for path in backups.values() if path is not None)]:
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+
+def _write_if_changed(path: Path, content: str) -> bool:
+    return _write_generated_transaction({path: content})[path]
+
+
+def migration_baseline(catalog: dict[str, Any]) -> dict[str, Any]:
+    """Hash ordered exported data so accidental migration changes are visible."""
+    exports = {}
+    for variable in EXPORTED_VARIABLES:
+        canonical = json.dumps(
+            catalog[variable], ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+        exports[variable] = hashlib.sha256(canonical).hexdigest()
+    return {
+        "algorithm": "sha256 of compact JSON with sorted object keys; array order preserved",
+        "favoriteIdentity": ["name", "host", "path"],
+        "exports": exports,
+    }
+
+
+def render_migration_baseline(catalog: dict[str, Any]) -> str:
+    validate_catalog(catalog)
+    return json.dumps(migration_baseline(catalog), indent=2) + "\n"
 
 
 def _print_report(report: dict[str, Any]) -> None:
@@ -414,19 +569,35 @@ def main(argv: list[str] | None = None) -> int:
     check_parser.add_argument("--schema", type=Path, default=DEFAULT_SCHEMA)
     check_parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
 
+    baseline_parser = subparsers.add_parser(
+        "update-baseline", help="explicitly accept intentional ordered catalog migration changes"
+    )
+    baseline_parser.add_argument("--catalog", type=Path, default=DEFAULT_CATALOG)
+    baseline_parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
+
     args = parser.parse_args(argv)
     try:
+        if args.command in {"generate", "check"}:
+            _resolved_paths_are_distinct(
+                {"catalog": args.catalog, "schema": args.schema, "output": args.output}
+            )
+        elif args.command == "update-baseline":
+            _resolved_paths_are_distinct(
+                {"catalog": args.catalog, "baseline": args.baseline}
+            )
         catalog = load_catalog(args.catalog)
         if args.command == "validate":
             _print_report(validate_catalog(catalog))
         elif args.command == "generate":
             report = validate_catalog(catalog)
-            js_changed = _write_if_changed(
-                args.output, render_javascript(catalog, already_validated=True)
+            changed = _write_generated_transaction(
+                {
+                    args.output: render_javascript(catalog, already_validated=True),
+                    args.schema: render_schema(),
+                }
             )
-            schema_changed = _write_if_changed(args.schema, render_schema())
-            print(f"generated {args.output}" if js_changed else f"unchanged {args.output}")
-            print(f"generated {args.schema}" if schema_changed else f"unchanged {args.schema}")
+            for path in (args.output, args.schema):
+                print(f"generated {path}" if changed[path] else f"unchanged {path}")
             _print_report(report)
         elif args.command == "check":
             report = validate_catalog(catalog)
@@ -445,6 +616,9 @@ def main(argv: list[str] | None = None) -> int:
                     )
             _print_report(report)
             print("generated catalog files are current")
+        elif args.command == "update-baseline":
+            changed = _write_if_changed(args.baseline, render_migration_baseline(catalog))
+            print(f"updated {args.baseline}" if changed else f"unchanged {args.baseline}")
     except CatalogError as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
