@@ -6,3 +6,11 @@ notes:
     supersedes: null
     author: DonutsDelivery
     created_at: 2026-07-18T17:29:24.663Z
+  - _ulid: 01KXV542QSEH7F2T3GS6R76C60
+    content: "Independent review confirmed two defects: audiobook seek/resume was rejected while UI
+      implied success, and pause during Loading/Buffering could restart or fail to suppress
+      playback. Specs now include custom audio AC6 and shared QML AC4; audio and QML workers are
+      fixing both."
+    supersedes: null
+    author: DonutsDelivery
+    created_at: 2026-07-18T17:41:56.089Z
