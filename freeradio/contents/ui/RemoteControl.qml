@@ -1,6 +1,5 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import QtMultimedia 6.5
 import org.kde.plasma.plasmoid
 import org.kde.kirigami 2.20 as Kirigami
 

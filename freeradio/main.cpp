@@ -38,6 +38,9 @@ int main(int argc, char *argv[])
     qmlRegisterType<SessionMonitor>("SessionMonitor", 1, 0, "SessionMonitor");
 
     QQmlApplicationEngine engine;
+    // qt_add_qml_module places FreeRadio.Audio beside the build output under
+    // qml/. Installed builds also find it through Qt's standard import path.
+    engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml");
 
     // Try to load from Qt resources first (bundled app)
     QUrl qmlUrl = QUrl("qrc:/ui/main.qml");

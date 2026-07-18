@@ -11,23 +11,12 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 # Find required Qt components
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets Qml Quick QuickControls2 Multimedia DBus Network Xml)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Qml Quick QuickControls2 DBus Network Xml)
 qt_policy(SET QTP0001 NEW)
-find_package(PkgConfig QUIET)
-option(FREERADIO_ENABLE_AUDIO_CORE "Build the FFmpeg/miniaudio audio core when system FFmpeg is available" ON)
-set(FREERADIO_AUDIO_CORE_AVAILABLE OFF)
-if(FREERADIO_ENABLE_AUDIO_CORE AND PkgConfig_FOUND)
-    pkg_check_modules(FFMPEG QUIET IMPORTED_TARGET
-        libavformat libavcodec libavutil libswresample
-    )
-    if(FFMPEG_FOUND)
-        set(FREERADIO_AUDIO_CORE_AVAILABLE ON)
-    else()
-        message(WARNING "System FFmpeg development files not found; custom audio core is disabled until dependencies are provisioned")
-    endif()
-elseif(FREERADIO_ENABLE_AUDIO_CORE)
-    message(WARNING "pkg-config not found; custom audio core is disabled until system FFmpeg is provisioned")
-endif()
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET
+    libavformat libavcodec libavutil libswresample
+)
 
 # Find KDE Frameworks 6 Kirigami
 find_package(KF6Kirigami REQUIRED)
@@ -37,35 +26,33 @@ if(PkgConfig_FOUND)
     pkg_check_modules(PULSEAUDIO libpulse libpulse-simple)
 endif()
 
-if(FREERADIO_AUDIO_CORE_AVAILABLE)
-    qt_add_qml_module(freeradio_audio
-        SHARED
-        URI FreeRadio.Audio
-        VERSION 1.0
-        OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml/FreeRadio/Audio
-        SOURCES
-            src/audio/AudioEngine.cpp
-            src/audio/AudioEngine.h
-            src/audio/IcyDemuxer.cpp
-            src/audio/IcyDemuxer.h
-            src/audio/NetworkBuffer.cpp
-            src/audio/NetworkBuffer.h
-            src/audio/PcmRingBuffer.h
-            src/audio/PlaylistParser.cpp
-            src/audio/PlaylistParser.h
-            src/audio/SpectrumAnalyzer.cpp
-            src/audio/SpectrumAnalyzer.h
-    )
-    target_include_directories(freeradio_audio PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/audio
-    )
-    target_link_libraries(freeradio_audio
-        PUBLIC Qt6::Core Qt6::Network Qt6::Qml
-        PRIVATE Qt6::Xml PkgConfig::FFMPEG
-    )
-    set_target_properties(freeradio_audioplugin PROPERTIES INSTALL_RPATH "$ORIGIN")
-endif()
+qt_add_qml_module(freeradio_audio
+    SHARED
+    URI FreeRadio.Audio
+    VERSION 1.0
+    OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml/FreeRadio/Audio
+    SOURCES
+        src/audio/AudioEngine.cpp
+        src/audio/AudioEngine.h
+        src/audio/IcyDemuxer.cpp
+        src/audio/IcyDemuxer.h
+        src/audio/NetworkBuffer.cpp
+        src/audio/NetworkBuffer.h
+        src/audio/PcmRingBuffer.h
+        src/audio/PlaylistParser.cpp
+        src/audio/PlaylistParser.h
+        src/audio/SpectrumAnalyzer.cpp
+        src/audio/SpectrumAnalyzer.h
+)
+target_include_directories(freeradio_audio PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/audio
+)
+target_link_libraries(freeradio_audio
+    PUBLIC Qt6::Core Qt6::Network Qt6::Qml
+    PRIVATE Qt6::Xml PkgConfig::FFMPEG
+)
+set_target_properties(freeradio_audioplugin PROPERTIES INSTALL_RPATH "$ORIGIN")
 
 # Add executables
 set(FREERADIO_SOURCES
@@ -100,9 +87,9 @@ target_link_libraries(freeradio PRIVATE
     Qt6::Qml
     Qt6::Quick
     Qt6::QuickControls2
-    Qt6::Multimedia
     Qt6::DBus
     KF6::Kirigami
+    freeradio_audio
 )
 
 # Optional PulseAudio support
@@ -113,7 +100,6 @@ if(PULSEAUDIO_FOUND)
 
     target_link_libraries(test-audio PRIVATE
         Qt6::Core
-        Qt6::Multimedia
         ${PULSEAUDIO_LIBRARIES}
     )
     target_include_directories(test-audio PRIVATE ${PULSEAUDIO_INCLUDE_DIRS})
@@ -145,18 +131,16 @@ install(FILES icons/freeradio.svg
     DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
 )
 
-if(FREERADIO_AUDIO_CORE_AVAILABLE)
-    install(TARGETS freeradio_audio freeradio_audioplugin
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/qt6/qml/FreeRadio/Audio
-        RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}/qt6/qml/FreeRadio/Audio
-    )
-    install(FILES ${CMAKE_BINARY_DIR}/qml/FreeRadio/Audio/qmldir
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/qt6/qml/FreeRadio/Audio
-    )
-endif()
+install(TARGETS freeradio_audio freeradio_audioplugin
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/qt6/qml/FreeRadio/Audio
+    RUNTIME DESTINATION ${CMAKE_INSTALL_LIBDIR}/qt6/qml/FreeRadio/Audio
+)
+install(FILES ${CMAKE_BINARY_DIR}/qml/FreeRadio/Audio/qmldir
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/qt6/qml/FreeRadio/Audio
+)
 
 include(CTest)
-if(BUILD_TESTING AND FREERADIO_AUDIO_CORE_AVAILABLE)
+if(BUILD_TESTING)
     find_package(Qt6 REQUIRED COMPONENTS Test)
     add_executable(freeradio-audio-tests tests/audio/AudioCoreTest.cpp)
     target_link_libraries(freeradio-audio-tests PRIVATE freeradio_audio Qt6::Test Qt6::Network)
@@ -166,6 +150,8 @@ if(BUILD_TESTING AND FREERADIO_AUDIO_CORE_AVAILABLE)
     target_link_libraries(freeradio-qml-import-test PRIVATE Qt6::Test Qt6::Qml)
     target_compile_definitions(freeradio-qml-import-test PRIVATE
         FREERADIO_QML_IMPORT_PATH="${CMAKE_BINARY_DIR}/qml"
+        FREERADIO_UI_PATH="${CMAKE_CURRENT_SOURCE_DIR}/contents/ui"
+        FREERADIO_CMAKE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt"
     )
     add_dependencies(freeradio-qml-import-test freeradio_audioplugin)
     add_test(NAME freeradio-qml-import-test COMMAND freeradio-qml-import-test)
