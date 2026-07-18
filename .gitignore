@@ -25,3 +25,13 @@ Thumbs.db
 # Research/reference directories (contain Windows-incompatible filenames)
 radcap channels/
 radcap-radio-widget/
+
+# >>> kspec managed
+.kspec/
+.kspec-sessions/
+plans/
+.kspec-worktrees/
+.kspec-dispatch-workspace.json
+.kspec-dispatch-shadow-mutation
+.kspec-dispatch-shadow-mutation.lock/
+# <<< kspec managed
