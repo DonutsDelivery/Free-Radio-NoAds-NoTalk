@@ -22,3 +22,17 @@ notes:
     supersedes: null
     author: "@claude"
     created_at: 2026-07-18T16:10:52.512Z
+  - _ulid: 01KXV3F58H93JC16Z61Z95CYZM
+    content: "[FIX_CYCLE: 1] Review findings: Confirmed review defects: destructive/aliased generator
+      paths, non-atomic output writes, malformed host/path validation, raw U+2028/U+2029 QML
+      breakage, circular favorite preservation checks, missing PR validation, and stale catalog
+      shipped in Plasma artifact."
+    supersedes: null
+    author: "@claude"
+    created_at: 2026-07-18T17:13:01.969Z
+  - _ulid: 01KXV3F5A0RC2PY431ZRV3ZS5F
+    content: Fix cycle resumed in the catalog worker; all nine high-effort review findings were
+      independently verified, with legacy-helper candidate refuted.
+    supersedes: null
+    author: "@claude"
+    created_at: 2026-07-18T17:13:02.016Z

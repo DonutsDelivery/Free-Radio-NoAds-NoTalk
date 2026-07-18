@@ -14,3 +14,11 @@ notes:
     supersedes: null
     author: "@claude"
     created_at: 2026-07-18T15:31:14.001Z
+  - _ulid: 01KXV3F5ASJTWD01MYEPQWSVRB
+    content: Integrated as bd171a4 and built/tests passed, but current review blocks migration pending
+      module discoverability/fail-closed dependency semantics, bounded stable-window reconnects,
+      detached-worker owner race, live/finite/socket reconnect classification, playlist scheme
+      restriction, and ICY URL clearing.
+    supersedes: null
+    author: "@claude"
+    created_at: 2026-07-18T17:13:02.042Z
