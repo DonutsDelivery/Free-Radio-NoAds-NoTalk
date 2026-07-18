@@ -108,6 +108,11 @@ features:
             then: all network, decoder, buffer, timer, and device resources stop and the public state reflects
               the outcome
             when: the pipeline reaches completion or a terminal error
+          - given: a finite audiobook source with a known duration and saved position
+            id: ac-6
+            then: the in-process engine seeks to the requested timestamp using the custom FFmpeg pipeline and
+              playback continues without Qt Multimedia
+            when: the user seeks or resumes the chapter
         priority: high
         tags: []
         created: 2026-07-18T15:27:31.769Z
