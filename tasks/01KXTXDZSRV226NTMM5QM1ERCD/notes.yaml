@@ -5,3 +5,12 @@ notes:
     supersedes: null
     author: "@claude"
     created_at: 2026-07-18T15:27:32.436Z
+  - _ulid: 01KXTXMREH64Z6DEH94XCP9SMN
+    content: Blocking reviews require full terminal-error/EOF teardown, coherent
+      pause/cancel/backpressure, correct source replacement, prebuffer/rebuffer state independent of
+      timestamps, audible-output-synchronized accumulated/throttled FFT, HLS versus playlist
+      handling, nonblocking GUI teardown, loadable QML module integration, and cross-platform-safe
+      dependency wiring.
+    supersedes: null
+    author: "@claude"
+    created_at: 2026-07-18T15:31:14.001Z

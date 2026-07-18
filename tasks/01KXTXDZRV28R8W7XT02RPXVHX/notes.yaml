@@ -5,3 +5,11 @@ notes:
     supersedes: null
     author: "@claude"
     created_at: 2026-07-18T15:27:32.380Z
+  - _ulid: 01KXTXMRDC8DPRN1RTK968D71P
+    content: Reviews confirmed exact current catalog value/order parity and required one authoritative
+      validator/generator, provider-specific host/path invariants, exact duplicate occurrence
+      approvals, singleton provider categories, clean Unicode diagnostics, generated-file drift in
+      CI, and AC-linked tests.
+    supersedes: null
+    author: "@claude"
+    created_at: 2026-07-18T15:31:13.965Z
