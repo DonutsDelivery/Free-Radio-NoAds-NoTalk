@@ -1,1 +1,9 @@
-notes: []
+notes:
+  - _ulid: 01KXV5E1R6Z4EX640PM7356XY5
+    content: Worker implementation now includes manifest/resources, QtActivity, foreground mediaPlayback
+      service, MediaSession notification controls, audio focus/noisy handling, JNI/QML bridge,
+      catalog-derived cleartext policy, dual-ABI hooks, and static tests. Final Android configure
+      fix and integration are pending.
+    supersedes: null
+    author: DonutsDelivery
+    created_at: 2026-07-18T17:47:22.758Z
