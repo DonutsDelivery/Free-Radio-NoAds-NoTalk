@@ -1,0 +1,6 @@
+# Ephemeral artifacts - reports, exports, generated files
+# Not tracked in shadow branch
+artifacts/
+
+# Sessions stored in .kspec-sessions/ at project root, not on shadow branch
+sessions/

@@ -1,0 +1,12 @@
+_ulid: 01KXTT775QWACCVS5AVN516NMK
+slugs:
+  - main
+title: "Project - Main Module"
+type: module
+status:
+  maturity: draft
+  implementation: not_started
+description: |
+  Default module for Project. Add your spec items here.
+
+items: []
