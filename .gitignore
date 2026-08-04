@@ -2,6 +2,7 @@
 *.plasmoid
 build/
 **/build/
+build-macos*/
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake

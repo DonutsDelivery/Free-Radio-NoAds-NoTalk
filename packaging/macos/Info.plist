@@ -24,6 +24,17 @@
     <string>10.15</string>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <!--
+         The station catalog includes legacy Icecast/Shoutcast streams that
+         are available only over cleartext HTTP. QMediaPlayer uses
+         AVFoundation on macOS, so allow those loads for media playback while
+         leaving ordinary URL loading subject to App Transport Security.
+    -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoadsForMedia</key>
+        <true/>
+    </dict>
     <key>NSHumanReadableCopyright</key>
     <string>Copyright 2024 Free Radio Project</string>
     <key>CFBundleDocumentTypes</key>

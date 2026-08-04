@@ -9,5 +9,6 @@
         <file alias="ui/RemoteControl.qml">contents/ui/RemoteControl.qml</file>
         <file alias="ui/SystemAudioCapture.qml">contents/ui/SystemAudioCapture.qml</file>
         <file alias="ui/AudioStreamer.qml">contents/ui/AudioStreamer.qml</file>
+        <file alias="icons/freeradio.png">icons/freeradio.png</file>
     </qresource>
 </RCC>

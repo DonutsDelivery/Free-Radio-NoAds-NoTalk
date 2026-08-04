@@ -870,15 +870,29 @@ Item {
         }
     }
 
+    // Track the system output explicitly so Bluetooth devices selected while
+    // the app is running are used by the player instead of a stale default.
+    MediaDevices {
+        id: mediaDevices
+    }
+
     // Main audio player with enhanced spectrum integration
     MediaPlayer {
         id: player
         autoPlay: false
         loops: MediaPlayer.Infinite
+        // FFmpeg can reduce the initial live-stream buffer. Backends that do
+        // not support this hint simply ignore it.
+        playbackOptions: {
+            playbackIntent: PlaybackOptions.LowLatencyStreaming
+        }
         audioOutput: AudioOutput {
             id: audioOut
+            device: mediaDevices.defaultAudioOutput
             volume: compactVolumeSlider.value
             muted: false
+
+            onDeviceChanged: console.log("Audio output device:", device.description)
         }
 
         onPlaybackStateChanged: {
@@ -1000,6 +1014,25 @@ Item {
         
         onErrorOccurred: function(error, errorString) {
             console.log("AudioStreamer: Player error:", error, errorString)
+
+            // If the native HLS path is unavailable for a station, fall back
+            // to its direct Icecast URL instead of leaving the player silent.
+            if (Qt.platform.os === "osx" &&
+                currentStationUrl.includes("hls.somafm.com") &&
+                currentStationHost.includes("somafm.com")) {
+                var directUrl = getStreamUrl(currentStationHost, currentStationPath, streamQuality, true)
+                console.log("AudioStreamer: HLS failed; falling back to direct stream:", directUrl)
+                currentStationUrl = directUrl
+                player.stop()
+                player.source = ""
+                Qt.callLater(function() {
+                    if (currentStationUrl !== "" && !userPaused) {
+                        player.source = currentStationUrl
+                        Qt.callLater(function() { player.play() })
+                    }
+                })
+                return
+            }
             
             // Attempt restart on network/resource errors if we have a valid station
             if (currentStationUrl !== "" && !userPaused && restartAttempts < maxRestartAttempts) {
@@ -1031,6 +1064,7 @@ Item {
         loops: MediaPlayer.Infinite
         audioOutput: AudioOutput {
             id: previewAudioOut
+            device: mediaDevices.defaultAudioOutput
             volume: compactVolumeSlider.value * 0.7  // Slightly lower volume for preview
             muted: false
         }
@@ -1473,10 +1507,22 @@ Item {
         xhr.send()
     }
     
-    function getStreamUrl(host, path, quality) {
+    function getStreamUrl(host, path, quality, forceDirect) {
         // Check if this is a SomaFM station
         if (host.includes("somafm.com")) {
-            // SomaFM direct stream URL pattern: https://ice1.somafm.com/[station]-[bitrate]-[format]
+            // AVFoundation on macOS can report Icecast MP3 as PlayingState while
+            // producing no audible output. SomaFM provides an HLS AAC feed,
+            // which uses the native macOS streaming path reliably.
+            if (Qt.platform.os === "osx" && !forceDirect) {
+                var hlsQuality = quality === "1" ? "64k" :
+                                 (quality === "3" ? "320k" : "128k")
+                var hlsUrl = "https://hls.somafm.com/hls/" + path + "/" + hlsQuality + "/program.m3u8"
+                console.log("SomaFM HLS stream URL:", hlsUrl, "for macOS quality level:", quality)
+                return hlsUrl
+            }
+
+            // Other platforms use SomaFM's direct stream URL pattern:
+            // https://ice1.somafm.com/[station]-[bitrate]-[format]
             // Some stations have 256kbps MP3, others only have 128kbps
             var stations256 = ["groovesalad", "dronezone", "darkzone", "dubstep", "defcon",
                                "sonicuniverse", "u80s", "digitalis", "cliqhop", "doomed",

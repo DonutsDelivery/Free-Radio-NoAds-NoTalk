@@ -1,7 +1,7 @@
 // Free Radio - Standalone Application (no Plasma dependencies)
 import QtQuick
 import QtQuick.Controls
-import Qt.labs.settings
+import QtCore
 import org.kde.kirigami as Kirigami
 import SessionMonitor 1.0
 
@@ -37,8 +37,8 @@ Kirigami.ApplicationWindow {
     }
 
     // Screen lock detection — restart stream on unlock as safety net.
-    // QT_AUDIO_BACKEND=pulseaudio uses pipewire-pulse ring buffer to survive
-    // DPMS graph reconfiguration. Restart-on-unlock is a fallback if it still breaks.
+    // On Linux, QT_AUDIO_BACKEND=pulseaudio uses the pipewire-pulse ring buffer
+    // to survive DPMS graph reconfiguration. Restart-on-unlock is a fallback.
     SessionMonitor {
         id: sessionMonitor
         onScreenUnlocked: mainContent.restartCurrentStream()
