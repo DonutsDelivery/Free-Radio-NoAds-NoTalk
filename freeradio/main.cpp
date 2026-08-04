@@ -18,14 +18,17 @@ int main(int argc, char *argv[])
     // PulseAudio via pipewire-pulse has a ~500ms ring buffer that survives this.
     qputenv("QT_AUDIO_BACKEND", "pulseaudio");
 #elif defined(Q_OS_MACOS)
-    // Use the locally bundled FFmpeg multimedia backend when present. A
-    // regular macOS build without that optional plugin keeps Qt's Darwin
-    // backend instead of being forced into a missing backend.
-    const QString executableDir = QFileInfo(QString::fromLocal8Bit(argv[0])).absolutePath();
-    const QString ffmpegPlugin = QDir(executableDir).absoluteFilePath(
-            "../PlugIns/multimedia/libffmpegmediaplugin.dylib");
-    if (QFileInfo::exists(ffmpegPlugin))
-        qputenv("QT_MEDIA_BACKEND", "ffmpeg");
+    // Keep macOS on the stable Darwin multimedia backend by default. The
+    // optional FFmpeg backend can be enabled explicitly for diagnostics with
+    // FREERADIO_MEDIA_BACKEND=ffmpeg; some audio-device/stream combinations
+    // can otherwise crash while FFmpeg initializes its resampler.
+    if (qEnvironmentVariable("FREERADIO_MEDIA_BACKEND").compare("ffmpeg", Qt::CaseInsensitive) == 0) {
+        const QString executableDir = QFileInfo(QString::fromLocal8Bit(argv[0])).absolutePath();
+        const QString ffmpegPlugin = QDir(executableDir).absoluteFilePath(
+                "../PlugIns/multimedia/libffmpegmediaplugin.dylib");
+        if (QFileInfo::exists(ffmpegPlugin))
+            qputenv("QT_MEDIA_BACKEND", "ffmpeg");
+    }
 #endif
 
     // Enable GPU acceleration where available
