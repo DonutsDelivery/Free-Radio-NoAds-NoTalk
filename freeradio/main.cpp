@@ -5,16 +5,28 @@
 #include <QQuickWindow>
 #include <QIcon>
 #include <QDir>
+#include <QFileInfo>
 #include "AudioCapture.h"
 #include "SessionMonitor.h"
 
 int main(int argc, char *argv[])
 {
+#if defined(Q_OS_LINUX)
     // Force PulseAudio API instead of native PipeWire protocol.
     // Native PipeWire sets PW_STREAM_FLAG_DONT_RECONNECT which kills the stream
     // when monitors DPMS off during screen lock (graph reconfiguration).
     // PulseAudio via pipewire-pulse has a ~500ms ring buffer that survives this.
     qputenv("QT_AUDIO_BACKEND", "pulseaudio");
+#elif defined(Q_OS_MACOS)
+    // Use the locally bundled FFmpeg multimedia backend when present. A
+    // regular macOS build without that optional plugin keeps Qt's Darwin
+    // backend instead of being forced into a missing backend.
+    const QString executableDir = QFileInfo(QString::fromLocal8Bit(argv[0])).absolutePath();
+    const QString ffmpegPlugin = QDir(executableDir).absoluteFilePath(
+            "../PlugIns/multimedia/libffmpegmediaplugin.dylib");
+    if (QFileInfo::exists(ffmpegPlugin))
+        qputenv("QT_MEDIA_BACKEND", "ffmpeg");
+#endif
 
     // Enable GPU acceleration where available
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
@@ -25,13 +37,27 @@ int main(int argc, char *argv[])
     app.setApplicationVersion("2.0.0");
     app.setOrganizationName("FreeRadio");
     app.setOrganizationDomain("freeradio.app");
-    app.setWindowIcon(QIcon::fromTheme("radio"));
+    QIcon appIcon(":/icons/freeradio.png");
+    if (appIcon.isNull()) {
+        appIcon = QIcon::fromTheme("radio");
+    }
+    app.setWindowIcon(appIcon);
 
-    // Use appropriate style per platform
+    // The UI customizes control backgrounds and content items, which the
+    // native macOS style intentionally does not allow. Fusion keeps those
+    // controls usable while retaining the app's own visual design.
+#if defined(Q_OS_MACOS)
+    QQuickStyle::setStyle("Fusion");
+#elif defined(Q_OS_LINUX)
     // Try org.kde.desktop first (KDE), fall back to Fusion (works everywhere)
     if (QQuickStyle::name().isEmpty()) {
         QQuickStyle::setStyle("org.kde.desktop");
     }
+#else
+    if (QQuickStyle::name().isEmpty()) {
+        QQuickStyle::setStyle("Fusion");
+    }
+#endif
 
     // Register types with QML
     qmlRegisterType<AudioCapture>("AudioCapture", 1, 0, "AudioCapture");
