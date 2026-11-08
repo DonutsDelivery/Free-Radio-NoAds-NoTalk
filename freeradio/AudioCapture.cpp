@@ -33,7 +33,7 @@ pa_simple *AudioCapture::createPulseConnection()
     int error;
     pa_simple *s = pa_simple_new(
         NULL,                    // Use default server
-        "FreeRadio Spectrum",    // Application name
+        "DonutRadio Spectrum",    // Application name
         PA_STREAM_RECORD,        // Record stream
         "@DEFAULT_MONITOR@",     // Default monitor source (system output)
         "Audio Visualization",   // Stream description

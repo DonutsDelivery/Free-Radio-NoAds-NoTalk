@@ -1,4 +1,4 @@
-// Free Radio - KDE Plasma Widget Wrapper
+// DonutRadio - KDE Plasma Widget Wrapper
 // This wraps MainContent for use as a Plasma plasmoid
 import QtQuick
 import QtQuick.Controls
@@ -252,7 +252,7 @@ PlasmoidItem {
                     anchors.left: parent.left
                     anchors.leftMargin: 16
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "Free Radio"
+                    text: "DonutRadio"
                     font.bold: true
                     color: Kirigami.Theme.textColor
                 }

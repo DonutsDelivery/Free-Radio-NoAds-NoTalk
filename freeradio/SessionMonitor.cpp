@@ -66,7 +66,7 @@ void SessionMonitor::inhibitIdle(const QString &reason)
 
     if (iface.isValid()) {
         // Inhibit flags: 4 = suspend, 8 = idle (prevent DPMS/screen off)
-        QDBusReply<quint32> reply = iface.call("Inhibit", "FreeRadio", quint32(0), reason, quint32(12));
+        QDBusReply<quint32> reply = iface.call("Inhibit", "DonutRadio", quint32(0), reason, quint32(12));
         if (reply.isValid()) {
             m_inhibitCookie = reply.value();
             emit inhibitActiveChanged();
@@ -85,7 +85,7 @@ void SessionMonitor::inhibitIdle(const QString &reason)
     );
 
     if (fdIface.isValid()) {
-        QDBusReply<quint32> reply = fdIface.call("Inhibit", "FreeRadio", reason);
+        QDBusReply<quint32> reply = fdIface.call("Inhibit", "DonutRadio", reason);
         if (reply.isValid()) {
             m_inhibitCookie = reply.value();
             emit inhibitActiveChanged();

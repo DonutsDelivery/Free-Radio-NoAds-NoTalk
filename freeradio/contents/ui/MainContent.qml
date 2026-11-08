@@ -1,4 +1,4 @@
-// Free Radio - Shared UI Component
+// DonutRadio - Shared UI Component
 // This component is used by both the standalone app and Plasma widget
 import QtQuick
 import QtQuick.Controls
@@ -2553,7 +2553,7 @@ Item {
         }
         
         xhr.open("GET", apiUrl)
-        xhr.setRequestHeader("User-Agent", "FreeRadio/1.2")
+        xhr.setRequestHeader("User-Agent", "DonutRadio/2.0.0")
         xhr.send()
     }
 

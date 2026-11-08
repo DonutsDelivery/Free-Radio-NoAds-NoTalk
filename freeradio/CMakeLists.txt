@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(FreeRadioApp VERSION 2.0.0)
+project(DonutRadio VERSION 2.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -23,7 +23,7 @@ if(PkgConfig_FOUND)
 endif()
 
 # Add executables
-set(FREERADIO_SOURCES
+set(DONUTRADIO_SOURCES
     main.cpp
     AudioCapture.cpp
     AudioCapture.h
@@ -34,10 +34,10 @@ set(FREERADIO_SOURCES
 
 # Add Windows icon resource
 if(WIN32)
-    list(APPEND FREERADIO_SOURCES freeradio.rc)
+    list(APPEND DONUTRADIO_SOURCES donutradio.rc)
 endif()
 
-add_executable(freeradio ${FREERADIO_SOURCES})
+add_executable(donutradio ${DONUTRADIO_SOURCES})
 
 # Optional test executable
 if(PULSEAUDIO_FOUND)
@@ -49,7 +49,7 @@ if(PULSEAUDIO_FOUND)
 endif()
 
 # Link Qt and Kirigami libraries
-target_link_libraries(freeradio PRIVATE
+target_link_libraries(donutradio PRIVATE
     Qt6::Core
     Qt6::Widgets
     Qt6::Qml
@@ -62,9 +62,9 @@ target_link_libraries(freeradio PRIVATE
 
 # Optional PulseAudio support
 if(PULSEAUDIO_FOUND)
-    target_link_libraries(freeradio PRIVATE ${PULSEAUDIO_LIBRARIES})
-    target_include_directories(freeradio PRIVATE ${PULSEAUDIO_INCLUDE_DIRS})
-    target_compile_definitions(freeradio PRIVATE ${PULSEAUDIO_CFLAGS_OTHER} HAVE_PULSEAUDIO)
+    target_link_libraries(donutradio PRIVATE ${PULSEAUDIO_LIBRARIES})
+    target_include_directories(donutradio PRIVATE ${PULSEAUDIO_INCLUDE_DIRS})
+    target_compile_definitions(donutradio PRIVATE ${PULSEAUDIO_CFLAGS_OTHER} HAVE_PULSEAUDIO)
 
     target_link_libraries(test-audio PRIVATE
         Qt6::Core
@@ -76,7 +76,7 @@ if(PULSEAUDIO_FOUND)
 endif()
 
 # Set output directory for QML modules
-set_target_properties(freeradio PROPERTIES
+set_target_properties(donutradio PROPERTIES
     QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml
     # GUI subsystem (no console window) for all builds EXCEPT Debug.
     # Debug builds keep the console so qDebug()/console.log output is visible.
@@ -87,15 +87,38 @@ set_target_properties(freeradio PROPERTIES
 # Installation rules
 include(GNUInstallDirs)
 
-install(TARGETS freeradio
+set(DONUTRADIO_APP_ID online.donutsdelivery.DonutRadio)
+set(DONUTRADIO_PLASMOID_ID online.donutsdelivery.donutradio)
+
+install(TARGETS donutradio
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     BUNDLE DESTINATION .
 )
 
-install(FILES freeradio.desktop
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
-)
+if(NOT WIN32 AND NOT APPLE)
+    install(FILES ${DONUTRADIO_APP_ID}.desktop
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
+    )
 
-install(FILES icons/freeradio.svg
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
-)
+    install(FILES ${DONUTRADIO_APP_ID}.metainfo.xml
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/metainfo
+    )
+
+    # Icon theme tree: scalable SVG plus 16 to 512 px PNGs, all named after the app ID.
+    install(DIRECTORY icons/hicolor
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/icons
+    )
+
+    # The Plasma widget shares the QML sources with the app. Turn this off for
+    # AppImage staging, where a plasmoid directory would be dead weight.
+    option(DONUTRADIO_INSTALL_PLASMOID "Install the Plasma 6 widget" ON)
+    if(DONUTRADIO_INSTALL_PLASMOID)
+        install(FILES metadata.json
+            DESTINATION ${CMAKE_INSTALL_DATADIR}/plasma/plasmoids/${DONUTRADIO_PLASMOID_ID}
+        )
+        install(DIRECTORY contents
+            DESTINATION ${CMAKE_INSTALL_DATADIR}/plasma/plasmoids/${DONUTRADIO_PLASMOID_ID}
+            PATTERN "*.backup" EXCLUDE
+        )
+    endif()
+endif()

@@ -1,4 +1,4 @@
-// Free Radio - Standalone Application (no Plasma dependencies)
+// DonutRadio - Standalone Application (no Plasma dependencies)
 import QtQuick
 import QtQuick.Controls
 import Qt.labs.settings
@@ -7,7 +7,7 @@ import SessionMonitor 1.0
 
 Kirigami.ApplicationWindow {
     id: window
-    title: "Free Radio"
+    title: "DonutRadio"
     width: 400
     height: 650
     minimumWidth: 300
