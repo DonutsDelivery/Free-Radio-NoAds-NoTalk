@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 #endif
 
-    app.setApplicationVersion("2.0.0");
+    app.setApplicationVersion("2.3.0");
     migrateLegacySettings();  // sets the application, organization and domain names
     // Wayland app_id and X11 class must match the installed desktop file.
     QGuiApplication::setDesktopFileName(kAppId);

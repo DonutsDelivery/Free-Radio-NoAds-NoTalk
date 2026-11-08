@@ -26,6 +26,11 @@
   </categories>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="2.3.0" date="2026-11-08">
+      <description>
+        <p>Free Radio is now DonutRadio. Playback runs on a built-in audio engine with a pinned LGPL FFmpeg, and the Plasma widget installs with the app.</p>
+      </description>
+    </release>
     <release version="2.0.0" date="2026-02-21"/>
   </releases>
 </component>

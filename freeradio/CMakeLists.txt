@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(DonutRadio VERSION 2.0.0)
+project(DonutRadio VERSION 2.3.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -175,7 +175,7 @@ if(ANDROID)
         QT_ANDROID_PACKAGE_NAME "org.freeradio.app"
         QT_ANDROID_MIN_SDK_VERSION 26
         QT_ANDROID_TARGET_SDK_VERSION 34
-        QT_ANDROID_VERSION_CODE 20000
+        QT_ANDROID_VERSION_CODE 20300
         QT_ANDROID_VERSION_NAME "${PROJECT_VERSION}"
     )
     qt_finalize_executable(donutradio)
