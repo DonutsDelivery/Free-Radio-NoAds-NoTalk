@@ -72,7 +72,7 @@ KDE_QML="${KDE_QML%/org/kde}"
 wine "$QT_WIN/bin/windeployqt.exe" --release --no-translations --no-compiler-runtime \
     --qmldir "$(winepath -w /src/freeradio/contents/ui)" \
     --qmlimport "$(winepath -w "$KDE_QML")" --qmlimport "$(winepath -w "$D/qml")" \
-    "$(winepath -w "$D/donutradio.exe")"
+    "$(winepath -w "$D/donutradio.exe")" "$(winepath -w "$D/freeradio_audio.dll")"
 # The portable zip carries the VC++ runtime DLLs; the installer also runs vc_redist.
 crt="$(find /opt/msvc -type d -path '*Redist/MSVC/*/x64/Microsoft.VC*.CRT' | grep -v onecore | sort | tail -1)"
 [[ -n "$crt" ]] || { echo "MSVC runtime DLLs not found" >&2; exit 1; }
@@ -84,7 +84,7 @@ mkdir -p "$D/licenses"
 cp /src/LICENSES/FFmpeg-* "$D/licenses/"
 cp "$FF/share/freeradio/licenses/"* "$D/licenses/" 2>/dev/null || true
 
-for dll in avformat-62.dll avcodec-62.dll avutil-60.dll swresample-6.dll Qt6Core.dll Qt6Quick.dll; do
+for dll in avformat-62.dll avcodec-62.dll avutil-60.dll swresample-6.dll Qt6Core.dll Qt6Quick.dll Qt6Xml.dll freeradio_audio.dll; do
     test -f "$D/$dll" || { echo "Windows package is missing $dll" >&2; exit 1; }
 done
 ls "$D"/KF6Kirigami*.dll "$D"/Kirigami*.dll >/dev/null 2>&1 || ls "$D" | grep -i kirigami || { echo "Kirigami DLL missing" >&2; exit 1; }
@@ -94,7 +94,7 @@ ls "$D"/KF6Kirigami*.dll "$D"/Kirigami*.dll >/dev/null 2>&1 || ls "$D" | grep -i
 if [[ $status != 124 ]]; then
     echo "donutradio.exe exited with $status during the smoke start:" >&2; tail -40 /cache/smoke.log >&2; exit 1
 fi
-grep -iE 'module .* not (found|installed)|cannot load library' /cache/smoke.log && { echo "QML import failure" >&2; exit 1; }
+grep -iE 'module .* not (found|installed)|cannot load library|err:module:import_dll' /cache/smoke.log && { echo "QML import failure" >&2; exit 1; }
 
 rm -rf /cache/DonutRadio /out/DonutRadio-Windows-Portable-x64.zip /out/windows-dist
 cp -r "$D" /cache/DonutRadio
