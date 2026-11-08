@@ -1,5 +1,5 @@
 @echo off
-REM Build Windows installer for Free Radio
+REM Build Windows installer for DonutRadio
 REM Requirements: Qt6, CMake, NSIS, Visual Studio
 
 setlocal
@@ -8,7 +8,7 @@ set SCRIPT_DIR=%~dp0
 set PROJECT_DIR=%SCRIPT_DIR%..\..
 set BUILD_DIR=%PROJECT_DIR%\build-windows
 
-echo Building Free Radio for Windows...
+echo Building DonutRadio for Windows...
 echo Project directory: %PROJECT_DIR%
 
 REM Clean and create build directory
@@ -26,10 +26,10 @@ cmake --build . --config Release --parallel
 
 REM Create release directory
 mkdir release
-copy Release\freeradio.exe release\
+copy Release\donutradio.exe release\
 
 REM Deploy Qt libraries
-windeployqt --qmldir "%PROJECT_DIR%\freeradio\contents\ui" release\freeradio.exe
+windeployqt --qmldir "%PROJECT_DIR%\freeradio\contents\ui" release\donutradio.exe
 
 REM Build installer
 cd "%SCRIPT_DIR%"

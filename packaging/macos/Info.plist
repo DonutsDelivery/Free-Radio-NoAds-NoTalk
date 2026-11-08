@@ -5,15 +5,15 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleExecutable</key>
-    <string>freeradio</string>
+    <string>donutradio</string>
     <key>CFBundleIconFile</key>
-    <string>freeradio.icns</string>
+    <string>donutradio.icns</string>
     <key>CFBundleIdentifier</key>
-    <string>app.freeradio.FreeRadio</string>
+    <string>online.donutsdelivery.DonutRadio</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>Free Radio</string>
+    <string>DonutRadio</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -25,7 +25,7 @@
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSHumanReadableCopyright</key>
-    <string>Copyright 2024 Free Radio Project</string>
+    <string>Copyright 2024 DonutsDelivery</string>
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>

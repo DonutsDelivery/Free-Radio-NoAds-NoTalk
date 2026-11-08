@@ -1,10 +1,10 @@
-; Free Radio Installer Script for Inno Setup
+; DonutRadio Installer Script for Inno Setup
 
-#define MyAppName "Free Radio"
+#define MyAppName "DonutRadio"
 #define MyAppVersion "2.0.0"
-#define MyAppPublisher "Free Radio Project"
+#define MyAppPublisher "DonutsDelivery"
 #define MyAppURL "https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk"
-#define MyAppExeName "freeradio.exe"
+#define MyAppExeName "donutradio.exe"
 
 [Setup]
 AppId={{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
@@ -19,8 +19,8 @@ DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 ; LicenseFile=..\..\LICENSE
 OutputDir=..\..\build-installer
-OutputBaseFilename=FreeRadio-Setup-x64
-SetupIconFile=..\..\freeradio\icons\freeradio.ico
+OutputBaseFilename=DonutRadio-Setup-x64
+SetupIconFile=..\..\freeradio\icons\donutradio.ico
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
