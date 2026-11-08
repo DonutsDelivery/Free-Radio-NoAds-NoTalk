@@ -143,8 +143,22 @@ else()
         endif()
         add_library(FreeRadio::${_component} SHARED IMPORTED)
         set_target_properties(FreeRadio::${_component} PROPERTIES
-            IMPORTED_LOCATION "${_location}"
             INTERFACE_INCLUDE_DIRECTORIES "${FREERADIO_FFMPEG_INCLUDE_DIR}")
+        if(WIN32)
+            # On Windows the explicit path is the import library; the DLL sits beside it.
+            get_filename_component(_dir "${_location}" DIRECTORY)
+            file(GLOB _dll "${_dir}/${_component}-*.dll")
+            set_target_properties(FreeRadio::${_component} PROPERTIES
+                IMPORTED_IMPLIB "${_location}")
+            if(_dll)
+                list(GET _dll 0 _dll)
+                set_target_properties(FreeRadio::${_component} PROPERTIES
+                    IMPORTED_LOCATION "${_dll}")
+            endif()
+        else()
+            set_target_properties(FreeRadio::${_component} PROPERTIES
+                IMPORTED_LOCATION "${_location}")
+        endif()
     endforeach()
 endif()
 
