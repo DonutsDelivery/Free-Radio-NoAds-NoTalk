@@ -13,8 +13,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libwayland-client0 \
       libwayland-cursor0 libwayland-egl1 \
  && rm -rf /var/lib/apt/lists/*
+# aqt renamed the Linux arch from gcc_64 to linux_gcc_64 in later Qt releases; ask it.
 RUN pip3 install --no-cache-dir "aqtinstall==${AQT_VERSION}" \
- && aqt install-qt linux desktop "${QT_VERSION}" linux_gcc_64 -m qtshadertools -O /opt/Qt \
+ && arch="$(aqt list-qt linux desktop --arch "${QT_VERSION}" | tr ' ' '\n' | grep -E '^(linux_)?gcc_64$' | head -1)" \
+ && aqt install-qt linux desktop "${QT_VERSION}" "$arch" -m qtshadertools -O /opt/Qt \
  && test -x "/opt/Qt/${QT_VERSION}/gcc_64/bin/qmake"
 ENV QT_ROOT=/opt/Qt/${QT_VERSION}/gcc_64
 WORKDIR /src
