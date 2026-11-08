@@ -1,10 +1,8 @@
 name: Build DonutRadio
 
+# Manual diagnostic only. Release files are built locally with packaging/local/
+# (see docs/platform-build-and-acceptance.md); this workflow never publishes.
 on:
-  push:
-    branches: ['**']
-    tags: ['v*']
-  pull_request:
   workflow_dispatch:
 
 env:
@@ -375,27 +373,3 @@ jobs:
         with:
           name: DonutRadio-Windows-Installer
           path: build-installer/DonutRadio-Setup-x64.exe
-
-  release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build-plasmoid, build-linux, build-macos, build-windows]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            artifacts/DonutRadio-Plasmoid/*
-            artifacts/DonutRadio-Linux/*
-            artifacts/DonutRadio-macOS/*
-            artifacts/DonutRadio-Windows-Portable/*
-            artifacts/DonutRadio-Windows-Installer/*
-          draft: false
-          generate_release_notes: true

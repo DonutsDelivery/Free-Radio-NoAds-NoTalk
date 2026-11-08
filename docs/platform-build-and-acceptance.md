@@ -4,10 +4,18 @@ This guide is the operational source of truth for Free Radio desktop artifacts a
 
 ## Ownership and support state
 
-- `.github/workflows/build.yml` currently owns Linux, Windows, and macOS desktop builds. The Windows job uses native MSVC/Qt tooling; the macOS job uses native `macos-14`, Qt 6.7.0, KF/Kirigami 6.3.0, CMake, `macdeployqt`, ad-hoc signing, and DMG creation.
-- A `v*` tag causes that workflow to publish all collected artifacts. Use `workflow_dispatch` for inspection because its release job is tag-gated; do not push a stable tag until the macOS support claim and full required matrix are approved.
-- No accepted pinned local Windows Docker release wrapper exists yet. WinBoat is runtime acceptance only; never compile or package Free Radio there.
-- `packaging/macos/build-macos.sh` is a native helper, but it does not provision the complete pinned CI toolchain and contains versioned packaging assumptions. Reconcile it with the workflow and project version before treating its DMG as a release candidate.
+Release files are built locally, the same way as DonutStudio and DonutMediaCenter. GitHub Actions does not run on this account, and `.github/workflows/build.yml` is now a manual diagnostic that never publishes.
+
+| Platform | Command (from a clean checkout) | Output in `dist/` | Where it compiles |
+|---|---|---|---|
+| Linux | `packaging/local/build-linux.sh` | `DonutRadio-Linux-x86_64.AppImage`, `donutradio.plasmoid` | Ubuntu 22.04 Docker image, Linux build token |
+| Windows | `packaging/local/build-windows.sh` | `DonutRadio-Windows-Portable-x64.zip`, `DonutRadio-Setup-x64.exe` | DonutStudio's msvc-wine and Inno images, Linux build token |
+| macOS | `packaging/local/build-macos.sh` | `DonutRadio-macOS.dmg` (arm64, ad-hoc signed) | The physical MacBook over SSH, its `/tmp/arbit-build.lock` |
+
+- Toolchain pins live in `packaging/local/versions.env`: Qt 6.7.0, KF/Kirigami 6.3.0 and the aqtinstall version. FFmpeg is pinned to 8.0.3 by `scripts/ffmpeg/configure-common.sh`.
+- Each wrapper refuses a dirty tree, builds from an exported copy of `HEAD`, smoke-starts the packaged app and writes `dist/<platform>-receipt.txt` with the commit and SHA-256 of every file.
+- Set `HOST_HEAVY_BUILD_WAIT_SECONDS=21600` to queue for the Linux token instead of failing when another project holds it. Dependency trees (Kirigami, FFmpeg) are cached under `~/.cache/donutradio-release/` on Linux and `~/build/donutradio-release/` on the Mac, so only the app recompiles on later runs.
+- WinBoat is runtime acceptance only; never compile or package DonutRadio there.
 - The Sonoma VM is the local x86_64 native compile and functional-test worker. It cannot establish Apple Silicon, notarization, representative GPU, or real CoreAudio latency support.
 - The shared DonutsDelivery profile excludes macOS from stable support until the exact shipping artifact passes real Apple-hardware audio, network playback, and sustained-use acceptance.
 
