@@ -7,7 +7,7 @@ APP_ID=online.donutsdelivery.DonutRadio
 JOBS=${JOBS:-$(nproc)}
 KDE=/cache/kde-$KF_VERSION-qt$QT_VERSION
 FF=/cache/ffmpeg-8.0.3
-export PATH="$QT_ROOT/bin:$PATH"
+export PATH="$QT_ROOT/bin:$PATH" LANG=C.UTF-8 LC_ALL=C.UTF-8
 
 # ECM and Kirigami, built once per pin.
 if [[ ! -f "$KDE/.done" ]]; then
@@ -36,7 +36,7 @@ fi
 B=/cache/app-build
 rm -rf "$B" /cache/AppDir
 cmake -S /src/freeradio -B "$B" -G Ninja -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_PREFIX_PATH="$QT_ROOT;$KDE" -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_PREFIX_PATH="$QT_ROOT;$KDE" -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib \
     -DDONUTRADIO_INSTALL_PLASMOID=OFF -DBUILD_TESTING=OFF \
     -DFREERADIO_FFMPEG_PROVIDER=EXPLICIT -DFREERADIO_FFMPEG_INCLUDE_DIR="$FF/include" \
     -DFREERADIO_AVFORMAT_LIBRARY="$FF/lib/libavformat.so" \

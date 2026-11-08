@@ -17,7 +17,7 @@ CACHE="$CACHE_ROOT/linux"
 mkdir -p "$CACHE" "$DIST"
 rm -f "$DIST/DonutRadio-Linux-x86_64.AppImage" "$DIST/donutradio.plasmoid"
 docker run --rm --user "$(id -u):$(id -g)" -e HOME=/cache -e JOBS="${JOBS:-8}" \
-    -v "$REPO:/src:ro" -v "$CACHE:/cache" -v "$DIST:/out" \
+    -v "$SRC_SNAPSHOT:/src:ro" -v "$CACHE:/cache" -v "$DIST:/out" \
     "$IMAGE" /src/packaging/local/linux-in-container.sh
 write_receipt linux-receipt.txt DonutRadio-Linux-x86_64.AppImage donutradio.plasmoid
 cat "$DIST/linux-receipt.txt"

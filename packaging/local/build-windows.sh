@@ -24,7 +24,7 @@ CACHE="$CACHE_ROOT/windows"
 mkdir -p "$CACHE" "$DIST"
 rm -rf "$DIST/DonutRadio-Windows-Portable-x64.zip" "$DIST/DonutRadio-Setup-x64.exe" "$DIST/windows-dist"
 docker run --rm -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" -e JOBS="${JOBS:-4}" \
-    -v "$REPO:/src:ro" -v "$CACHE:/cache" -v "$DIST:/out" \
+    -v "$SRC_SNAPSHOT:/src:ro" -v "$CACHE:/cache" -v "$DIST:/out" \
     "$IMAGE" /src/packaging/local/windows-in-container.sh
 
 # Installer: Inno Setup under Wine, from a staging copy laid out like the repo so the

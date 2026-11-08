@@ -26,6 +26,14 @@ require_clean_tree() {
         exit 1
     fi
     SOURCE_COMMIT="$(git -C "$REPO" rev-parse HEAD)"
+    # Build from an exported copy of the commit, so edits to the checkout during a
+    # long build cannot leak into the release files.
+    SRC_SNAPSHOT="$CACHE_ROOT/src/$SOURCE_COMMIT"
+    if [[ ! -f "$SRC_SNAPSHOT/.complete" ]]; then
+        rm -rf "$SRC_SNAPSHOT" && mkdir -p "$SRC_SNAPSHOT"
+        git -C "$REPO" archive --format=tar HEAD | tar -xf - -C "$SRC_SNAPSHOT"
+        touch "$SRC_SNAPSHOT/.complete"
+    fi
 }
 
 write_receipt() {
