@@ -39,11 +39,15 @@ if [[ ! -f "$archive" ]]; then
     mv "$tmp" "$archive"
 fi
 
+# Compare the digest directly: the BSD sha256sum on macOS lacks --check --status.
 if command -v sha256sum >/dev/null 2>&1; then
-    printf '%s  %s\n' "${FREERADIO_FFMPEG_SHA256}" "$archive" | sha256sum --check --status
+    actual=$(sha256sum "$archive" | cut -d' ' -f1)
 else
     actual=$(shasum -a 256 "$archive" | cut -d' ' -f1)
-    [[ "$actual" == "${FREERADIO_FFMPEG_SHA256}" ]]
+fi
+if [[ "$actual" != "${FREERADIO_FFMPEG_SHA256}" ]]; then
+    printf 'FFmpeg archive checksum mismatch: %s\n' "$archive" >&2
+    exit 1
 fi
 
 if [[ -e "$source_dir" && ! -f "$source_dir/configure" ]]; then
