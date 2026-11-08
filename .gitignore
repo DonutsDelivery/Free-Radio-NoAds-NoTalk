@@ -49,3 +49,4 @@ freeradio/dist/
 .claude/worktrees/
 .claude/settings.local.json
 .gitignore.backup*
+dist/
