@@ -9,4 +9,4 @@ Terminal=false
 Categories=AudioVideo;Audio;Player;Qt;
 Keywords=radio;stream;music;audio;internet;
 StartupNotify=true
-StartupWMClass=online.donutsdelivery.DonutRadio
+StartupWMClass=DonutRadio
