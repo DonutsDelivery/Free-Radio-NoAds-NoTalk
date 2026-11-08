@@ -16,7 +16,7 @@ Release files are built locally, the same way as DonutStudio and DonutMediaCente
 - Each wrapper refuses a dirty tree, builds from an exported copy of `HEAD`, smoke-starts the packaged app and writes `dist/<platform>-receipt.txt` with the commit and SHA-256 of every file.
 - Set `HOST_HEAVY_BUILD_WAIT_SECONDS=21600` to queue for the Linux token instead of failing when another project holds it. Dependency trees (Kirigami, FFmpeg) are cached under `~/.cache/donutradio-release/` on Linux and `~/build/donutradio-release/` on the Mac, so only the app recompiles on later runs.
 - WinBoat is runtime acceptance only; never compile or package DonutRadio there.
-- The Sonoma VM is the local x86_64 native compile and functional-test worker. It cannot establish Apple Silicon, notarization, representative GPU, or real CoreAudio latency support.
+- The Sonoma VM is an x86_64 functional-test fallback. It cannot establish Apple Silicon, notarization, representative GPU, or real CoreAudio latency support.
 - The shared DonutsDelivery profile excludes macOS from stable support until the exact shipping artifact passes real Apple-hardware audio, network playback, and sustained-use acceptance.
 
 ## Exact source and receipts
@@ -25,21 +25,16 @@ Freeze one clean full source commit. Record the commit, catalog hash, FFmpeg sou
 
 ## Native macOS build
 
-Use `/home/user/VMs/donutstudio-macos-builder` as the configured Sonoma worker. Stage an exact SHA-named source snapshot and provision the same versions used by `.github/workflows/build.yml`: Qt 6.7.0 with multimedia/shadertools, KF/Kirigami 6.3.0, CMake, Ninja, ImageMagick, and the pinned Free Radio FFmpeg runtime.
+`packaging/local/build-macos.sh` builds the release DMG on the physical Apple Silicon MacBook. It copies an exported snapshot of `HEAD` over SSH and runs `packaging/local/macos-on-mac.sh` there under `/tmp/arbit-build.lock`. That script:
 
-The canonical configure/build sequence is:
+- installs Qt 6.7.0 with aqtinstall into its cache and patches out the AGL framework, which the macOS 26 SDK no longer ships;
+- builds ECM, Kirigami and FFmpeg 8.0.3 for arm64 while ignoring `/opt/homebrew` and `/usr/local`, so Homebrew's Qt and FFmpeg cannot leak in;
+- forms `DonutRadio.app`, moves `libfreeradio_audio.dylib` into `Frameworks`, runs `macdeployqt` and drops every SQL driver except SQLite;
+- deep ad-hoc signs and verifies the bundle, fails if any library links outside it, launches the bundled executable and creates and verifies `DonutRadio-macOS.dmg`.
 
-```bash
-cmake -B build -S freeradio -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_PREFIX_PATH="$Qt6_DIR;$HOME/kde"
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
-```
+Any failure stops the build; nothing is ignored. The DMG is arm64 only and is not notarized. Record the bundle version, architecture, signature state and DMG SHA-256 from `dist/macos-receipt.txt` when accepting a candidate.
 
-Then mirror the workflow packaging steps: form `Free Radio.app`, install the tracked `Info.plist` and icon, run `macdeployqt` with both the application QML directory and custom Kirigami import root, deep ad-hoc sign after deployment, verify the signature, launch the actual bundled executable, and create/verify `FreeRadio-macOS.dmg` with `hdiutil`. Do not ignore `macdeployqt`, DMG, codesign, or launch failures as the current helper/workflow sometimes does; an ignored failure cannot produce an accepted candidate.
-
-Install by mounting the exact DMG and copying the app to `/Users/builder/Applications`. Record bundle version/identifier, executable architecture, linked Qt/KF/FFmpeg libraries, signature state, process path, and host/guest SHA-256. An x86_64 VM result must not be labeled universal or Apple Silicon.
+The Sonoma VM below remains an x86_64 fallback for functional tests only. An x86_64 VM result must not be labeled universal or Apple Silicon.
 
 ## Sonoma VM lifecycle
 
