@@ -48,7 +48,9 @@ fi
 B=/cache/app-build
 STAGE=/cache/stage
 rm -rf "$B" "$STAGE"
+# The host rcc compresses with zstd, which the MSVC QtCore cannot read back.
 cross_cmake -S /src/freeradio -B "$B" -DCMAKE_PREFIX_PATH="$QT_WIN;$KDE" \
+    -DCMAKE_AUTORCC_OPTIONS=--no-zstd \
     -DCMAKE_INSTALL_PREFIX="$STAGE" -DBUILD_TESTING=OFF \
     -DFREERADIO_FFMPEG_PROVIDER=EXPLICIT -DFREERADIO_FFMPEG_INCLUDE_DIR="$FF/include" \
     -DFREERADIO_AVFORMAT_LIBRARY="$FF/bin/avformat.lib" \
