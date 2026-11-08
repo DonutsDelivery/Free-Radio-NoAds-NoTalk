@@ -69,7 +69,7 @@ cp "$FF"/bin/*.dll "$D/"
 cp "$KDE"/bin/*.dll "$D/" 2>/dev/null || true
 KDE_QML="$(dirname "$(find "$KDE" -type d -path '*/qml/org/kde/kirigami' | head -1)")"
 KDE_QML="${KDE_QML%/org/kde}"
-wine64 "$QT_WIN/bin/windeployqt.exe" --release --no-translations --no-compiler-runtime \
+wine "$QT_WIN/bin/windeployqt.exe" --release --no-translations --no-compiler-runtime \
     --qmldir "$(winepath -w /src/freeradio/contents/ui)" \
     --qmlimport "$(winepath -w "$KDE_QML")" --qmlimport "$(winepath -w "$D/qml")" \
     "$(winepath -w "$D/donutradio.exe")"
@@ -90,7 +90,7 @@ done
 ls "$D"/KF6Kirigami*.dll "$D"/Kirigami*.dll >/dev/null 2>&1 || ls "$D" | grep -i kirigami || { echo "Kirigami DLL missing" >&2; exit 1; }
 
 # Smoke start under Wine without a display.
-(cd "$D" && QT_QPA_PLATFORM=offscreen timeout 25 wine64 donutradio.exe >/cache/smoke.log 2>&1) && status=0 || status=$?
+(cd "$D" && QT_QPA_PLATFORM=offscreen timeout 25 wine donutradio.exe >/cache/smoke.log 2>&1) && status=0 || status=$?
 if [[ $status != 124 ]]; then
     echo "donutradio.exe exited with $status during the smoke start:" >&2; tail -40 /cache/smoke.log >&2; exit 1
 fi

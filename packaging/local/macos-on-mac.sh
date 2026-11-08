@@ -106,6 +106,7 @@ mkdir -p "$APP/Contents/Frameworks"
 mv "$APP/Contents/Resources/qml/FreeRadio/Audio/libfreeradio_audio.dylib" "$APP/Contents/Frameworks/"
 ln -s ../../../../Frameworks/libfreeradio_audio.dylib \
     "$APP/Contents/Resources/qml/FreeRadio/Audio/libfreeradio_audio.dylib"
+install_name_tool -add_rpath @executable_path/../Frameworks "$APP/Contents/MacOS/donutradio"
 export DYLD_LIBRARY_PATH="$FF/lib:$KDE/lib"
 "$QT/bin/macdeployqt" "$APP" -qmldir="$SRC/freeradio/contents/ui" -qmlimport="$KDE_QML" \
     -qmlimport="$APP/Contents/Resources/qml" -libpath="$FF/lib" -libpath="$KDE/lib" -libpath="$APP/Contents/Frameworks" -verbose=1
