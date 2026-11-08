@@ -2,7 +2,9 @@ name: Build DonutRadio
 
 on:
   push:
+    branches: ['**']
     tags: ['v*']
+  pull_request:
   workflow_dispatch:
 
 env:
@@ -10,7 +12,20 @@ env:
   KF_VERSION: '6.3.0'
 
 jobs:
+  catalog-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check canonical station catalog
+        run: |
+          python3 tools/radiodata_catalog.py check
+          python3 -m unittest discover -s tests
+
   build-plasmoid:
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: catalog-check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -22,7 +37,8 @@ jobs:
           zip -r ../donutradio.plasmoid \
             metadata.json \
             contents/ \
-            -x "*.o" -x "*.so" -x "*.backup" -x "build/*"
+            -x "*.o" -x "*.so" -x "*.backup" -x "build/*" \
+            -x "contents/ui/radiodata_radcap.js"
 
       - name: Upload Plasmoid artifact
         uses: actions/upload-artifact@v4
@@ -31,6 +47,8 @@ jobs:
           path: donutradio.plasmoid
 
   build-linux:
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: catalog-check
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -130,6 +148,8 @@ jobs:
           path: DonutRadio-Linux-x86_64.AppImage
 
   build-macos:
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: catalog-check
     runs-on: macos-14
     steps:
       - name: Checkout
@@ -256,6 +276,8 @@ jobs:
           if-no-files-found: ignore
 
   build-windows:
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: catalog-check
     runs-on: windows-latest
     steps:
       - name: Checkout

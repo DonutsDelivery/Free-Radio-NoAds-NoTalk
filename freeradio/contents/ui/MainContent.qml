@@ -4,8 +4,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
-import QtMultimedia
-import org.kde.kirigami as Kirigami
 import "radiodata.js" as RadioData
 
 Item {
@@ -39,19 +37,44 @@ Item {
 
     // Popup state (used by plasmoid for panel popup)
     property bool showPopup: false
+
+    // Cross-platform UI capabilities. Wrappers may override safe-area values;
+    // compact Plasma mode deliberately ignores them to preserve panel sizing.
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
+    property real safeAreaLeft: 0
+    property real safeAreaTop: 0
+    property real safeAreaRight: 0
+    property real safeAreaBottom: 0
+    readonly property real effectiveSafeAreaLeft: isCompactMode ? 0 : safeAreaLeft
+    readonly property real effectiveSafeAreaTop: isCompactMode ? 0 : safeAreaTop
+    readonly property real effectiveSafeAreaRight: isCompactMode ? 0 : safeAreaRight
+    readonly property real effectiveSafeAreaBottom: isCompactMode ? 0 : safeAreaBottom
+    readonly property bool portraitLayout: height >= width
+    readonly property real fontScale: isMobile ? (portraitLayout ? 1.0 : 0.92) : 1.0
+    readonly property real touchTargetSize: isMobile ? 48 : buttonSize
+    readonly property bool keyboardVisible: Qt.inputMethod.visible
+    property bool androidBackEnabled: isMobile
     
     
     // Playback state tracking
     property bool userPaused: false
+    readonly property bool mainPlaybackPlaying: playbackController.mainPlaying
+    readonly property bool mainPlaybackEngaged:
+        playbackController.main.playbackState === playbackController.loadingState
+        || playbackController.main.playbackState === playbackController.bufferingState
+        || playbackController.main.playbackState === playbackController.playingState
+        || playbackController.main.playbackState === playbackController.pausedState
     property real lastBufferProgress: 0
     property int lastBufferUpdateTime: 0
     property int restartAttempts: 0
     property int maxRestartAttempts: 3
     
-    // Adaptive sizing properties - FORCE 720P SIMULATION MODE with optimized text sizing
-    // Simulate widget running on 720p screen by scaling down effective dimensions
-    property real simulatedWidth: Math.min(root.width, root.width * 720 / 2560) // Scale down from your 2560px to 720p equivalent
-    property real simulatedHeight: Math.min(root.height, root.height * 720 / 1440) // Scale down from your 1440px to 720p equivalent
+    // Desktop keeps the established 720p simulation; mobile uses its real
+    // viewport so controls and type do not collapse on narrow screens.
+    property real simulatedWidth: isMobile ? Math.max(0, root.width - effectiveSafeAreaLeft - effectiveSafeAreaRight)
+                                           : Math.min(root.width, root.width * 720 / 2560)
+    property real simulatedHeight: isMobile ? Math.max(0, root.height - effectiveSafeAreaTop - effectiveSafeAreaBottom)
+                                            : Math.min(root.height, root.height * 720 / 1440)
     
     // Optimized text sizing hierarchy that makes better use of space
     property real availableTextWidth: simulatedWidth - (marginSize * 2) // Account for margins
@@ -59,12 +82,12 @@ Item {
     property real marginSize: Math.max(6, Math.min(15, simulatedWidth / 40)) // Match spacingLarge value for consistent gaps
     
     // Text size hierarchy optimized for space utilization
-    property real microFontSize: Math.max(7, Math.min(9, availableTextWidth / 80))     // Very small text (codec info, etc)
-    property real smallFontSize: Math.max(8, Math.min(11, availableTextWidth / 65))    // Small text (secondary info)
-    property real baseFontSize: Math.max(10, Math.min(13, availableTextWidth / 50))    // Base text (most content)
-    property real titleFontSize: Math.max(12, Math.min(16, availableTextWidth / 40))   // Titles and important text
-    property real largeFontSize: Math.max(14, Math.min(18, availableTextWidth / 35))   // Large headings
-    property real headerFontSize: Math.max(16, Math.min(20, availableTextWidth / 30))  // Main headers
+    property real microFontSize: Math.max(7, Math.min(9, availableTextWidth / 80)) * fontScale
+    property real smallFontSize: Math.max(8, Math.min(11, availableTextWidth / 65)) * fontScale
+    property real baseFontSize: Math.max(10, Math.min(13, availableTextWidth / 50)) * fontScale
+    property real titleFontSize: Math.max(12, Math.min(16, availableTextWidth / 40)) * fontScale
+    property real largeFontSize: Math.max(14, Math.min(18, availableTextWidth / 35)) * fontScale
+    property real headerFontSize: Math.max(16, Math.min(20, availableTextWidth / 30)) * fontScale
     
     // Size classifications
     property bool isVerySmall: simulatedWidth < 180 || simulatedHeight < 120
@@ -329,8 +352,8 @@ Item {
                 ebookProgress[currentEbookUrl] = {}
             }
             ebookProgress[currentEbookUrl].chapterIndex = currentEbookChapterIndex
-            ebookProgress[currentEbookUrl].position = player.position
-            console.log("Saving progress for", currentEbookTitle, "chapter", currentEbookChapterIndex, "position", player.position)
+            ebookProgress[currentEbookUrl].position = playbackController.main.position
+            console.log("Saving progress for", currentEbookTitle, "chapter", currentEbookChapterIndex, "position", playbackController.main.position)
         }
         
         var json = JSON.stringify(ebookProgress)
@@ -539,7 +562,7 @@ Item {
             
             // Set the player source but don't auto-play
             console.log("Setting source without auto-play")
-            player.source = savedUrl
+            playbackController.main.source = savedUrl
             // Don't call stop() immediately as it might interfere with source loading
             
             return true
@@ -603,10 +626,10 @@ Item {
         }
         
         // Apply the auto-mute logic
-        if (hasOtherAudio && !audioOut.muted && !isFadingOut) {
+        if (hasOtherAudio && !playbackController.muted && !isFadingOut) {
             console.log("Auto-mute: Detected other audio, fading out")
             fadeOutAudio()
-        } else if (!hasOtherAudio && audioOut.muted && !isFadingIn) {
+        } else if (!hasOtherAudio && playbackController.muted && !isFadingIn) {
             console.log("Auto-mute: Other audio stopped, fading back in")
             fadeInAudio()
         }
@@ -769,7 +792,7 @@ Item {
         running: currentEbookUrl !== ""
         repeat: true
         onTriggered: {
-            if (currentEbookUrl && player.playbackState === MediaPlayer.PlayingState) {
+            if (currentEbookUrl && playbackController.main.playbackState === playbackController.playingState) {
                 saveEbookProgress()
             }
         }
@@ -790,15 +813,13 @@ Item {
                 var reason = ""
 
                 // Player stopped unexpectedly while we expect it to be playing
-                if (player.playbackState === MediaPlayer.StoppedState) {
+                if (playbackController.main.playbackState === playbackController.stoppedState) {
                     needsRestart = true
                     reason = "Player stopped unexpectedly"
                 }
-                // Media status indicates an error or no media loaded
-                else if (player.mediaStatus === MediaPlayer.InvalidMedia ||
-                         player.mediaStatus === MediaPlayer.NoMedia) {
+                else if (playbackController.main.playbackState === playbackController.errorState) {
                     needsRestart = true
-                    reason = "Invalid or no media: " + player.mediaStatus
+                    reason = playbackController.main.errorString || "Audio engine error"
                 }
 
                 if (needsRestart && restartAttempts < maxRestartAttempts) {
@@ -806,13 +827,13 @@ Item {
                     restartAttempts++
 
                     // Force a complete restart
-                    player.stop()
-                    player.source = ""
+                    playbackController.main.stop()
+                    playbackController.main.source = ""
                     Qt.callLater(function() {
                         if (currentStationUrl !== "" && !userPaused) {
                             console.log("Restarting stream (attempt", restartAttempts, ")")
-                            player.source = currentStationUrl
-                            player.play()
+                            playbackController.main.source = currentStationUrl
+                            playbackController.playMain()
                         }
                     })
                 } else if (!needsRestart) {
@@ -832,21 +853,20 @@ Item {
             // This timer is a backup for the silentPlaybackDetector
             // Only reinitialize if player is in a bad state AND we're supposed to be playing
             if (currentStationUrl !== "" && !userPaused) {
-                var needsReset = (player.mediaStatus === MediaPlayer.NoMedia ||
-                                  player.mediaStatus === MediaPlayer.InvalidMedia ||
-                                  player.playbackState === MediaPlayer.StoppedState)
+                var state = playbackController.main.playbackState
+                var needsReset = (state === playbackController.errorState ||
+                                  state === playbackController.stoppedState)
 
                 if (needsReset) {
-                    console.log("Idle reset: Reinitializing player")
-                    console.log("Media status:", player.mediaStatus, "Playback state:", player.playbackState)
+                    console.log("Idle reset: Reinitializing AudioEngine; state:", state)
 
-                    player.stop()
-                    player.source = ""
+                    playbackController.main.stop()
+                    playbackController.main.source = ""
                     Qt.callLater(function() {
                         if (currentStationUrl !== "" && !userPaused) {
                             console.log("Reconnecting to:", currentStationUrl)
-                            player.source = currentStationUrl
-                            player.play()
+                            playbackController.main.source = currentStationUrl
+                            playbackController.playMain()
                         }
                     })
                 }
@@ -860,219 +880,108 @@ Item {
     // Restart current stream — called by wrapper on screen unlock as safety net
     function restartCurrentStream() {
         if (currentStationUrl !== "" && !userPaused &&
-            player.playbackState !== MediaPlayer.PlayingState) {
+            playbackController.main.playbackState !== playbackController.playingState) {
             console.log("restartCurrentStream: restarting after disruption")
-            player.source = ""
+            playbackController.main.source = ""
             Qt.callLater(function() {
-                player.source = currentStationUrl
-                Qt.callLater(function() { player.play() })
+                playbackController.main.source = currentStationUrl
+                Qt.callLater(function() { playbackController.playMain() })
             })
         }
     }
 
-    // Main audio player with enhanced spectrum integration
-    MediaPlayer {
-        id: player
-        autoPlay: false
-        loops: MediaPlayer.Infinite
-        audioOutput: AudioOutput {
-            id: audioOut
-            volume: compactVolumeSlider.value
-            muted: false
-        }
+    // Shared in-process playback for the standalone app and Plasma surface.
+    PlaybackController {
+        id: playbackController
+        volume: compactVolumeSlider.value
+    }
 
-        onPlaybackStateChanged: {
-            var stateNames = ["Stopped", "Playing", "Paused"]
-            console.log("AudioStreamer: Main player state changed to:", stateNames[playbackState] || playbackState)
-            
-            // Detect unexpected stops (not caused by user pause/stop)
-            if (playbackState === MediaPlayer.StoppedState && 
-                currentStationUrl !== "" && 
-                !userPaused) {
-                console.log("AudioStreamer: Unexpected stop detected - attempting restart...")
-                
-                if (restartAttempts < maxRestartAttempts) {
-                    restartAttempts++
-                    
-                    Qt.callLater(function() {
-                        if (currentStationUrl !== "" && !userPaused) {
-                            console.log("AudioStreamer: Reinitializing connection after unexpected stop (attempt", restartAttempts, ")")
-                            player.stop()
-                            player.source = ""
-                            Qt.callLater(function() {
-                                player.source = currentStationUrl
-                                fetchStreamMetadata(currentStationUrl)
-                                silentPlaybackDetector.start()
-                                player.play()
-                            })
-                        }
-                    })
-                }
-            }
-            
-            // Reset restart counter on successful playback and inhibit idle
-            if (playbackState === MediaPlayer.PlayingState) {
+    // Expose AudioEngine spectrum output to visualizer consumers.
+    readonly property var spectrum: playbackController.spectrum
+
+    Connections {
+        target: playbackController.main
+
+        function onPlaybackStateChanged() {
+            var state = playbackController.main.playbackState
+            console.log("AudioEngine: Main player state changed to:", state)
+
+            if (state === playbackController.playingState) {
                 restartAttempts = 0
                 silentPlaybackDetector.start()
-                if (sessionMonitor) sessionMonitor.inhibitIdle("Playing: " + (currentStationName || "audio stream"))
-            }
-
-            // Release inhibitor when not playing
-            if (playbackState === MediaPlayer.StoppedState && userPaused) {
+                if (sessionMonitor)
+                    sessionMonitor.inhibitIdle("Playing: " + (currentStationName || "audio stream"))
+            } else if (state === playbackController.stoppedState && userPaused) {
                 if (sessionMonitor) sessionMonitor.uninhibitIdle()
             }
         }
-        
-        onSourceChanged: {
-            if (source && source !== "" && autoPlay) {
-                play()
+
+        function onIcyMetadataChanged() {
+            var title = playbackController.icyTitle
+            if (!title || title === "" ||
+                    (currentSongTitle !== "" && currentArtist !== ""))
+                return
+            console.log("ICY metadata received:", title)
+            if (title.indexOf(" - ") !== -1) {
+                var parts = title.split(" - ")
+                if (currentArtist === "") currentArtist = parts[0].trim()
+                if (currentSongTitle === "")
+                    currentSongTitle = parts.slice(1).join(" - ").trim()
+            } else if (currentSongTitle === "") {
+                currentSongTitle = title
+            }
+            lastMetadataUpdate = new Date()
+        }
+
+        function onBufferingChanged() {
+            var progress = playbackController.main.bufferingProgress
+            if (progress > lastBufferProgress) {
+                lastBufferProgress = progress
+                lastBufferUpdateTime = Date.now()
             }
         }
 
-        // Read ICY metadata from streams (fallback for stations without API)
-        onMetaDataChanged: {
-            // Only use ICY metadata if we don't have data from a dedicated API
-            if (currentSongTitle === "" || currentArtist === "") {
-                var title = metaData.value(MediaMetaData.Title)
-                if (title && title !== "") {
-                    console.log("ICY metadata received:", title)
-                    // ICY metadata is often "Artist - Title" format
-                    if (title.indexOf(" - ") !== -1) {
-                        var parts = title.split(" - ")
-                        if (currentArtist === "") currentArtist = parts[0].trim()
-                        if (currentSongTitle === "") currentSongTitle = parts.slice(1).join(" - ").trim()
-                    } else {
-                        if (currentSongTitle === "") currentSongTitle = title
-                    }
-                    lastMetadataUpdate = Date.now()
-                }
-            }
-        }
-        
-        // Start playing as soon as media is loaded (not fully buffered)
-        onMediaStatusChanged: {
-            console.log("AudioStreamer: Media status changed:", mediaStatus)
-            if (mediaStatus === MediaPlayer.LoadedMedia) {
-                if (preventAutoPlayOnStartup) {
-                    console.log("AudioStreamer: Media loaded but auto-play prevented on startup")
-                    preventAutoPlayOnStartup = false // Allow future plays
-                } else {
-                    console.log("AudioStreamer: Media loaded, starting playback immediately")
-                    play()
-                }
-            }
-        }
-        
-        // Monitor buffering
-        onBufferProgressChanged: {
-            if (bufferProgress > 0) {
-                console.log("AudioStreamer: Buffering:", (bufferProgress * 100).toFixed(1) + "%")
-                
-                // Track buffer progress for stale detection
-                var currentTime = Date.now()
-                if (bufferProgress > lastBufferProgress) {
-                    lastBufferProgress = bufferProgress
-                    lastBufferUpdateTime = currentTime
-                }
-                
-                // If buffer hasn't progressed for 60 seconds and we should be playing
-                if (false && currentTime - lastBufferUpdateTime > 60000 && 
-                    currentStationUrl !== "" && 
-                    !userPaused &&
-                    playbackState === MediaPlayer.PlayingState) {
-                    console.log("AudioStreamer: Buffer stalled for 60 seconds, reinitializing connection...")
-                    
-                    Qt.callLater(function() {
-                        if (currentStationUrl !== "" && !userPaused) {
-                            // console.log("Reinitializing due to stalled buffer") // DISABLED
-                            player.stop()
-                            player.source = ""
-                            player.source = currentStationUrl
-                            fetchStreamMetadata(currentStationUrl)
-                            player.play()
-                            lastBufferProgress = 0
-                            lastBufferUpdateTime = Date.now()
-                        }
-                    })
-                }
-            }
-        }
-        
-        onErrorOccurred: function(error, errorString) {
-            console.log("AudioStreamer: Player error:", error, errorString)
-            
-            // Attempt restart on network/resource errors if we have a valid station
-            if (currentStationUrl !== "" && !userPaused && restartAttempts < maxRestartAttempts) {
-                console.log("AudioStreamer: Attempting restart due to player error...")
+        function onErrorChanged() {
+            if (playbackController.main.error === 0) return
+            console.log("AudioEngine: Main player error:",
+                        playbackController.main.errorString)
+            if (currentStationUrl !== "" && !userPaused &&
+                    restartAttempts < maxRestartAttempts) {
                 restartAttempts++
-                
                 Qt.callLater(function() {
-                    if (currentStationUrl !== "" && !userPaused) {
-                        console.log("AudioStreamer: Restarting after error (attempt", restartAttempts, "of", maxRestartAttempts + ")")
-                        player.stop()
-                        player.source = ""
-                        Qt.callLater(function() {
-                            player.source = currentStationUrl
-                            silentPlaybackDetector.start()
-                            player.play()
-                        })
-                    }
+                    if (currentStationUrl !== "" && !userPaused)
+                        playbackController.restartMain(currentStationUrl)
                 })
             }
         }
-
     }
-    
-    
-    // Preview player for search results
-    MediaPlayer {
-        id: previewPlayer
-        autoPlay: false
-        loops: MediaPlayer.Infinite
-        audioOutput: AudioOutput {
-            id: previewAudioOut
-            volume: compactVolumeSlider.value * 0.7  // Slightly lower volume for preview
-            muted: false
+
+    Connections {
+        target: playbackController.preview
+        function onPlaybackStateChanged() {
+            isPreviewPlaying = playbackController.previewPlaying
         }
-        
-        onErrorOccurred: function(error, errorString) {
-            console.log("=== PREVIEW PLAYER ERROR ===")
-            console.log("Error code:", error)
-            console.log("Error string:", errorString)
-            console.log("Current source:", source)
+        function onErrorChanged() {
+            if (playbackController.preview.error === 0) return
+            console.log("Preview AudioEngine error:",
+                        playbackController.preview.errorString)
             isPreviewPlaying = false
         }
-        
-        onPlaybackStateChanged: {
-            var stateNames = ["Stopped", "Playing", "Paused"]
-            console.log("Preview playback state changed to:", stateNames[playbackState] || playbackState)
-            isPreviewPlaying = (playbackState === MediaPlayer.PlayingState)
-        }
     }
-    
+
     function startPreview(url) {
         console.log("Starting preview for:", url)
-        // Stop main player if playing
-        if (player.playbackState === MediaPlayer.PlayingState) {
-            player.stop()
-            songUpdateTimer.stop()
-            idleResetTimer.stop()
-            silentPlaybackDetector.stop()
-        }
-        
-        // Stop any existing preview
-        previewPlayer.stop()
-        
-        // Start new preview
+        songUpdateTimer.stop()
+        idleResetTimer.stop()
+        silentPlaybackDetector.stop()
         previewStationUrl = url
+        playbackController.startPreview(url)
         isPreviewPlaying = true
-        previewPlayer.source = url
-        previewPlayer.play()
     }
-    
+
     function stopPreview() {
         console.log("Stopping preview")
-        previewPlayer.stop()
+        playbackController.stopPreview()
         previewStationUrl = ""
         isPreviewPlaying = false
     }
@@ -1085,64 +994,43 @@ Item {
         
         switch(command) {
             case "playpause":
-                if (player.playbackState === MediaPlayer.PlayingState) {
-                    console.log("Remote: Pausing playback")
-                    player.pause()
+                if (playbackController.mainActive) {
+                    console.log("Remote: Suspending active playback")
+                    playbackController.suspendMain()
                     userPaused = true
                     songUpdateTimer.stop()
                     idleResetTimer.stop()
-                } else if (currentStationUrl !== "" && (player.playbackState === MediaPlayer.PausedState || userPaused)) {
-                    console.log("Remote: Resuming playback")
-                    console.log("Fetching updated song metadata")
-
-                    // Fetch fresh metadata before playing
+                    silentPlaybackDetector.stop()
+                    ebookProgressTimer.stop()
+                } else if (currentEbookUrl !== "") {
+                    console.log("Remote: Explicitly resuming audiobook")
+                    userPaused = false
+                    if (playbackController.main.playbackState === playbackController.pausedState) {
+                        playbackController.playMain()
+                        ebookProgressTimer.start()
+                    } else if (currentEbookChapterIndex >= 0
+                               && currentEbookChapterIndex < currentEbookChapters.length) {
+                        var saved = ebookProgress[currentEbookUrl]
+                        var resumePosition = saved && saved.chapterIndex === currentEbookChapterIndex
+                                           ? (saved.position || 0) : 0
+                        playEbookChapter(currentEbookChapterIndex, resumePosition)
+                    }
+                } else if (currentStationUrl !== "") {
+                    console.log("Remote: Explicitly resuming radio playback")
                     fetchStreamMetadata(currentStationUrl)
-
                     lastBufferProgress = 0
                     lastBufferUpdateTime = Date.now()
-
-                    // Use deferred play pattern to ensure proper initialization after idle
-                    player.stop()
-                    player.source = ""
-                    Qt.callLater(function() {
-                        player.source = currentStationUrl
-                        Qt.callLater(function() {
-                            player.play()
-                            userPaused = false
-                            songUpdateTimer.start()
-                            idleResetTimer.start()
-                            silentPlaybackDetector.start()
-                        })
-                    })
-                } else if (currentStationUrl !== "" && player.playbackState === MediaPlayer.StoppedState) {
-                    console.log("Remote: Starting playback from stopped state")
-                    console.log("Fetching updated song metadata")
-
-                    // Fetch fresh metadata before playing
-                    fetchStreamMetadata(currentStationUrl)
-
-                    lastBufferProgress = 0
-                    lastBufferUpdateTime = Date.now()
-
-                    // Use deferred play pattern to ensure proper initialization after idle
-                    player.stop()
-                    player.source = ""
-                    Qt.callLater(function() {
-                        player.source = currentStationUrl
-                        Qt.callLater(function() {
-                            player.play()
-                            userPaused = false
-                            songUpdateTimer.start()
-                            idleResetTimer.start()
-                            silentPlaybackDetector.start()
-                        })
-                    })
-                } else if (currentStationUrl === "") {
+                    userPaused = false
+                    if (playbackController.main.playbackState === playbackController.pausedState)
+                        playbackController.playMain()
+                    else
+                        playbackController.restartMain(currentStationUrl)
+                    songUpdateTimer.start()
+                    idleResetTimer.start()
+                    silentPlaybackDetector.start()
+                } else {
                     console.log("Remote: No station selected, starting random station")
-                    console.log("Current state - inSource:", inSource, "currentSource:", currentSource)
-                    console.log("sourcesModel count:", sourcesModel.count)
-                    var result = playRandomStation()
-                    console.log("playRandomStation result:", result)
+                    playRandomStation()
                 }
                 break
             
@@ -1289,9 +1177,8 @@ Item {
         if (RadioData.radcapCategories) {
             console.log("RadioData.radcapCategories length:", RadioData.radcapCategories.length)
         }
-        console.log("MediaPlayer available:", typeof player)
-        console.log("AudioOutput available:", typeof audioOut)
-        console.log("Initial player state:", player.playbackState)
+        console.log("PlaybackController available:", typeof playbackController)
+        console.log("Initial AudioEngine state:", playbackController.main.playbackState)
         loadVolumeLevel()
         console.log("Loaded volume level")
         loadFavorites()
@@ -1450,21 +1337,21 @@ Item {
                     if (streamUrl) {
                         console.log("=== SETTING STREAM URL ===")
                         console.log("Stream URL:", streamUrl)
-                        player.source = streamUrl
+                        playbackController.main.source = streamUrl
                     } else {
                         console.log("Could not extract stream URL, falling back to direct stream")
                         var baseUrl = playlistUrl.replace("." + format, "")
                         console.log("Fallback URL:", baseUrl)
-                        player.source = baseUrl
-                        player.play()
+                        playbackController.main.source = baseUrl
+                        playbackController.playMain()
                     }
                 } else {
                     console.log("Failed to fetch playlist:", xhr.status)
                     // Fallback to direct stream
                     var baseUrl = playlistUrl.replace("." + format, "")
                     console.log("Fallback to direct stream:", baseUrl)
-                    player.source = baseUrl
-                    player.play()
+                    playbackController.main.source = baseUrl
+                    playbackController.playMain()
                 }
             }
         }
@@ -2944,7 +2831,7 @@ Item {
             debugMetadata = "Reloading with new quality..."
             
             songUpdateTimer.stop()
-            player.stop()
+            playbackController.main.stop()
             console.log("=== RELOADING STATION ===")
             console.log("Old URL:", currentStationUrl)
             console.log("New URL:", streamUrl)
@@ -2957,11 +2844,11 @@ Item {
             lastBufferUpdateTime = Date.now()
 
             // Clear source first and use deferred play pattern to ensure proper initialization
-            player.source = ""
+            playbackController.main.source = ""
             Qt.callLater(function() {
-                player.source = streamUrl
+                playbackController.main.source = streamUrl
                 Qt.callLater(function() {
-                    player.play()
+                    playbackController.playMain()
                     songUpdateTimer.start()
                     idleResetTimer.start()
                     silentPlaybackDetector.start()
@@ -3571,7 +3458,7 @@ Item {
         console.log("Stream URL:", streamUrl)
         
         songUpdateTimer.stop()
-        player.stop()
+        playbackController.main.stop()
 
         // Fetch live song metadata and start timer
         fetchStreamMetadata(streamUrl)
@@ -3583,11 +3470,11 @@ Item {
 
         // Clear source first and use deferred play pattern to ensure proper initialization
         // This fixes the issue where playback fails after being idle for a while
-        player.source = ""
+        playbackController.main.source = ""
         Qt.callLater(function() {
-            player.source = streamUrl
+            playbackController.main.source = streamUrl
             Qt.callLater(function() {
-                player.play()
+                playbackController.playMain()
                 songUpdateTimer.start()
                 idleResetTimer.start()
                 silentPlaybackDetector.start()
@@ -3820,7 +3707,7 @@ Item {
         console.log("Stream URL:", streamUrl)
         
         songUpdateTimer.stop()
-        player.stop()
+        playbackController.main.stop()
         
         // Update navigation context for the new station
         updateCurrentStationsList()
@@ -3834,11 +3721,11 @@ Item {
         lastBufferUpdateTime = Date.now()
 
         // Clear source first and use deferred play pattern to ensure proper initialization
-        player.source = ""
+        playbackController.main.source = ""
         Qt.callLater(function() {
-            player.source = streamUrl
+            playbackController.main.source = streamUrl
             Qt.callLater(function() {
-                player.play()
+                playbackController.playMain()
                 songUpdateTimer.start()
                 idleResetTimer.start()
                 silentPlaybackDetector.start()
@@ -4050,7 +3937,7 @@ Item {
         console.log("Stream URL:", streamUrl)
         
         songUpdateTimer.stop()
-        player.stop()
+        playbackController.main.stop()
 
         // Fetch live song metadata
         fetchStreamMetadata(streamUrl)
@@ -4060,11 +3947,11 @@ Item {
 
         // Clear source first and use deferred play pattern to ensure proper initialization
         // This fixes the issue where playback fails after being idle for a while
-        player.source = ""
+        playbackController.main.source = ""
         Qt.callLater(function() {
-            player.source = streamUrl
+            playbackController.main.source = streamUrl
             Qt.callLater(function() {
-                player.play()
+                playbackController.playMain()
                 songUpdateTimer.start()
                 idleResetTimer.start()
                 silentPlaybackDetector.start()
@@ -4113,7 +4000,7 @@ Item {
         
         // Stop any current radio playback first
         songUpdateTimer.stop()
-        player.stop()
+        playbackController.main.stop()
         
         console.log("Loading ebook chapters from RSS:", ebook.url)
         
@@ -4237,23 +4124,26 @@ Item {
         
         // Stop current playback and start ebook chapter
         songUpdateTimer.stop()
-        player.stop()
+        playbackController.main.stop()
 
         // Reset pause state
         userPaused = false
 
         // Use deferred play pattern to ensure proper initialization after idle
-        player.source = ""
+        playbackController.main.source = ""
         Qt.callLater(function() {
-            player.source = chapter.url
+            playbackController.main.source = chapter.url
             Qt.callLater(function() {
-                if (startPosition) {
-                    player.setPosition(startPosition)
+                playbackController.playMain()
+                if (startPosition && !playbackController.seekMain(startPosition)) {
+                    // Never overwrite saved progress by silently restarting at zero.
+                    playbackController.stopMain()
+                    userPaused = true
+                    ebookProgressTimer.stop()
+                    debugMetadata = "This audiobook stream cannot resume from its saved position"
+                    return
                 }
-                player.play()
-                // Start ebook progress timer
                 ebookProgressTimer.start()
-                // Save progress
                 saveEbookProgress()
             })
         })
@@ -4271,10 +4161,83 @@ Item {
         }
     }
 
+    function dismissKeyboard() {
+        if (Qt.inputMethod.visible)
+            Qt.inputMethod.hide()
+        root.forceActiveFocus()
+    }
+
+    // Returns true when the app consumed Back. A false result lets the
+    // standalone window close while Plasma keeps its existing popup behavior.
+    function handleBackNavigation() {
+        dismissKeyboard()
+        if (showCustomEbookDialog) {
+            showCustomEbookDialog = false
+            return true
+        }
+        if (showEbookSearchDialog) {
+            showEbookSearchDialog = false
+            return true
+        }
+        if (showSearchDialog) {
+            stopPreview()
+            showSearchDialog = false
+            return true
+        }
+        if (showCustomDialog) {
+            showCustomDialog = false
+            return true
+        }
+        if (isSearchMode) {
+            searchField.text = ""
+            searchResultsModel.clear()
+            isSearchMode = false
+            return true
+        }
+        if (inMiscGenre && !inCategory) {
+            inMiscGenre = false
+            currentMiscGenre = ""
+            loadCategories(RadioData.miscGenreGroups)
+            return true
+        }
+        if (inCategory) {
+            stationsModel.clear()
+            currentCategory = ""
+            inCategory = false
+            if (!inSource || currentSource === "⭐ Favorites" || currentSource === "🔗 Custom Radio") {
+                inSource = false
+                currentSource = ""
+            }
+            return true
+        }
+        if (inSource) {
+            categoriesModel.clear()
+            currentSource = ""
+            inSource = false
+            return true
+        }
+        if (showPopup) {
+            showPopup = false
+            return true
+        }
+        return false
+    }
+
+    onShowCustomDialogChanged: if (!showCustomDialog) dismissKeyboard()
+    onShowSearchDialogChanged: if (!showSearchDialog) dismissKeyboard()
+    onShowEbookSearchDialogChanged: if (!showEbookSearchDialog) dismissKeyboard()
+    onShowCustomEbookDialogChanged: if (!showCustomEbookDialog) dismissKeyboard()
+
+    Keys.onReleased: function(event) {
+        if (androidBackEnabled && (event.key === Qt.Key_Back || event.key === Qt.Key_Escape)) {
+            event.accepted = handleBackNavigation()
+        }
+    }
+
     // Refined Audio - Main container with subtle gradient
     Rectangle {
         anchors.fill: parent
-        radius: 20
+        radius: isMobile ? 0 : 20
         antialiasing: true
         visible: true  // Always visible in standalone mode
 
@@ -4321,7 +4284,10 @@ Item {
     ColumnLayout {
         id: mainWidget
         anchors.fill: parent
-        anchors.margins: spacingLarge
+        anchors.leftMargin: spacingLarge + effectiveSafeAreaLeft
+        anchors.topMargin: spacingLarge + effectiveSafeAreaTop
+        anchors.rightMargin: spacingLarge + effectiveSafeAreaRight
+        anchors.bottomMargin: spacingLarge + effectiveSafeAreaBottom
         spacing: spacingMedium
         visible: true  // Always visible in standalone mode
 
@@ -4337,6 +4303,7 @@ Item {
             TextField {
                 id: searchField
                 Layout.fillWidth: true
+                Layout.minimumHeight: isMobile ? touchTargetSize : 0
                 placeholderText: "🔍 Search radio stations..."
                 font.pointSize: baseFontSize
                 leftPadding: 14
@@ -4496,7 +4463,7 @@ Item {
                     console.log("Source:", model.source)
                     
                     songUpdateTimer.stop()
-                    player.stop()
+                    playbackController.main.stop()
                     
                     // Update navigation context
                     updateCurrentStationsList()
@@ -4508,11 +4475,11 @@ Item {
                     userPaused = false
 
                     // Use deferred play pattern to ensure proper initialization after idle
-                    player.source = ""
+                    playbackController.main.source = ""
                     Qt.callLater(function() {
-                        player.source = streamUrl
+                        playbackController.main.source = streamUrl
                         Qt.callLater(function() {
-                            player.play()
+                            playbackController.playMain()
                             songUpdateTimer.start()
                             idleResetTimer.start()
                             silentPlaybackDetector.start()
@@ -4699,8 +4666,8 @@ Item {
                             console.log("Navigated back to sources")
                         }
                     }
-                    implicitWidth: Math.max(50, Math.min(80, root.width / 8))
-                    implicitHeight: Math.max(25, Math.min(35, root.height / 25))
+                    implicitWidth: isMobile ? Math.max(88, touchTargetSize) : Math.max(50, Math.min(80, root.width / 8))
+                    implicitHeight: isMobile ? touchTargetSize : Math.max(25, Math.min(35, root.height / 25))
                     contentItem: Text {
                         text: parent.text
                         font: parent.font
@@ -4813,6 +4780,7 @@ Item {
                 Layout.fillWidth: true
                 Button {
                     text: "⬅ Back"
+                    implicitHeight: isMobile ? touchTargetSize : implicitContentHeight + topPadding + bottomPadding
                     onClicked: {
                         if (inCategory) {
                             // Special handling for favorites and custom stations - go directly back to sources
@@ -5135,10 +5103,10 @@ Item {
                         debugMetadata = "Loading new station..."
                         
                         console.log("Stream URL:", streamUrl)
-                        console.log("Player state before:", player.playbackState)
+                        console.log("Player state before:", playbackController.main.playbackState)
                         
                         songUpdateTimer.stop()
-                        player.stop()
+                        playbackController.main.stop()
                         
                         // Update navigation context
                         updateCurrentStationsList()
@@ -5150,11 +5118,11 @@ Item {
                         userPaused = false
 
                         // Use deferred play pattern to ensure proper initialization after idle
-                        player.source = ""
+                        playbackController.main.source = ""
                         Qt.callLater(function() {
-                            player.source = streamUrl
+                            playbackController.main.source = streamUrl
                             Qt.callLater(function() {
-                                player.play()
+                                playbackController.playMain()
                                 songUpdateTimer.start()
                                 idleResetTimer.start()
                                 silentPlaybackDetector.start()
@@ -5334,11 +5302,11 @@ Item {
                 width: 4
                 radius: 2
                 visible: currentStationName !== ""
-                color: player.playbackState === MediaPlayer.PlayingState ? nowPlayingColor : Qt.rgba(nowPlayingColor.r, nowPlayingColor.g, nowPlayingColor.b, 0.4)
+                color: playbackController.main.playbackState === playbackController.playingState ? nowPlayingColor : Qt.rgba(nowPlayingColor.r, nowPlayingColor.g, nowPlayingColor.b, 0.4)
 
                 // Pulsing animation when playing
                 SequentialAnimation on opacity {
-                    running: player.playbackState === MediaPlayer.PlayingState
+                    running: playbackController.main.playbackState === playbackController.playingState
                     loops: Animation.Infinite
                     NumberAnimation { from: 0.7; to: 1.0; duration: 800; easing.type: Easing.InOutSine }
                     NumberAnimation { from: 1.0; to: 0.7; duration: 800; easing.type: Easing.InOutSine }
@@ -5496,8 +5464,8 @@ Item {
                         }
                     }
 
-                    implicitWidth: buttonSize
-                    implicitHeight: buttonSize
+                    implicitWidth: touchTargetSize
+                    implicitHeight: touchTargetSize
                     Layout.alignment: Qt.AlignVCenter
 
                     ToolTip.text: currentEbookUrl ? "Previous chapter" : "Previous station"
@@ -5531,7 +5499,7 @@ Item {
                         }
                     }
 
-                    contentItem: Kirigami.Icon {
+                    contentItem: PortableIcon {
                         source: currentEbookUrl ? "media-seek-backward" : "media-skip-backward"
                         implicitWidth: Math.max(16, Math.min(22, parent.height * 0.5))
                         implicitHeight: implicitWidth
@@ -5552,8 +5520,8 @@ Item {
                     id: playPauseButton
                     enabled: currentStationUrl !== "" || currentEbookUrl !== ""
                     onClicked: {
-                        if (player.playbackState === MediaPlayer.PlayingState) {
-                            player.pause()
+                        if (playbackController.mainActive) {
+                            playbackController.suspendMain()
                             userPaused = true
                             songUpdateTimer.stop()
                             idleResetTimer.stop()
@@ -5567,10 +5535,19 @@ Item {
                             console.log("Current ebook:", currentEbookTitle)
                             console.log("Current chapter index:", currentEbookChapterIndex)
 
+                            userPaused = false
                             if (currentEbookChapterIndex >= 0 && currentEbookChapterIndex < currentEbookChapters.length) {
-                                // Resume current chapter
-                                player.play()
-                                ebookProgressTimer.start()
+                                if (playbackController.main.playbackState === playbackController.pausedState) {
+                                    // Resume the existing decoder session without resetting position.
+                                    playbackController.playMain()
+                                    ebookProgressTimer.start()
+                                } else {
+                                    var savedProgress = ebookProgress[currentEbookUrl]
+                                    var savedPosition = savedProgress
+                                                        && savedProgress.chapterIndex === currentEbookChapterIndex
+                                                        ? (savedProgress.position || 0) : 0
+                                    playEbookChapter(currentEbookChapterIndex, savedPosition)
+                                }
                             } else if (currentEbookChapters.length > 0) {
                                 // Start from first chapter
                                 playEbookChapter(0)
@@ -5591,34 +5568,25 @@ Item {
                             fetchStreamMetadata(currentStationUrl)
 
                             // Check if player source is still valid after idle period
-                            if (player.source !== currentStationUrl) {
+                            if (playbackController.main.source !== currentStationUrl) {
                                 console.log("Player source mismatch after idle, resetting...")
                                 console.log("Expected:", currentStationUrl)
-                                console.log("Current:", player.source)
-                                player.source = currentStationUrl
+                                console.log("Current:", playbackController.main.source)
+                                playbackController.main.source = currentStationUrl
                             }
 
-                            // Force source refresh if player seems to have lost connection or is in problematic state
-                            if (player.mediaStatus === MediaPlayer.NoMedia ||
-                                player.mediaStatus === MediaPlayer.InvalidMedia ||
-                                player.playbackState === MediaPlayer.StoppedState) {
-                                console.log("Media lost/stopped after idle, refreshing source...")
-                                console.log("Media status:", player.mediaStatus, "Playback state:", player.playbackState)
-                                player.stop()
-                                player.source = ""  // Clear source first
-                                Qt.callLater(function() {
-                                    player.source = currentStationUrl  // Reset source
-                                    Qt.callLater(function() {
-                                        // Start playback after source is set
-                                        player.play()
-                                        songUpdateTimer.start()
-                                        idleResetTimer.start()
-                                        silentPlaybackDetector.start()
-                                    })
-                                })
+                            // Recreate stopped/error sessions through the shared controller.
+                            var playbackState = playbackController.main.playbackState
+                            if (playbackState === playbackController.errorState ||
+                                playbackState === playbackController.stoppedState) {
+                                console.log("AudioEngine stopped after idle; refreshing source")
+                                playbackController.restartMain(currentStationUrl)
+                                songUpdateTimer.start()
+                                idleResetTimer.start()
+                                silentPlaybackDetector.start()
                             } else {
                                 // Normal playback path
-                                player.play()
+                                playbackController.playMain()
                                 songUpdateTimer.start()
                                 idleResetTimer.start()
                                 silentPlaybackDetector.start()
@@ -5626,8 +5594,8 @@ Item {
                         }
                     }
 
-                    implicitWidth: Math.max(50, Math.min(60, root.width / 11))
-                    implicitHeight: Math.max(50, Math.min(60, root.height / 13))
+                    implicitWidth: isMobile ? Math.max(56, touchTargetSize) : Math.max(50, Math.min(60, root.width / 11))
+                    implicitHeight: isMobile ? Math.max(56, touchTargetSize) : Math.max(50, Math.min(60, root.height / 13))
                     Layout.alignment: Qt.AlignVCenter
 
                     // Main play button - larger, more prominent with accent gradient
@@ -5676,8 +5644,8 @@ Item {
                         }
                     }
 
-                    contentItem: Kirigami.Icon {
-                        source: player.playbackState === MediaPlayer.PlayingState ? "media-playback-pause" : "media-playback-start"
+                    contentItem: PortableIcon {
+                        source: playbackController.mainActive ? "media-playback-pause" : "media-playback-start"
                         implicitWidth: Math.max(22, Math.min(28, playPauseButton.height * 0.5))
                         implicitHeight: implicitWidth
                         color: {
@@ -5706,8 +5674,8 @@ Item {
                         }
                     }
 
-                    implicitWidth: buttonSize
-                    implicitHeight: buttonSize
+                    implicitWidth: touchTargetSize
+                    implicitHeight: touchTargetSize
                     Layout.alignment: Qt.AlignVCenter
 
                     ToolTip.text: currentEbookUrl ? "Next chapter" : "Next station"
@@ -5742,7 +5710,7 @@ Item {
                         }
                     }
 
-                    contentItem: Kirigami.Icon {
+                    contentItem: PortableIcon {
                         source: currentEbookUrl ? "media-seek-forward" : "media-skip-forward"
                         implicitWidth: Math.max(16, Math.min(22, nextButton.height * 0.5))
                         implicitHeight: implicitWidth
@@ -5765,8 +5733,8 @@ Item {
                     id: randomButton
                     enabled: true  // Always enabled since it can pick from all sources
                     onClicked: playRandomStation()
-                    implicitWidth: buttonSize
-                    implicitHeight: buttonSize
+                    implicitWidth: touchTargetSize
+                    implicitHeight: touchTargetSize
                     Layout.alignment: Qt.AlignVCenter
 
                     ToolTip.text: "Random station"
@@ -5805,7 +5773,7 @@ Item {
                         }
                     }
 
-                    contentItem: Kirigami.Icon {
+                    contentItem: PortableIcon {
                         source: "media-playlist-shuffle"
                         implicitWidth: Math.max(16, Math.min(22, randomButton.height * 0.5))
                         implicitHeight: implicitWidth
@@ -5903,7 +5871,7 @@ Item {
         // Dedicated Timeline Container for Audiobooks (as part of main layout)
         Rectangle {
             id: timelineContainer
-            visible: currentEbookUrl !== "" && player.playbackState === MediaPlayer.PlayingState
+            visible: currentEbookUrl !== "" && playbackController.main.playbackState === playbackController.playingState
             Layout.fillWidth: true
             Layout.preferredHeight: visible ? 60 : 0
             Layout.maximumHeight: visible ? 60 : 0
@@ -5932,8 +5900,8 @@ Item {
                 Slider {
                     id: dedicatedEbookSlider
                     from: 0
-                    to: player.duration || 1
-                    value: player.position || 0
+                    to: playbackController.main.duration || 1
+                    value: playbackController.main.position || 0
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
                     
@@ -5944,34 +5912,34 @@ Item {
                             userSeeking = true
                         } else {
                             userSeeking = false
-                            if (currentEbookUrl && player.duration > 0) {
-                                player.setPosition(value)
-                                saveEbookProgress()
+                            if (currentEbookUrl && playbackController.main.duration > 0) {
+                                if (playbackController.seekMain(value)) {
+                                    saveEbookProgress()
+                                } else {
+                                    dedicatedEbookSlider.value = playbackController.main.position
+                                }
                             }
                         }
                     }
                     
                     Connections {
-                        target: player
+                        target: playbackController.main
                         function onPositionChanged() {
                             if (!dedicatedEbookSlider.userSeeking && currentEbookUrl) {
-                                dedicatedEbookSlider.value = player.position
+                                dedicatedEbookSlider.value = playbackController.main.position
                             }
                         }
                     }
                     
-                    onValueChanged: {
-                        if (userSeeking && currentEbookUrl && player.duration > 0) {
-                            player.setPosition(value)
-                        }
-                    }
+                    // Seek only once on release; this avoids flooding the engine
+                    // and only commits progress after AudioEngine accepts it.
                 }
                 
                 Label {
                     text: {
-                        if (player.duration > 0) {
-                            var current = Math.floor(player.position / 1000)
-                            var total = Math.floor(player.duration / 1000)
+                        if (playbackController.main.duration > 0) {
+                            var current = Math.floor(playbackController.main.position / 1000)
+                            var total = Math.floor(playbackController.main.duration / 1000)
                             var currentMin = Math.floor(current / 60)
                             var currentSec = current % 60
                             var totalMin = Math.floor(total / 60)

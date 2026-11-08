@@ -2,10 +2,9 @@
 import QtQuick
 import QtQuick.Controls
 import Qt.labs.settings
-import org.kde.kirigami as Kirigami
 import SessionMonitor 1.0
 
-Kirigami.ApplicationWindow {
+ApplicationWindow {
     id: window
     title: "DonutRadio"
     width: 400
@@ -13,6 +12,14 @@ Kirigami.ApplicationWindow {
     minimumWidth: 300
     minimumHeight: 400
     visible: true
+    readonly property bool mobilePlatform: Qt.platform.os === "android" || Qt.platform.os === "ios"
+
+    // Android Back first dismisses dialogs/keyboards or navigates the shared
+    // hierarchy. The window closes only when MainContent has nothing to pop.
+    onClosing: function(close) {
+        if (mobilePlatform && mainContent.handleBackNavigation())
+            close.accepted = false
+    }
 
     // Let dark theme control the window background
     background: Rectangle {
@@ -49,6 +56,14 @@ Kirigami.ApplicationWindow {
         id: mainContent
         anchors.fill: parent
         sessionMonitor: sessionMonitor
+        isMobile: window.mobilePlatform
+        // Qt 6.6's Android window content rect already excludes system bars.
+        // Keep explicit capability values so newer edge-to-edge adapters can
+        // provide additional cutout insets without forking MainContent.
+        safeAreaLeft: 0
+        safeAreaTop: 0
+        safeAreaRight: 0
+        safeAreaBottom: 0
 
         // Standalone mode - no panel integration
         isCompactMode: false
@@ -76,6 +91,39 @@ Kirigami.ApplicationWindow {
             loadVolumeLevel()
             loadLastStation()
             loadSources()
+        }
+
+        function syncAndroidMedia() {
+            if (!mainPlaybackEngaged || currentStationUrl === "") {
+                AndroidMedia.stopService()
+                return
+            }
+            AndroidMedia.updatePlaybackState(mainPlaybackPlaying,
+                                             currentStationName || "DonutRadio",
+                                             currentSongTitle || currentArtist)
+        }
+
+        onCurrentStationUrlChanged: syncAndroidMedia()
+        onCurrentStationNameChanged: syncAndroidMedia()
+        onCurrentSongTitleChanged: syncAndroidMedia()
+        onCurrentArtistChanged: syncAndroidMedia()
+        onMainPlaybackPlayingChanged: syncAndroidMedia()
+        onMainPlaybackEngagedChanged: syncAndroidMedia()
+
+        Connections {
+            target: AndroidMedia
+            function onPlayRequested() {
+                if (mainContent.userPaused) mainContent.handleRemoteCommand("playpause")
+            }
+            function onPauseRequested() {
+                if (!mainContent.userPaused) mainContent.handleRemoteCommand("playpause")
+            }
+            function onStopRequested() {
+                if (!mainContent.userPaused) mainContent.handleRemoteCommand("playpause")
+                Qt.callLater(function() { AndroidMedia.stopService() })
+            }
+            function onNextRequested() { mainContent.playNextStation() }
+            function onPreviousRequested() { mainContent.playPreviousStation() }
         }
 
         // Save changes back to persistent settings

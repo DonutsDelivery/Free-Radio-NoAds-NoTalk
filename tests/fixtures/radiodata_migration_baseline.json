@@ -1,0 +1,16 @@
+{
+  "algorithm": "sha256 of compact JSON with sorted object keys; array order preserved",
+  "favoriteIdentity": [
+    "name",
+    "host",
+    "path"
+  ],
+  "exports": {
+    "somafmCategories": "0660a4df92b14eefbd2eac9b0ad4fcb7e6cdeca7df2839eb345b50cb7d1d0e42",
+    "radcapCategories": "3daad6c7b8de26797d1b1a1745f852d4969f217ed96d5fecf8b372e7dd38e530",
+    "radioParadiseCategories": "99529127c9e3660b83ab90d4b0f0c635c9d0ec97521f3dd625d03e0dbcd0e55f",
+    "fipCategories": "314f950be30de613c4c0cc015792e1f7af9950ec74cdfa6fc8e7cec43266c253",
+    "miscCategories": "310151d75e9cb45952857b73ace0419565db4edad242ff977ef28b0d930d50a6",
+    "miscGenreGroups": "fe70fd6c53d0aa66cb983ba05d64663be510d540d6c8cb404d207c87ab48b0b7"
+  }
+}

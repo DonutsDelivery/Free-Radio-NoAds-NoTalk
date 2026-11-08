@@ -24,9 +24,14 @@ A cross-platform internet radio player with curated ad-free stations. Available 
 |----------|----------|
 | **Windows** | [Installer (Recommended)](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/DonutRadio-Setup-x64.exe) \| [Portable](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/DonutRadio-Windows-Portable-x64.zip) |
 | **Linux** | [AppImage](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/DonutRadio-Linux-x86_64.AppImage) \| [Plasma Widget](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/donutradio.plasmoid) |
-| **macOS** | [DMG](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/DonutRadio-macOS.dmg) |
+| **macOS (compatibility build)** | [DMG](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/DonutRadio-macOS.dmg) |
 
 > Download links will be available after the first release is published.
+>
+> The macOS DMG is not stable supported until the exact package passes real Apple
+> hardware CoreAudio, network playback, signing/notarization, and sustained-use
+> acceptance. See
+> [`docs/platform-build-and-acceptance.md`](docs/platform-build-and-acceptance.md).
 
 ## Features
 

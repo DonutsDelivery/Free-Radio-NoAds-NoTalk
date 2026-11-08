@@ -11,6 +11,10 @@ Makefile
 *.so
 *.a
 
+# Python cache
+__pycache__/
+*.py[cod]
+
 # IDE
 .vscode/
 .idea/
@@ -25,3 +29,23 @@ Thumbs.db
 # Research/reference directories (contain Windows-incompatible filenames)
 radcap channels/
 radcap-radio-widget/
+
+# >>> kspec managed
+.kspec/
+.kspec-sessions/
+plans/
+.kspec-worktrees/
+.kspec-dispatch-workspace.json
+.kspec-dispatch-shadow-mutation
+.kspec-dispatch-shadow-mutation.lock/
+# <<< kspec managed
+
+# Local build output and agent runtime state
+freeradio/build-*/
+freeradio/dist/
+.beads/beads.db
+.beads/daemon*
+.beads/last-touched
+.claude/worktrees/
+.claude/settings.local.json
+.gitignore.backup*

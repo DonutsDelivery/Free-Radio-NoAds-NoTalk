@@ -1,0 +1,20 @@
+FFmpeg notice for Free Radio
+
+Free Radio can be linked to FFmpeg 8.0.3, configured as an LGPL-2.1-or-later
+shared library. FFmpeg is a separate work and is not part of Free Radio's
+source code.
+
+Copyright (c) 2000-2026 the FFmpeg developers.
+Project: https://ffmpeg.org/
+Pinned source: https://ffmpeg.org/releases/ffmpeg-8.0.3.tar.xz
+SHA-256: 6136812ea6d4e68bdba27e33c2a94382711cdf4f8602ffef056ff792bd6f9818
+License: GNU Lesser General Public License, version 2.1 or later.
+
+The complete license text is in FFmpeg-LGPL-2.1-or-later.txt. Free Radio's
+build disables GPL, nonfree, and LGPLv3 components. Distributors must ship
+this notice, the license, the exact configuration, and corresponding FFmpeg
+source with binary packages. The provisioning scripts stage those materials
+for Android packages. Users may replace the dynamically linked FFmpeg shared
+libraries with compatible modified builds.
+
+FFmpeg is provided without warranty, as described by its license.

@@ -1,5 +1,11 @@
+#include <QtGlobal>
+#ifdef Q_OS_ANDROID
+#include <QGuiApplication>
+#else
 #include <QApplication>
+#endif
 #include <QQmlApplicationEngine>
+#include <QQmlComponent>
 #include <QQmlContext>
 #include <QQuickStyle>
 #include <QQuickWindow>
@@ -7,7 +13,9 @@
 #include <QDir>
 #include <QSettings>
 #include <QStringList>
+#include <memory>
 #include "AudioCapture.h"
+#include "AndroidMediaIntegration.h"
 #include "SessionMonitor.h"
 
 static const char kAppId[] = "online.donutsdelivery.DonutRadio";
@@ -51,16 +59,22 @@ static QIcon appIcon()
 
 int main(int argc, char *argv[])
 {
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
     // Force PulseAudio API instead of native PipeWire protocol.
     // Native PipeWire sets PW_STREAM_FLAG_DONT_RECONNECT which kills the stream
     // when monitors DPMS off during screen lock (graph reconfiguration).
     // PulseAudio via pipewire-pulse has a ~500ms ring buffer that survives this.
     qputenv("QT_AUDIO_BACKEND", "pulseaudio");
+#endif
 
     // Enable GPU acceleration where available
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
+#ifdef Q_OS_ANDROID
+    QGuiApplication app(argc, argv);
+#else
     QApplication app(argc, argv);
+#endif
 
     app.setApplicationVersion("2.0.0");
     migrateLegacySettings();  // sets the application, organization and domain names
@@ -68,10 +82,13 @@ int main(int argc, char *argv[])
     QGuiApplication::setDesktopFileName(kAppId);
     app.setWindowIcon(appIcon());
 
-    // Use appropriate style per platform
-    // Try org.kde.desktop first (KDE), fall back to Fusion (works everywhere)
+    // Use a native mobile control style; desktop keeps the KDE integration.
     if (QQuickStyle::name().isEmpty()) {
+#ifdef Q_OS_ANDROID
+        QQuickStyle::setStyle("Material");
+#else
         QQuickStyle::setStyle("org.kde.desktop");
+#endif
     }
 
     // Register types with QML
@@ -79,6 +96,31 @@ int main(int argc, char *argv[])
     qmlRegisterType<SessionMonitor>("SessionMonitor", 1, 0, "SessionMonitor");
 
     QQmlApplicationEngine engine;
+    // qt_add_qml_module places FreeRadio.Audio beside the build output under
+    // qml/. Installed builds also find it through Qt's standard import path.
+    engine.addImportPath(QCoreApplication::applicationDirPath() + "/qml");
+
+#ifdef FREERADIO_AUDIO_CORE_AVAILABLE
+#ifdef FREERADIO_BUILD_QML_IMPORT_PATH
+    engine.addImportPath(QStringLiteral(FREERADIO_BUILD_QML_IMPORT_PATH));
+#endif
+    const QString appDir = QCoreApplication::applicationDirPath();
+    engine.addImportPath(QDir::cleanPath(appDir + QStringLiteral("/qml")));
+    engine.addImportPath(QDir::cleanPath(appDir + QStringLiteral("/../Resources/qml")));
+    engine.addImportPath(QDir::cleanPath(appDir + QStringLiteral("/../lib/qt6/qml")));
+    if (app.arguments().contains(QStringLiteral("--audio-qml-smoke"))) {
+        QQmlComponent smoke(&engine);
+        smoke.setData("import QtQml\nimport FreeRadio.Audio 1.0\nAudioEngine {}", QUrl());
+        std::unique_ptr<QObject> instance(smoke.create());
+        if (!instance) {
+            qCritical().noquote() << smoke.errorString();
+            return 2;
+        }
+        return 0;
+    }
+#endif
+    AndroidMediaIntegration androidMedia;
+    engine.rootContext()->setContextProperty("AndroidMedia", &androidMedia);
 
     // Try to load from Qt resources first (bundled app)
     QUrl qmlUrl = QUrl("qrc:/ui/main.qml");

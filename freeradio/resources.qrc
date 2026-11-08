@@ -3,12 +3,10 @@
         <file alias="ui/main.qml">contents/ui/main_standalone.qml</file>
         <file alias="ui/MainContent.qml">contents/ui/MainContent.qml</file>
         <file alias="ui/radiodata.js">contents/ui/radiodata.js</file>
-        <file alias="ui/radiodata_radcap.js">contents/ui/radiodata_radcap.js</file>
         <file alias="ui/fft.js">contents/ui/fft.js</file>
-        <file alias="ui/MinimalPlayer.qml">contents/ui/MinimalPlayer.qml</file>
+        <file alias="ui/PlaybackController.qml">contents/ui/PlaybackController.qml</file>
+        <file alias="ui/PortableIcon.qml">contents/ui/PortableIcon.qml</file>
         <file alias="ui/RemoteControl.qml">contents/ui/RemoteControl.qml</file>
-        <file alias="ui/SystemAudioCapture.qml">contents/ui/SystemAudioCapture.qml</file>
-        <file alias="ui/AudioStreamer.qml">contents/ui/AudioStreamer.qml</file>
         <file alias="icons/32.png">icons/hicolor/32x32/apps/online.donutsdelivery.DonutRadio.png</file>
         <file alias="icons/64.png">icons/hicolor/64x64/apps/online.donutsdelivery.DonutRadio.png</file>
         <file alias="icons/128.png">icons/hicolor/128x128/apps/online.donutsdelivery.DonutRadio.png</file>
