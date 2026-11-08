@@ -1,67 +1,54 @@
 # Maintainer: DonutsDelivery <megusta52@proton.me>
-pkgname=plasma6-applet-freeradio
-pkgver=1.5.6
+pkgname=donutradio
+pkgver=2.0.0
 pkgrel=1
-pkgdesc="Ad-free internet radio widget for KDE Plasma 6"
-arch=('any')
+pkgdesc="Internet radio player with curated ad-free stations, plus a KDE Plasma 6 widget"
+arch=('x86_64' 'aarch64')
 url="https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk"
 license=('GPL-2.0-or-later')
-depends=('plasma-workspace' 'qt6-multimedia' 'qt6-declarative')
-makedepends=('extra-cmake-modules' 'git')
-optdepends=('qt6-websockets: Enhanced streaming features')
-provides=('plasma-applet-freeradio')
-conflicts=('plasma-applet-freeradio' 'plasma5-applet-freeradio')
+depends=('qt6-base' 'qt6-declarative' 'qt6-multimedia' 'kirigami' 'qqc2-desktop-style'
+         'libpulse' 'hicolor-icon-theme')
+makedepends=('cmake' 'extra-cmake-modules')
+optdepends=('plasma-workspace: DonutRadio widget for Plasma 6 panels and desktops')
+provides=('plasma6-applet-freeradio')
+conflicts=('plasma6-applet-freeradio')
+replaces=('plasma6-applet-freeradio')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
-sha256sums=('48f17f4f06ccdc8205535f2a3ccf8385bf1ce6b1805ca211d7b6137a92695c4a')
+# Replace SKIP with the real checksum once the release tag exists.
+sha256sums=('SKIP')
+
+_srcdir() {
+    echo "$srcdir/Free-Radio-NoAds-NoTalk-$pkgver"
+}
 
 prepare() {
-    cd "$srcdir/Free-Radio-NoAds-NoTalk-$pkgver"
-    
-    # Ensure we're building the main freeradio widget
-    if [[ ! -d "freeradio" ]]; then
-        msg2 "Error: freeradio directory not found"
-        exit 1
+    cd "$(_srcdir)"
+
+    if [[ ! -f freeradio/CMakeLists.txt ]]; then
+        error "freeradio/CMakeLists.txt not found in the source tree"
+        return 1
     fi
 }
 
 build() {
-    cd "$srcdir/Free-Radio-NoAds-NoTalk-$pkgver"
-    
-    # Build using the CMakeLists.txt in the root
-    cmake -B build -S . \
+    cmake -B build -S "$(_srcdir)/freeradio" \
         -DCMAKE_INSTALL_PREFIX=/usr \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DKDE_INSTALL_USE_QT_SYS_PATHS=ON
-    
+        -DCMAKE_BUILD_TYPE=Release
     cmake --build build
 }
 
 package() {
-    cd "$srcdir/Free-Radio-NoAds-NoTalk-$pkgver"
-    
-    # Install using cmake if available, otherwise manual install
-    if [[ -f "build/Makefile" ]]; then
-        DESTDIR="$pkgdir" cmake --install build
-    else
-        # Manual installation fallback
-        msg2 "Using manual installation method"
-        
-        # Create target directories
-        install -dm755 "$pkgdir/usr/share/plasma/plasmoids/freeradio"
-        
-        # Copy the widget files
-        cp -r freeradio/* "$pkgdir/usr/share/plasma/plasmoids/freeradio/"
-        
-        # Ensure correct permissions
-        find "$pkgdir/usr/share/plasma/plasmoids/freeradio" -type f -exec chmod 644 {} \;
-        find "$pkgdir/usr/share/plasma/plasmoids/freeradio" -type d -exec chmod 755 {} \;
+    # Installs the donutradio binary, the desktop file, the AppStream metainfo,
+    # the hicolor icons and the Plasma widget (share/plasma/plasmoids/online.donutsdelivery.donutradio).
+    DESTDIR="$pkgdir" cmake --install build
+
+    local plasmoid="$pkgdir/usr/share/plasma/plasmoids/online.donutsdelivery.donutradio"
+    if [[ ! -f "$plasmoid/metadata.json" || ! -f "$plasmoid/contents/ui/main.qml" ]]; then
+        error "Plasma widget was not installed"
+        return 1
     fi
-    
-    # Verify installation
-    if [[ ! -f "$pkgdir/usr/share/plasma/plasmoids/freeradio/metadata.json" ]]; then
-        msg2 "Error: metadata.json not found after installation"
-        exit 1
+    if [[ ! -x "$pkgdir/usr/bin/donutradio" ]]; then
+        error "donutradio binary was not installed"
+        return 1
     fi
-    
-    msg2 "Installation completed successfully"
 }

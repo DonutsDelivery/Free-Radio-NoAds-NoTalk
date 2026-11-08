@@ -3,8 +3,8 @@
 
 set -e
 
-VERSION="1.5.6"
-PKGNAME="plasma6-applet-freeradio"
+VERSION="2.0.0"
+PKGNAME="donutradio"
 
 echo "=== Preparing Release v$VERSION for AUR ==="
 
@@ -71,12 +71,7 @@ if git rev-parse "v$VERSION" >/dev/null 2>&1; then
     echo "✓ Tag v$VERSION already exists"
 else
     echo "Creating tag v$VERSION..."
-    git tag -a "v$VERSION" -m "Release version $VERSION
-
-- Revert to Qt MediaPlayer for reliable audio playback
-- Remove experimental spectrum visualizer
-- Stable radio streaming functionality
-- Compatible with KDE Plasma 6"
+    git tag -a "v$VERSION" -m "DonutRadio $VERSION"
     echo "✓ Created tag v$VERSION"
     echo "Remember to push the tag: git push origin v$VERSION"
 fi

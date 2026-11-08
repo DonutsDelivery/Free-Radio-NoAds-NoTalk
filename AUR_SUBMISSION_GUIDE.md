@@ -1,124 +1,64 @@
-# AUR Submission Guide for plasma6-applet-freeradio
+# AUR submission guide for donutradio
 
-This guide explains how to submit the Free Radio widget to the Arch User Repository (AUR).
+This guide covers publishing the `donutradio` package to the Arch User Repository (AUR). The package builds the DonutRadio app and installs the DonutRadio Plasma 6 widget with it. It replaces the older `plasma6-applet-freeradio` package.
 
 ## Prerequisites
 
-1. **AUR Account**: Create an account at https://aur.archlinux.org/register/
-2. **SSH Key**: Generate and add SSH key to your AUR account
-3. **Git**: Ensure git is installed and configured
+1. An AUR account (https://aur.archlinux.org/register/).
+2. An SSH key added to that account.
+3. `git` and `makepkg` installed.
 
-## Files Created
+## Files
 
-- `PKGBUILD` - Build script for Arch Linux
-- `.SRCINFO` - Package metadata for AUR
-- `AUR_SUBMISSION_GUIDE.md` - This guide
+- `PKGBUILD` builds `freeradio/` with CMake and runs `cmake --install` into the package.
+- `.SRCINFO` is the AUR metadata. Regenerate it with `makepkg --printsrcinfo > .SRCINFO`.
 
-## Package Details
+## Package details
 
-- **Package Name**: `plasma6-applet-freeradio`
-- **Version**: 1.5.6
-- **Description**: Ad-free internet radio widget for KDE Plasma 6
-- **License**: GPL-2.0-or-later
-- **Dependencies**:
-  - plasma-workspace
-  - qt6-multimedia
-  - qt6-declarative
-- **Optional Dependencies**:
-  - qt6-websockets (Enhanced streaming features)
+- Name: `donutradio` (provides, conflicts with and replaces `plasma6-applet-freeradio`)
+- Version: the CMake project version in `freeradio/CMakeLists.txt`, kept equal to `pkgver`
+- License: GPL-2.0-or-later
+- Installs: `/usr/bin/donutradio`, the desktop file, the AppStream metainfo, hicolor icons, and the widget at `/usr/share/plasma/plasmoids/online.donutsdelivery.donutradio`
+- Optional dependency: `plasma-workspace` for the widget
 
-## Steps to Submit to AUR
+## Steps
 
-### 1. Generate SSH Key (if not done already)
+### 1. Tag the release and set the checksum
+
+The source is the GitHub tag archive for `v$pkgver`. Push the tag first, then:
+
 ```bash
-ssh-keygen -t ed25519 -C "your-email@example.com"
-cat ~/.ssh/id_ed25519.pub
+curl -L "https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/archive/v2.0.0.tar.gz" | sha256sum
 ```
-Copy the public key and add it to your AUR account settings.
 
-### 2. Test Build Locally
+Put the result in `sha256sums` (it is `SKIP` until then) and regenerate `.SRCINFO`.
+
+### 2. Test the build
+
 ```bash
-# In the project directory
 makepkg -si
 ```
-This will test if the package builds correctly.
 
-### 3. Create AUR Repository
+### 3. Create the AUR repository
+
 ```bash
-git clone ssh://aur@aur.archlinux.org/plasma6-applet-freeradio.git aur-package
+git clone ssh://aur@aur.archlinux.org/donutradio.git aur-package
 cd aur-package
-```
-
-### 4. Copy Package Files
-```bash
-cp ../PKGBUILD .
-cp ../.SRCINFO .
-```
-
-### 5. Commit and Push
-```bash
+cp ../PKGBUILD ../.SRCINFO .
 git add PKGBUILD .SRCINFO
-git commit -m "Initial upload: plasma6-applet-freeradio 1.5.6
-
-Ad-free internet radio widget for KDE Plasma 6.
-Features:
-- Multiple radio sources (radcap.ru, icecast)
-- No ads or talk shows
-- Kirigami UI components
-- Qt6 MediaPlayer support
-"
-
+git commit -m "Initial upload: donutradio 2.0.0"
 git push origin master
 ```
 
-### 6. Verify Upload
-Visit https://aur.archlinux.org/packages/plasma6-applet-freeradio to confirm the package was uploaded successfully.
+Check https://aur.archlinux.org/packages/donutradio afterwards.
 
-## Package Testing
+## Updating
 
-Users can install the package using an AUR helper:
+1. Bump `pkgver` in the PKGBUILD and reset `pkgrel` to 1.
+2. Update `sha256sums`.
+3. Regenerate `.SRCINFO`.
+4. Commit and push to the AUR repository.
 
-```bash
-# Using yay
-yay -S plasma6-applet-freeradio
+## Renaming from plasma6-applet-freeradio
 
-# Using paru
-paru -S plasma6-applet-freeradio
-
-# Manual installation
-git clone https://aur.archlinux.org/plasma6-applet-freeradio.git
-cd plasma6-applet-freeradio
-makepkg -si
-```
-
-## Updating the Package
-
-When releasing new versions:
-
-1. Update `pkgver` in PKGBUILD
-2. Reset `pkgrel` to 1
-3. Update SHA256 checksum if needed
-4. Regenerate .SRCINFO: `makepkg --printsrcinfo > .SRCINFO`
-5. Commit and push changes
-
-## Notes
-
-- The package is architecture-independent (`arch=('any')`)
-- Uses manual installation fallback if CMake build fails
-- Includes proper file permissions and verification
-- Conflicts with older plasma5 versions to prevent conflicts
-
-## Support
-
-For AUR-specific issues, users should:
-1. Check the AUR comments section
-2. Report issues on the GitHub repository
-3. Follow Arch Linux packaging guidelines
-
-## Maintenance
-
-As the package maintainer, monitor:
-- User comments on AUR page
-- Build failures reported by users
-- New releases from upstream
-- Dependency changes in Plasma 6
+Upload `donutradio` as a new package. Then ask the AUR maintainers to merge or delete the old `plasma6-applet-freeradio` package so users get the replacement through `replaces`.

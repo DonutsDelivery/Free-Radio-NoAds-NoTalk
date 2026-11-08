@@ -1,3 +1,5 @@
+> Historical checklist from the original `plasma6-applet-freeradio` submission. The package is now `donutradio`; see `AUR_SUBMISSION_GUIDE.md`.
+
 # Final AUR Submission Steps for DonutsDelivery
 
 ## ✅ Completed:
