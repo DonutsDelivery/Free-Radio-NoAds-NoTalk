@@ -1,16 +1,18 @@
 {
     "KPackageStructure": "Plasma/Applet",
     "KPlugin": {
-        "Id": "freeradio",
-        "Name": "Free Radio",
+        "Id": "online.donutsdelivery.donutradio",
+        "Name": "DonutRadio",
         "Description": "Stream radio stations from various sources without ads or talk",
-        "Version": "1.7.0",
+        "Icon": "online.donutsdelivery.DonutRadio",
+        "Version": "2.0.0",
         "Category": "Multimedia",
         "License": "GPL-2.0+",
         "EnabledByDefault": true,
+        "Website": "https://donutsdelivery.online/freeradio",
         "Authors": [
             {
-                "Name": "Unknown",
+                "Name": "DonutsDelivery",
                 "Email": ""
             }
         ]

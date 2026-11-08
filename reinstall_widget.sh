@@ -1,17 +1,23 @@
 #!/bin/bash
 
+WIDGET_ID="online.donutsdelivery.donutradio"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 echo "Starting widget reinstallation..."
 
 # Kill all plasma processes
 echo "Stopping Plasma..."
-kquitapp5 plasmashell
+kquitapp6 plasmashell
 pkill -f krunner
 sleep 3
 
 # Remove widget and clear all caches
 echo "Removing old widget..."
-kpackagetool6 --type="Plasma/Applet" --remove radcapradio 2>/dev/null || true
-rm -rf ~/.local/share/plasma/plasmoids/radcapradio
+# Also remove the ids this widget shipped under before the rename.
+for old_id in "$WIDGET_ID" freeradio radcapradio; do
+    kpackagetool6 --type="Plasma/Applet" --remove "$old_id" 2>/dev/null || true
+    rm -rf ~/.local/share/plasma/plasmoids/"$old_id"
+done
 rm -rf ~/.cache/plasmashell
 rm -rf ~/.cache/plasma-qmlcache
 rm -rf ~/.cache/plasma*
@@ -26,13 +32,12 @@ sleep 2
 
 # Install widget fresh
 echo "Installing widget..."
-cd /home/user/Documents/Free-Radio-NoAds-NoTalk
-kpackagetool6 --type="Plasma/Applet" --upgrade radcapradio
+kpackagetool6 --type="Plasma/Applet" --upgrade "$REPO_DIR/freeradio"
 
 # Wait and restart plasma
 echo "Restarting Plasma..."
 sleep 3
-kstart5 plasmashell
+kstart plasmashell
 sleep 5
 
 echo "Widget reinstallation complete!"

@@ -1,10 +1,10 @@
-# FreeRadio Widget Reinstall Instructions
+# DonutRadio Widget Reinstall Instructions
 
 ## Critical Information for Future Sessions
 
 ### Plasma Version & Location
 - **Plasma Version**: 6.4.2
-- **Correct Install Location**: `~/.local/share/plasma/plasmoids/freeradio/`
+- **Correct Install Location**: `~/.local/share/plasma/plasmoids/online.donutsdelivery.donutradio/`
 - **Wrong Location** (old method): `~/.local/share/kpackage/generic/freeradio/`
 
 ### Current Widget Status
@@ -20,19 +20,19 @@
 cd /home/user/Documents/Free-Radio-NoAds-NoTalk/freeradio
 
 # Copy all updated files to correct Plasma 6 location
-cp contents/ui/main.qml ~/.local/share/plasma/plasmoids/freeradio/contents/ui/
-cp contents/ui/SpectrumVisualizerAdvanced.qml ~/.local/share/plasma/plasmoids/freeradio/contents/ui/
-cp contents/ui/SpectrumWorkerAdvanced.js ~/.local/share/plasma/plasmoids/freeradio/contents/ui/
-cp contents/ui/SpectrumVisualizerNew.qml ~/.local/share/plasma/plasmoids/freeradio/contents/ui/
-cp contents/ui/SpectrumWorkerFFT.js ~/.local/share/plasma/plasmoids/freeradio/contents/ui/
+cp contents/ui/main.qml ~/.local/share/plasma/plasmoids/online.donutsdelivery.donutradio/contents/ui/
+cp contents/ui/SpectrumVisualizerAdvanced.qml ~/.local/share/plasma/plasmoids/online.donutsdelivery.donutradio/contents/ui/
+cp contents/ui/SpectrumWorkerAdvanced.js ~/.local/share/plasma/plasmoids/online.donutsdelivery.donutradio/contents/ui/
+cp contents/ui/SpectrumVisualizerNew.qml ~/.local/share/plasma/plasmoids/online.donutsdelivery.donutradio/contents/ui/
+cp contents/ui/SpectrumWorkerFFT.js ~/.local/share/plasma/plasmoids/online.donutsdelivery.donutradio/contents/ui/
 ```
 
 #### 2. Restart Plasma Shell
 ```bash
 # Method 1: Graceful restart
-kquitapp5 plasmashell
+kquitapp6 plasmashell
 sleep 3
-kstart5 plasmashell
+kstart plasmashell
 
 # Method 2: Force restart if needed
 killall plasmashell
@@ -46,10 +46,10 @@ plasmashell > /dev/null 2>&1 &
 journalctl --user --since="2 minutes ago" | grep -E "(SpectrumVisualizerAdvanced|SpectrumWorkerAdvanced)"
 
 # Check installed files
-ls -la ~/.local/share/plasma/plasmoids/freeradio/contents/ui/Spectrum*
+ls -la ~/.local/share/plasma/plasmoids/online.donutsdelivery.donutradio/contents/ui/Spectrum*
 
 # Verify correct component in main.qml
-grep -n "SpectrumVisualizerAdvanced" ~/.local/share/plasma/plasmoids/freeradio/contents/ui/main.qml
+grep -n "SpectrumVisualizerAdvanced" ~/.local/share/plasma/plasmoids/online.donutsdelivery.donutradio/contents/ui/main.qml
 ```
 
 ### Expected Log Output After Restart
@@ -86,7 +86,7 @@ SpectrumWorkerAdvanced v1.0 - High-performance FFT with audioMotion features
 ```bash
 # Full reinstall sequence
 cd /home/user/Documents/Free-Radio-NoAds-NoTalk/freeradio
-cp contents/ui/*.qml contents/ui/*.js ~/.local/share/plasma/plasmoids/freeradio/contents/ui/
+cp contents/ui/*.qml contents/ui/*.js ~/.local/share/plasma/plasmoids/online.donutsdelivery.donutradio/contents/ui/
 killall plasmashell && sleep 3 && plasmashell > /dev/null 2>&1 &
 sleep 10 && journalctl --user --since="1 minute ago" | grep -E "SpectrumVisualizer.*v[0-9]"
 ```

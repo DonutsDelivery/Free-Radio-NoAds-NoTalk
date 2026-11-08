@@ -14,7 +14,7 @@ PlasmoidItem {
             console.log("Panel widget clicked - would open full interface")
         }
         
-        ToolTip.text: "Free Radio Panel"
+        ToolTip.text: "DonutRadio Panel"
         ToolTip.visible: hovered
     }
 }

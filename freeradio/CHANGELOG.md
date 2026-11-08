@@ -1,4 +1,4 @@
-# Free Radio - Changelog
+# DonutRadio - Changelog (formerly Free Radio)
 
 ## Version 1.5.6 - July 2025
 
@@ -104,10 +104,10 @@
 ## Installation
 
 ```bash
-kpackagetool5 --install freeradio
+kpackagetool6 --type Plasma/Applet --install freeradio
 ```
 
-Add "Free Radio" from your KDE Plasma widget list.
+Add "DonutRadio" from your KDE Plasma widget list.
 
 ## Key Features Summary
 

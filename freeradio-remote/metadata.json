@@ -1,8 +1,8 @@
 {
   "KPlugin": {
-    "Id": "freeradio-remote",
-    "Name": "Free Radio Remote",
-    "Description": "Panel remote control for Free Radio widget",
+    "Id": "online.donutsdelivery.donutradio-remote",
+    "Name": "DonutRadio Remote",
+    "Description": "Panel remote control for DonutRadio widget",
     "Version": "1.0.0",
     "EnabledByDefault": true,
     "License": "GPL"
