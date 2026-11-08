@@ -22,11 +22,12 @@ A cross-platform internet radio player with curated ad-free stations. Available 
 
 | Platform | Download |
 |----------|----------|
-| **Windows** | [Installer (Recommended)](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/DonutRadio-Setup-x64.exe) \| [Portable](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/DonutRadio-Windows-Portable-x64.zip) |
-| **Linux** | [AppImage](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/DonutRadio-Linux-x86_64.AppImage) \| [Plasma Widget](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/donutradio.plasmoid) |
-| **macOS (compatibility build)** | [DMG](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/latest/download/DonutRadio-macOS.dmg) |
+| **Windows** | [Installer (Recommended)](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/download/v2.2.2/FreeRadio-Setup-x64.exe) \| [Portable](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/download/v2.2.2/FreeRadio-Windows-Portable-x64.zip) |
+| **Linux** | [AppImage](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/download/v2.2.2/FreeRadio-Linux-x86_64.AppImage) \| [Plasma Widget](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/download/v2.2.2/freeradio.plasmoid) |
+| **macOS (compatibility build)** | [DMG](https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/download/v2.2.2/FreeRadio-macOS.dmg) |
 
-> Download links will be available after the first release is published.
+> These links are the last Free Radio release (2.2.2). DonutRadio 2.3.0 installers
+> are not built yet. On Arch, install it from the AUR: `yay -S donutradio`.
 >
 > The macOS DMG is not stable supported until the exact package passes real Apple
 > hardware CoreAudio, network playback, signing/notarization, and sustained-use
