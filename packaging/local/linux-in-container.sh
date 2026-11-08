@@ -58,6 +58,8 @@ sha256sum "$TOOLS"/*.AppImage
 KDE_QML="$(dirname "$(find "$KDE" -type d -path '*/qml/org/kde/kirigami' | head -1)")"
 KDE_QML="${KDE_QML%/org/kde}"
 export APPIMAGE_EXTRACT_AND_RUN=1 QMAKE="$QT_ROOT/bin/qmake"
+# xcb only by default; add Wayland for Wayland desktops and offscreen for the smoke start.
+export EXTRA_PLATFORM_PLUGINS="libqwayland-egl.so;libqwayland-generic.so;libqoffscreen.so"
 export QML_SOURCES_PATHS=/src/freeradio/contents/ui
 export QML_MODULES_PATHS="/cache/AppDir/usr/lib/qt6/qml:$KDE_QML"
 export LD_LIBRARY_PATH="$FF/lib:$KDE/lib:$KDE/lib/x86_64-linux-gnu:$QT_ROOT/lib"

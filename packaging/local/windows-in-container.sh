@@ -12,11 +12,12 @@ KDE=/cache/kde-$KF_VERSION-qt$QT_VERSION
 FF=/cache/ffmpeg-8.0.3
 trap '[ "${HOST_UID:-0}" = 0 ] || chown -R "$HOST_UID:$HOST_GID" /cache /out 2>/dev/null || true' EXIT
 
-# CC=cl + CMAKE_SYSTEM_NAME=Windows is msvc-wine's documented cross setup. Response
-# files keep command lines under Windows' 32 KB limit.
+# CC=cl + CMAKE_SYSTEM_NAME=Windows is msvc-wine's documented cross setup. No forced
+# response files: msvc-wine rewrites /unix/paths to z:/unix/paths only on the command
+# line, and link.exe reads an unconverted /opt/Qt/...lib inside a .rsp as an option.
 cross_cmake() {
     CC=cl CXX=cl cmake -G Ninja -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_NINJA_FORCE_RESPONSE_FILE=ON -DQT_HOST_PATH="$QT_HOST" "$@"
+        -DQT_HOST_PATH="$QT_HOST" "$@"
 }
 
 if [[ ! -f "$KDE/.done" ]]; then

@@ -42,6 +42,12 @@ if [[ ! -x "$QT/bin/macdeployqt" ]]; then
     "$CACHE/venv/bin/aqt" install-qt mac desktop "$QT_VERSION" clang_64 -m qtshadertools -O "$CACHE/Qt"
 fi
 
+# Qt 6.7.0 links the AGL framework, which the macOS 26 SDK no longer ships. Later Qt
+# releases dropped it; do the same in the cached copy (idempotent).
+sed -i '' -e 's/find_library(WrapOpenGL_AGL NAMES AGL)/set(WrapOpenGL_AGL "")/' \
+    -e 's/set(__opengl_agl_fw_path "-framework AGL")/set(__opengl_agl_fw_path "")/' \
+    "$QT/lib/cmake/Qt6/FindWrapOpenGL.cmake"
+
 if [[ ! -f "$KDE/.done" ]]; then
     rm -rf "$KDE" "$CACHE/kde-src" && mkdir -p "$CACHE/kde-src"
     for repo in extra-cmake-modules kirigami; do
