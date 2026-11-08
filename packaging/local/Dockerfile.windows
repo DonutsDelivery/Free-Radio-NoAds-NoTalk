@@ -1,0 +1,17 @@
+# Windows release image for DonutRadio. It extends DonutStudio's msvc-wine image (the
+# real MSVC toolchain and Windows SDK under Wine) with the MSVC Qt build, a Linux Qt of
+# the same version for the host tools (moc, qsb, qmlcachegen), and FFmpeg's tools.
+ARG BASE=arbit-windows-build:msvc-wine
+FROM ${BASE}
+ARG QT_VERSION
+ARG AQT_VERSION
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      python3-pip nasm make pkg-config curl xz-utils zip \
+ && rm -rf /var/lib/apt/lists/*
+RUN pip3 install --no-cache-dir --break-system-packages "aqtinstall==${AQT_VERSION}" \
+ && win="$(aqt list-qt windows desktop --arch "${QT_VERSION}" | tr ' ' '\n' | grep -E '^win64_msvc20[0-9]{2}_64$' | tail -1)" \
+ && lin="$(aqt list-qt linux desktop --arch "${QT_VERSION}" | tr ' ' '\n' | grep -E '^(linux_)?gcc_64$' | head -1)" \
+ && aqt install-qt windows desktop "${QT_VERSION}" "$win" -m qtshadertools -O /opt/Qt \
+ && aqt install-qt linux desktop "${QT_VERSION}" "$lin" -m qtshadertools -O /opt/Qt \
+ && ls -d /opt/Qt/${QT_VERSION}/msvc20*_64 /opt/Qt/${QT_VERSION}/gcc_64
+WORKDIR /work

@@ -1,7 +1,9 @@
 ; DonutRadio Installer Script for Inno Setup
 
 #define MyAppName "DonutRadio"
-#define MyAppVersion "2.0.0"
+#ifndef MyAppVersion
+  #define MyAppVersion "2.3.0"
+#endif
 #define MyAppPublisher "DonutsDelivery"
 #define MyAppURL "https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk"
 #define MyAppExeName "donutradio.exe"
