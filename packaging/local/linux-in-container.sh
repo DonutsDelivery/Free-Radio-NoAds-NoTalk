@@ -68,7 +68,7 @@ ICON=/src/freeradio/icons/hicolor/256x256/apps/$APP_ID.png
 cd /cache
 rm -f "$LDAI_OUTPUT"
 # AppImageHub rejects an AppImage without a .DirIcon. A real file, not a link.
-rm -f /cache/AppDir/.DirIcon && cp "$ICON" /cache/AppDir/.DirIcon
+rm -f /cache/AppDir/.DirIcon && install -m 644 "$ICON" /cache/AppDir/.DirIcon
 "$TOOLS/linuxdeploy-x86_64.AppImage" --appdir /cache/AppDir \
     --desktop-file "/cache/AppDir/usr/share/applications/$APP_ID.desktop" \
     --icon-file "$ICON" --plugin qt --output appimage
