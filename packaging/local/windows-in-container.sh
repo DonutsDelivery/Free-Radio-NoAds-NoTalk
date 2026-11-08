@@ -60,6 +60,9 @@ cmake --install "$B"
 
 # Deploy Qt next to the exe with the MSVC Qt's own windeployqt, run under Wine.
 D="$STAGE/bin"
+# The exe links freeradio_audio.dll, which installs beside the QML plugin; the plugin
+# reuses the copy the exe already loaded.
+mv "$D/qml/FreeRadio/Audio/freeradio_audio.dll" "$D/"
 cp "$FF"/bin/*.dll "$D/"
 cp "$KDE"/bin/*.dll "$D/" 2>/dev/null || true
 KDE_QML="$(dirname "$(find "$KDE" -type d -path '*/qml/org/kde/kirigami' | head -1)")"

@@ -81,6 +81,8 @@ if(ANDROID)
     target_link_libraries(freeradio_audio PRIVATE ${CMAKE_DL_LIBS})
 elseif(WIN32)
     target_link_libraries(freeradio_audio PRIVATE ole32 winmm)
+    # windows.h defines min/max macros that break std::min/std::max.
+    target_compile_definitions(freeradio_audio PRIVATE NOMINMAX)
 elseif(APPLE)
     foreach(_framework IN ITEMS CoreAudio AudioToolbox CoreFoundation)
         string(TOUPPER "${_framework}" _framework_upper)

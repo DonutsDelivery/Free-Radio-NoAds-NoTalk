@@ -100,10 +100,19 @@ iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/donutradio.icns"
 
 KDE_QML="$(dirname "$(find "$KDE" -type d -path '*/qml/org/kde/kirigami' | head -1)")"
 KDE_QML="${KDE_QML%/org/kde}"
+# The executable links libfreeradio_audio.dylib, which installs beside the QML plugin.
+# Keep one copy in Frameworks and point the plugin's directory at it.
+mkdir -p "$APP/Contents/Frameworks"
+mv "$APP/Contents/Resources/qml/FreeRadio/Audio/libfreeradio_audio.dylib" "$APP/Contents/Frameworks/"
+ln -s ../../../../Frameworks/libfreeradio_audio.dylib \
+    "$APP/Contents/Resources/qml/FreeRadio/Audio/libfreeradio_audio.dylib"
 export DYLD_LIBRARY_PATH="$FF/lib:$KDE/lib"
 "$QT/bin/macdeployqt" "$APP" -qmldir="$SRC/freeradio/contents/ui" -qmlimport="$KDE_QML" \
-    -qmlimport="$APP/Contents/Resources/qml" -libpath="$FF/lib" -libpath="$KDE/lib" -verbose=1
+    -qmlimport="$APP/Contents/Resources/qml" -libpath="$FF/lib" -libpath="$KDE/lib" -libpath="$APP/Contents/Frameworks" -verbose=1
 unset DYLD_LIBRARY_PATH
+# QtSql comes in through QML LocalStorage; only SQLite is used, and the other drivers
+# link client libraries that are not in the bundle.
+find "$APP/Contents/PlugIns/sqldrivers" -name '*.dylib' ! -name 'libqsqlite.dylib' -delete
 
 # macdeployqt rewrites install names, which breaks signatures; Apple Silicon refuses to
 # load unsigned code, so ad-hoc sign the whole bundle afterwards.
