@@ -1,0 +1,20 @@
+# kspec project configuration
+# This file was scaffolded by kspec setup. Review and customize for your project.
+# Documentation: https://github.com/lepahc/kynetic-spec
+
+dispatch:
+  # How dispatched agents publish completed work.
+  # Accepted values: pull_request, manual_merge, auto
+  publication_mode: auto
+
+  # Uncomment and set to pin the base/integration branch for dispatch workspaces.
+  # When omitted, the dispatcher resolves deterministically (remote HEAD → current branch → "main").
+  # Resolved from repository default branch.
+  # base_branch: "main"
+
+# Uncomment to enable acceptance criteria coverage scanning.
+# scan_paths lists directories to scan for AC annotations in test files.
+# coverage:
+#   scan_paths:
+#     - "tests/"
+#     - "src/"

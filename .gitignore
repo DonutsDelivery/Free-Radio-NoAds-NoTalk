@@ -39,3 +39,13 @@ plans/
 .kspec-dispatch-shadow-mutation
 .kspec-dispatch-shadow-mutation.lock/
 # <<< kspec managed
+
+# Local build output and agent runtime state
+freeradio/build-*/
+freeradio/dist/
+.beads/beads.db
+.beads/daemon*
+.beads/last-touched
+.claude/worktrees/
+.claude/settings.local.json
+.gitignore.backup*
