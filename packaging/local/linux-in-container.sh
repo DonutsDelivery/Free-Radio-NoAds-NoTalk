@@ -67,6 +67,8 @@ export LDAI_OUTPUT=/cache/DonutRadio-Linux-x86_64.AppImage
 ICON=/src/freeradio/icons/hicolor/256x256/apps/$APP_ID.png
 cd /cache
 rm -f "$LDAI_OUTPUT"
+# AppImageHub rejects an AppImage without a .DirIcon. A real file, not a link.
+rm -f /cache/AppDir/.DirIcon && cp "$ICON" /cache/AppDir/.DirIcon
 "$TOOLS/linuxdeploy-x86_64.AppImage" --appdir /cache/AppDir \
     --desktop-file "/cache/AppDir/usr/share/applications/$APP_ID.desktop" \
     --icon-file "$ICON" --plugin qt --output appimage
@@ -77,6 +79,15 @@ for lib in libavformat.so.62 libavcodec.so.62 libavutil.so.60 libswresample.so.6
 done
 ls /cache/AppDir/usr/lib/libKirigami*.so* >/dev/null || { echo "AppImage is missing Kirigami" >&2; exit 1; }
 find /cache/AppDir/usr -path '*org/kde/kirigami/qmldir' | grep -q . || { echo "Kirigami QML module missing" >&2; exit 1; }
+
+# The AppImage needs a .DirIcon, the desktop file and the AppStream metainfo.
+APPIMAGE_EXTRACT_AND_RUN=1 "$LDAI_OUTPUT" --appimage-extract >/dev/null
+for f in .DirIcon "$APP_ID.desktop" "usr/share/metainfo/$APP_ID.metainfo.xml"; do
+    test -e "squashfs-root/$f" || { echo "AppImage is missing $f" >&2; exit 1; }
+done
+grep -q "<id>$APP_ID</id>" "squashfs-root/usr/share/metainfo/$APP_ID.metainfo.xml" \
+    || { echo "metainfo ID is not $APP_ID" >&2; exit 1; }
+rm -rf squashfs-root
 
 # The packaged app must start and stay up.
 QT_QPA_PLATFORM=offscreen "$LDAI_OUTPUT" --appimage-extract-and-run >/cache/smoke.log 2>&1 &
