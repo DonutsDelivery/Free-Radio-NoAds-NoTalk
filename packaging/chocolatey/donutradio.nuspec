@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>donutradio</id>
+    <version>2.3.0</version>
+    <title>DonutRadio</title>
+    <authors>DonutsDelivery</authors>
+    <owners>DonutsDelivery</owners>
+    <projectUrl>https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/main/freeradio/icons/donutradio.png</iconUrl>
+    <licenseUrl>https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk</projectSourceUrl>
+    <packageSourceUrl>https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/tree/main/packaging/chocolatey</packageSourceUrl>
+    <docsUrl>https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk#readme</docsUrl>
+    <bugTrackerUrl>https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/issues</bugTrackerUrl>
+    <releaseNotes>https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/tag/v2.3.0</releaseNotes>
+    <copyright>Copyright (c) DonutsDelivery</copyright>
+    <tags>radio internet-radio streaming music audio player</tags>
+    <summary>Ad-free internet radio player with curated stations.</summary>
+    <description>DonutRadio streams curated, ad-free internet radio stations from RadCap, SomaFM and Radio Paradise. It saves favorites, has a volume control and a spectrum visualizer.</description>
+  </metadata>
+</package>
