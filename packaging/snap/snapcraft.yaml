@@ -1,0 +1,100 @@
+name: donutradio
+title: DonutRadio
+base: core24
+version: '2.3.0'
+summary: Internet radio without ads or talk
+description: |
+  DonutRadio plays internet radio stations picked for having no ads and no talk.
+  It streams through its own audio engine, so the spectrum visualizer reads the
+  same audio you hear.
+
+  This snap repackages the DonutRadio 2.3.0 AppImage from the GitHub release.
+  The build checks the file against a pinned SHA-256. Qt, KDE Kirigami and
+  FFmpeg come from that file.
+license: GPL-2.0-or-later
+grade: stable
+confinement: strict
+platforms:
+  amd64:
+    build-on: [amd64]
+    build-for: [amd64]
+contact: mailto:admin@donutsdelivery.online
+website: https://donutsdelivery.online/freeradio
+source-code: https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk
+issues: https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/issues
+icon: snap/gui/icon.png
+
+apps:
+  donutradio:
+    command: usr/bin/donutradio
+    plugs:
+      - network
+      - audio-playback
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
+      - opengl
+      - screen-inhibit-control
+    environment:
+      LD_LIBRARY_PATH: $SNAP/usr/lib:$SNAP/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+      XDG_DATA_DIRS: $SNAP/usr/share:$XDG_DATA_DIRS
+      XKB_CONFIG_ROOT: $SNAP/usr/share/X11/xkb
+      FONTCONFIG_FILE: $SNAP/etc/fonts/fonts.conf
+      LIBGL_DRIVERS_PATH: $SNAP/usr/lib/x86_64-linux-gnu/dri
+      __EGL_VENDOR_LIBRARY_DIRS: $SNAP/usr/share/glvnd/egl_vendor.d
+      GBM_BACKENDS_PATH: $SNAP/usr/lib/x86_64-linux-gnu/gbm
+
+parts:
+  donutradio:
+    plugin: nil
+    source: https://github.com/DonutsDelivery/Free-Radio-NoAds-NoTalk/releases/download/v2.3.0/DonutRadio-Linux-x86_64.AppImage
+    source-type: file
+    source-checksum: sha256/4db5a496917d8113fc862b1fc29b263cb281d64532afedbd2e0dc368ff9f8580
+    build-packages:
+      - python3
+      - squashfs-tools
+    stage-packages:
+      - fontconfig-config
+      - fonts-dejavu-core
+      - fonts-noto-color-emoji
+      - libdrm2
+      - libegl-mesa0
+      - libegl1
+      - libfontconfig1
+      - libfreetype6
+      - libgbm1
+      - libgl1
+      - libgl1-mesa-dri
+      - libglx-mesa0
+      - libglx0
+      - libopengl0
+      - libssl3t64
+      - libwayland-client0
+      - libx11-6
+      - libx11-xcb1
+      - libxcb1
+      - libxcb-xinerama0
+      - libxcb-xinput0
+      - libxkbcommon-x11-0
+      - xkb-data
+    override-build: |
+      # Unpack the AppImage's squashfs with unsquashfs, so nothing from the image runs.
+      appimage="$(ls "$CRAFT_PART_SRC"/*.AppImage)"
+      offset="$(python3 - "$appimage" <<'PY'
+      import struct, sys
+      with open(sys.argv[1], "rb") as f:
+          head = f.read(64)
+          if head[:4] != b"\x7fELF" or head[4] != 2:
+              sys.exit("not a 64-bit ELF AppImage")
+          shoff, = struct.unpack_from("<Q", head, 0x28)
+          shentsize, shnum = struct.unpack_from("<HH", head, 0x3A)
+          print(shoff + shentsize * shnum)
+      PY
+      )"
+      rm -rf "$CRAFT_PART_BUILD/appdir"
+      unsquashfs -q -o "$offset" -d "$CRAFT_PART_BUILD/appdir" "$appimage"
+      cp -a "$CRAFT_PART_BUILD/appdir/usr/." "$CRAFT_PART_INSTALL/usr/"
+      # The snap ships its own desktop file under meta/gui.
+      rm -f "$CRAFT_PART_INSTALL"/usr/share/applications/online.donutsdelivery.DonutRadio.desktop
+      chmod -R a+rX "$CRAFT_PART_INSTALL"
